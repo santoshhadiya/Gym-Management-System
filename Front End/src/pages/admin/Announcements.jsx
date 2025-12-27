@@ -23,7 +23,7 @@ const Announcements = () => {
 
   return (
     <div className="max-w-4xl mx-auto mt-8 p-6 bg-white shadow-lg rounded-xl">
-      <h1 className="text-3xl font-bold text-red-600 mb-4">Send AnnouncementAnnouncementAnnouncement</h1>
+      <h1 className="text-3xl font-bold text-red-600 mb-4">Send Announcement</h1>
 
       <form onSubmit={handlePost} className="space-y-4 mb-6">
         <div>

@@ -67,7 +67,6 @@ const App = () => {
 
     <BrowserRouter>
       {/* <div>hello</div> */}
-<h1>Hello, Admin, jayy Hadiya!!</h1>
       <Routes>
         <Route path="owner" element={<AdminLayout />}>
           <Route index element={<Dashboard_Admin />} />
