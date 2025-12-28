@@ -61,16 +61,21 @@ import ChatWithTrainer from './pages/admin/ChatWithTrainers'
 import UpdateSessions from './pages/admin/UpdateSessions'
 import AdminLayout from './pages/layout/AdminLayout'
 import AssignTrainers from './pages/admin/AssignTrainers'
+import LoginPage from './components/all/LoginPage'
+import Registration from './components/all/Registration'
 
 const App = () => {
   return (
 
     <BrowserRouter>
       {/* <div>hello</div> */}
+      
       <Routes>
+        <Route path="login" element={<LoginPage/>} />
+        <Route path="register" element={<Registration/>} />
+
         <Route path="admin" element={<AdminLayout />}>
           <Route index element={<Dashboard_Admin />} />
-          <Route path="login" element={<Login_admin />} />
           <Route path="members" element={<ManageMember />} />
           <Route path="trainers" element={<ManageTrainer />} />
           <Route path="payments" element={<MemberPayments />} />
@@ -95,7 +100,6 @@ const App = () => {
 
         <Route path="trainer" element={<TrainerLayout />}>
           <Route index element={<Dashboard_Trainer />} />
-          <Route path="login" element={<Login />} />
           <Route path="profile" element={<Profile_Trainer />} />
           <Route path="members" element={<Members />} />
           <Route path="workout-diet" element={<ManageWorkoutDiet />} />
@@ -134,7 +138,7 @@ const App = () => {
           <Route path="services" element={<Services />} />
           <Route path="trainers" element={<Trainers />} />
           <Route path="plans" element={<Plans />} />
-          <Route path="inquiry" element={<Inquiry />} />
+          <Route path="inquiry" element={<Inquiry />} />  
           <Route path="policies" element={<Policies />} />
           <Route path="reviews" element={<Reviews />} />
         </Route>
