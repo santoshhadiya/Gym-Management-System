@@ -19,7 +19,7 @@ const LoginPage = () => {
     // Logic based on your previous code
     setTimeout(() => {
       const routes = {
-        admin: "/owner",
+        admin: "/admin",
         trainer: "/trainer",
         member: "/member",
       };
@@ -50,10 +50,10 @@ const LoginPage = () => {
             <button
               key={r}
               onClick={() => setRole(r)}
-              className={`flex-1 py-2 rounded-full text-sm font-semibold border-2 transition-all duration-200 capitalize ${
+              className={`flex-1 py-2 rounded-full text-sm font-semibold border border-slate transition-all duration-200 capitalize cursor-pointer ${
                 role === r 
-                ? 'bg-[#F9C833] border-[#F9C833] text-gray-800 shadow-md' 
-                : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'
+                ? 'bg-[#FEEF75] border-[#FEEF75] text-gray-800 shadow-md' 
+                : ' border-slate-200 text-slate-500 hover:border-slate-300'
               }`}
             >
               {r}
@@ -67,7 +67,7 @@ const LoginPage = () => {
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="email"
-              className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3 rounded-xl focus:ring-2 focus:ring-[#F9C833] outline-none transition"
+              className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3 rounded-xl focus:ring-2 focus:ring-[#FEEF75] outline-none transition"
               placeholder="Email or Username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -80,7 +80,7 @@ const LoginPage = () => {
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type={showPassword ? "text" : "password"}
-              className="w-full bg-slate-50 border border-slate-200 pl-12 pr-12 py-3 rounded-xl focus:ring-2 focus:ring-[#F9C833] outline-none transition"
+              className="w-full bg-slate-50 border border-slate-200 pl-12 pr-12 py-3 rounded-xl focus:ring-2 focus:ring-[#FEEF75] outline-none transition"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -100,7 +100,7 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#F9C833] hover:bg-[#e6b82e] text-gray-800 font-bold py-3 rounded-full shadow-lg transition-transform active:scale-95"
+            className="w-full bg-[#FEEF75] hover:bg-[#ffca2b] text-gray-800 font-bold py-3 rounded-full shadow-lg transition-transform active:scale-95 cursor-pointer"
           >
             {loading ? "Logging in..." : "Login"}
           </button>

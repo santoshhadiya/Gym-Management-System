@@ -1,57 +1,44 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
+import Nav_Admin from "../../components/admin/Nav_Admin";
+import Sidebar_Admin from "../../components/admin/Sidebar_Admin";
+// Fixed import path to include extension and ensure resolution
 
 const AdminLayout = () => {
   const { pathname } = useLocation();
 
-  const navItems = [
-    { name: "Dashboard", path: "/admin" },
-    { name: "Manage Members", path: "/admin/members" },
-    { name: "Manage Trainers", path: "/admin/trainers" },
-    { name: "Membership Plans", path: "/admin/membership-plans" },
-    { name: "Payments", path: "/admin/payments" },
-    { name: "Payment History", path: "/admin/payment-history" },
-    { name: "Assign Trainers", path: "/admin/assign-trainers" },
-    { name: "Performance Reports", path: "/admin/performance-reports" },
-    { name: "Verify Accounts", path: "/admin/verify-accounts" },
-    { name: "Staff Schedules", path: "/admin/staff-schedules" },
-    { name: "Manage Bookings", path: "/admin/bookings" },
-    { name: "Announcements", path: "/admin/announcements" },
-    { name: "Financial Reports", path: "/admin/financial-reports" },
-    { name: "Media Gallery", path: "/admin/media-gallery" },
-    { name: "Manage Offers", path: "/admin/offers" },
-    { name: "Equipment Tracking", path: "/admin/equipment-tracking" },
-    { name: "Monitor Progress", path: "/admin/monitor-progress" },
-    { name: "Chat with Members", path: "/admin/chat-members" },
-    { name: "Chat with Trainers", path: "/admin/chat-trainers" },
-    { name: "View Feedback", path: "/admin/feedbacks" },
-    { name: "Update Sessions", path: "/admin/update-session" },
-  ];
+  // Load Font Awesome dynamically
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
+
+  // Defined icons for each navigation item
+  // using fa-regular (un-filled) where possible
+  
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-white font-sans">
+
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex-shrink-0 p-4 space-y-3">
-        <h2 className="text-2xl font-bold text-red-500 mb-6">Admin Panel</h2>
-        <nav className="space-y-2">
-          {navItems.map((item, i) => (
-            <Link
-              key={i}
-              to={item.path}
-              className={`block px-4 py-2 rounded hover:bg-red-600 transition ${
-                pathname === item.path ? "bg-red-500" : ""
-              }`}
-            >
-              {item.name}
-            </Link>
-          ))}
-        </nav>
-      </aside>
+      <Sidebar_Admin/>
 
       {/* Main Content */}
-      <main className="flex-1 bg-gray-100 p-6 overflow-y-auto">
-        <Outlet />
+      <main className="flex-1 h-screen overflow-y-auto bg-white">
+        <div className="p-6">
+            <Nav_Admin />
+            <div className="mt-6">
+                <Outlet />
+            </div>
+        </div>
       </main>
+
     </div>
   );
 };

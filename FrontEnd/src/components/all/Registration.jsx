@@ -67,10 +67,10 @@ const RegisterPage = () => {
               key={r}
               type="button"
               onClick={() => setRole(r)}
-              className={`flex-1 py-2.5 rounded-full text-sm font-semibold border transition-all duration-200 capitalize ${
+              className={`flex-1 py-2.5 rounded-full text-sm font-semibold border transition-all duration-200 capitalize cursor-pointer ${
                 role === r 
-                ? 'bg-[#fbc531] border-[#fbc531] text-gray-900 shadow-sm' 
-                : 'bg-white border-[#3498db] text-[#3498db] hover:bg-blue-50'
+                ? 'bg-[#FEEF75] border-[#FEEF75] text-gray-900 shadow-sm' 
+                : ' border-slate-200 text-slate-500 hover:border-slate-300'
               }`}
             >
               {r}
@@ -92,7 +92,7 @@ const RegisterPage = () => {
             <input
               type="text"
               name="fullName"
-              className="w-full bg-[#f1f4f9] border border-[#dcdde1] pl-12 pr-4 py-3.5 rounded-xl focus:ring-2 focus:ring-[#fbc531] outline-none transition placeholder-gray-400"
+              className="w-full bg-[#f1f4f9] border border-[#dcdde1] pl-12 pr-4 py-3.5 rounded-xl focus:ring-2 focus:ring-[#FEEF75] outline-none transition placeholder-gray-400"
               placeholder="Full Name"
               value={formData.fullName}
               onChange={handleChange}
@@ -106,7 +106,7 @@ const RegisterPage = () => {
             <input
               type="email"
               name="email"
-              className="w-full bg-[#f1f4f9] border border-[#dcdde1] pl-12 pr-4 py-3.5 rounded-xl focus:ring-2 focus:ring-[#fbc531] outline-none transition placeholder-gray-400"
+              className="w-full bg-[#f1f4f9] border border-[#dcdde1] pl-12 pr-4 py-3.5 rounded-xl focus:ring-2 focus:ring-[#FEEF75] outline-none transition placeholder-gray-400"
               placeholder="Email Address"
               value={formData.email}
               onChange={handleChange}
@@ -120,7 +120,7 @@ const RegisterPage = () => {
             <input
               type={showPassword ? "text" : "password"}
               name="password"
-              className="w-full bg-[#f1f4f9] border border-[#dcdde1] pl-12 pr-16 py-3.5 rounded-xl focus:ring-2 focus:ring-[#fbc531] outline-none transition placeholder-gray-400"
+              className="w-full bg-[#f1f4f9] border border-[#dcdde1] pl-12 pr-16 py-3.5 rounded-xl focus:ring-2 focus:ring-[#FEEF75] outline-none transition placeholder-gray-400"
               placeholder="Create Password"
               value={formData.password}
               onChange={handleChange}
@@ -141,7 +141,7 @@ const RegisterPage = () => {
             <input
               type="password"
               name="confirmPassword"
-              className="w-full bg-[#f1f4f9] border border-[#dcdde1] pl-12 pr-4 py-3.5 rounded-xl focus:ring-2 focus:ring-[#fbc531] outline-none transition placeholder-gray-400"
+              className="w-full bg-[#f1f4f9] border border-[#dcdde1] pl-12 pr-4 py-3.5 rounded-xl focus:ring-2 focus:ring-[#FEEF75] outline-none transition placeholder-gray-400"
               placeholder="Confirm Password"
               value={formData.confirmPassword}
               onChange={handleChange}
@@ -153,7 +153,7 @@ const RegisterPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#fbc531] hover:bg-[#e1b12c] text-gray-900 font-bold py-4 rounded-full shadow-md transition-all active:scale-[0.98] mt-2"
+            className="w-full bg-[#FEEF75] cursor-pointer hover:bg-[#ffca2b] text-gray-900 font-bold py-4 rounded-full shadow-md transition-all active:scale-[0.98] mt-2"
           >
             {loading ? "Creating Account..." : "Register"}
           </button>
