@@ -63,6 +63,7 @@ import AdminLayout from './pages/layout/AdminLayout'
 import AssignTrainers from './pages/admin/AssignTrainers'
 import LoginPage from './components/all/LoginPage'
 import Registration from './components/all/Registration'
+import PlansAnalysis from './components/Analysis/PlansAnalysis'
 
 const App = () => {
   return (
@@ -81,6 +82,7 @@ const App = () => {
           <Route path="payments" element={<MemberPayments />} />
           <Route path="payment-history" element={<PaymentHistory />} />
           <Route path="membership-plans" element={<MembershipPlan />} />
+          <Route path="membership-plans-analysis" element={<PlansAnalysis/>} />
           <Route path="assign-trainers" element={<AssignTrainers />} />
           <Route path="performance-reports" element={<PerformanceReport_admin />} />
           <Route path="staff-schedules" element={<StaffSchedules />} />
