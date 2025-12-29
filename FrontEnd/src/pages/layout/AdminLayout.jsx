@@ -30,7 +30,7 @@ const AdminLayout = () => {
       <Sidebar_Admin/>
 
       {/* Main Content */}
-      <main className="flex-1 h-screen overflow-y-auto bg-white">
+      <main className="flex-1  overflow-y-auto bg-white">
         <div className="p-6">
             <Nav_Admin />
             <div className="mt-6">

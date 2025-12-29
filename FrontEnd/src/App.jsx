@@ -44,7 +44,6 @@ import ChatWithOwner from './pages/trainer/ChatWithOwner'
 import SessionReports from './pages/trainer/SessionReports'
 import PerformanceReport from './pages/trainer/PerformanceReports'
 import PerformanceReport_admin from './pages/admin/PerformanceReports'
-import MemberPayments from './pages/trainer/MemberPayments'
 import ManageMember from './pages/admin/ManageMembers'
 import ManageTrainer from './pages/admin/ManageTrainers'
 import PaymentHistory from './pages/admin/PaymentHistory'
@@ -64,6 +63,7 @@ import AssignTrainers from './pages/admin/AssignTrainers'
 import LoginPage from './components/all/LoginPage'
 import Registration from './components/all/Registration'
 import PlansAnalysis from './components/Analysis/PlansAnalysis'
+import MemberPayments from './pages/admin/MemberPayments'
 
 const App = () => {
   return (
