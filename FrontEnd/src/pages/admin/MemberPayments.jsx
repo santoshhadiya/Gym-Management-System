@@ -166,17 +166,17 @@ const MemberPayments = () => {
 
       {/* STATS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-         <div className="bg-[#f0fdf4] border border-green-100 p-5 rounded-3xl">
-            <p className="text-xs text-green-600 font-bold uppercase tracking-wider">Total Collected</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">₹{payments.reduce((acc, curr) => acc + curr.paid, 0).toLocaleString()}</p>
+         <div className="bg-[#D9F17F]  p-5 rounded-3xl">
+            <p className="text-xs text-white font-bold uppercase tracking-wider">Total Collected</p>
+            <p className="text-2xl font-bold text-white mt-1">₹{payments.reduce((acc, curr) => acc + curr.paid, 0).toLocaleString()}</p>
          </div>
-         <div className="bg-[#fffbeb] border border-yellow-100 p-5 rounded-3xl">
-            <p className="text-xs text-yellow-600 font-bold uppercase tracking-wider">Pending Dues</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">₹{payments.reduce((acc, curr) => acc + curr.pending, 0).toLocaleString()}</p>
+         <div className="bg-[#FEEF75]   p-5 rounded-3xl">
+            <p className="text-xs text-white font-bold uppercase tracking-wider">Pending Dues</p>
+            <p className="text-2xl font-bold text-white mt-1">₹{payments.reduce((acc, curr) => acc + curr.pending, 0).toLocaleString()}</p>
          </div>
-         <div className="bg-[#eff6ff] border border-blue-100 p-5 rounded-3xl">
-            <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Transactions Today</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">0</p>
+         <div className="bg-[#CDE7FE]  p-5 rounded-3xl">
+            <p className="text-xs text-white font-bold uppercase tracking-wider">Transactions Today</p>
+            <p className="text-2xl font-bold text-white mt-1">0</p>
          </div>
       </div>
 

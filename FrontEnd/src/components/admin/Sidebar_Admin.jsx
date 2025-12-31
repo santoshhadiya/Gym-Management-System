@@ -13,6 +13,7 @@ const Sidebar_Admin = () => {
     { name: "Payments", path: "/admin/payments", icon: "fa-regular fa-credit-card" },
     { name: "Payment History", path: "/admin/payment-history", icon: "fa-solid fa-clock-rotate-left" },
     { name: "Assign Trainers", path: "/admin/assign-trainers", icon: "fa-solid fa-user-plus" },
+     { name: "Chat with Members", path: "/admin/chat-members", icon: "fa-regular fa-comments" },
     { name: "Performance Reports", path: "/admin/performance-reports", icon: "fa-regular fa-file-lines" },
     { name: "Verify Accounts", path: "/admin/verify-accounts", icon: "fa-regular fa-square-check" },
     { name: "Staff Schedules", path: "/admin/staff-schedules", icon: "fa-regular fa-calendar" },
@@ -23,13 +24,13 @@ const Sidebar_Admin = () => {
     { name: "Manage Offers", path: "/admin/offers", icon: "fa-solid fa-percent" },
     { name: "Equipment Tracking", path: "/admin/equipment-tracking", icon: "fa-solid fa-dumbbell" },
     { name: "Monitor Progress", path: "/admin/monitor-progress", icon: "fa-solid fa-stairs" },
-    { name: "Chat with Members", path: "/admin/chat-members", icon: "fa-regular fa-comments" },
+   
     { name: "Chat with Trainers", path: "/admin/chat-trainers", icon: "fa-regular fa-comment-dots" },
     { name: "View Feedback", path: "/admin/feedbacks", icon: "fa-regular fa-star" },
     { name: "Update Sessions", path: "/admin/update-session", icon: "fa-solid fa-rotate" },
   ];
   return (
-    <aside className="w-60   overflow-auto mt-4 ml-4 bg-white border rounded-4xl border-gray-200 flex flex-col px-5 py-6">
+    <aside className="w-60   overflow-auto mt-4 ml-4 bg-white border rounded-4xl border-gray-200 flex flex-col px-5 py-6 font-sans">
 
         {/* Logo */}
         <div className="flex items-center gap-2 mb-4  px-2 bg-gray-100 p-2 rounded-4xl">
@@ -48,7 +49,7 @@ const Sidebar_Admin = () => {
             <Link
               key={index}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-full text-sm transition-all duration-200 group
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-full text-sm transition-all font-sans duration-200 group
                 ${
                   pathname === item.path
                     ? "bg-[#D9F17F] text-gray-900 font-semibold shadow-sm"
