@@ -6,9 +6,10 @@ const VisitorLayout = () => {
   return (
     <>
       
-      <main className="min-h-screen p-4">
+      <main className="min-h-screen">
         <Nav/>
-        <Outlet /> {/* nested visitor pages render here */}
+      
+        <Outlet /> 
       </main>
       
     </>
