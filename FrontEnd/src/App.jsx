@@ -64,6 +64,7 @@ import LoginPage from './components/all/LoginPage'
 import Registration from './components/all/Registration'
 import PlansAnalysis from './components/Analysis/PlansAnalysis'
 import MemberPayments from './pages/admin/MemberPayments'
+import PlansMembers from './pages/member/PlansMembers'
 
 const App = () => {
   return (
@@ -119,7 +120,7 @@ const App = () => {
           <Route index element={<Dashboard />} /> {/* /member */}
           <Route path="profile" element={<Profile />} />
           <Route path="membership" element={<Membership />} />
-          <Route path="plans" element={<Plans />} />
+          <Route path="plans" element={<PlansMembers/>} />
           <Route path="progress" element={<Progress />} />
           <Route path="booking" element={<Booking />} />
           <Route path="chat" element={<Chat />} />

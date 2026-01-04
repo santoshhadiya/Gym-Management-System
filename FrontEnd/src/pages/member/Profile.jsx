@@ -1,163 +1,485 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
 
 const Profile = () => {
-  const [profile, setProfile] = useState({
-    name: 'Santosh Hadiya',
-    email: 'santosh@example.com',
-    phone: '9876543210',
-    age: 20,
-    gender: 'Male',
+  // --- MOCK DATA ---
+  const [user, setUser] = useState({
+    id: "MEM-2024-001",
+    name: "Santosh Hadiya",
+    email: "santosh@example.com",
+    phone: "9876543210",
+    address: "B-404, Shivalik Heights, Ahmedabad",
+    emergencyContact: "9876500000",
+    profileImage: "https://i.pravatar.cc/150?u=101",
+    status: "Verified",
+    joinedDate: "2024-01-15",
+    
+    membership: {
+      plan: "Yearly Elite",
+      startDate: "2024-01-15",
+      endDate: "2025-01-15",
+      status: "Active",
+      features: ["All Gym Access", "Spa & Sauna", "2 PT Sessions/Month"]
+    },
+    
+    trainer: {
+      name: "Raj Mehta",
+      specialization: "Strength & Conditioning",
+      id: 1
+    },
+    
+    fitness: {
+      height: 175, // cm
+      weight: 82, // kg
+      goal: "Weight Loss",
+      notes: "Focus on compound movements. Knee stability improving."
+    }
   });
 
-  const [editMode, setEditMode] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
+  
+  // --- STATE ---
+  const [activeTab, setActiveTab] = useState("personal"); // personal, fitness, settings
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempData, setTempData] = useState({ ...user });
+  const fileInputRef = useRef(null);
 
-  const handleChange = (e) => {
+  // --- STYLE INJECTION ---
+  useEffect(() => {
+    const linkToast = document.createElement("link");
+    linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
+    linkToast.rel = "stylesheet";
+    document.head.appendChild(linkToast);
+
+    const linkFA = document.createElement("link");
+    linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
+    linkFA.rel = "stylesheet";
+    document.head.appendChild(linkFA);
+
+    return () => {
+      document.head.removeChild(linkToast);
+      document.head.removeChild(linkFA);
+    };
+  }, []);
+
+  // --- HANDLERS ---
+  const handleInputChange = (e, section = null) => {
     const { name, value } = e.target;
-    setProfile((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    if (section) {
+      setTempData(prev => ({ ...prev, [section]: { ...prev[section], [name]: value } }));
+    } else {
+      setTempData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
-  const handleSave = (e) => {
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setTempData(prev => ({ ...prev, profileImage: imageUrl }));
+      setUser(prev => ({ ...prev, profileImage: imageUrl })); // Immediate update for demo
+      toast.success("Profile picture updated!");
+    }
+  };
+
+  const handleSave = () => {
+    setUser(tempData);
+    setIsEditing(false);
+    toast.success("Profile details updated successfully!");
+  };
+
+  const handlePasswordChange = (e) => {
     e.preventDefault();
-    // You can send this to backend here
-    console.log('Updated Profile:', profile);
-    setEditMode(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    if (passwords.new !== passwords.confirm) {
+      toast.error("New passwords do not match!");
+      return;
+    }
+    toast.success("Password changed successfully!");
+    setPasswords({ current: "", new: "", confirm: "" });
+  };
+
+  const handleRequestChange = (field) => {
+    toast.info(`Request sent to Admin to update ${field}.`);
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-md mt-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold text-red-600">My Profile</h1>
-        {!editMode ? (
-          <button
-            onClick={() => setEditMode(true)}
-            className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
-          >
-            Edit
-          </button>
-        ) : null}
+    <div className="w-full max-w-6xl mx-auto space-y-6 pb-10">
+      <ToastContainer position="top-right" autoClose={3000} />
+
+      {/* --- HEADER SECTION --- */}
+      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-gray-900 to-gray-800"></div>
+        
+        <div className="relative flex flex-col md:flex-row items-end md:items-center gap-6 mt-12 px-4">
+          
+          {/* Avatar */}
+          <div className="relative group">
+            <div className="w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-200">
+              <img src={tempData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+            </div>
+            <button 
+              onClick={() => fileInputRef.current.click()}
+              className="absolute bottom-2 right-2 w-8 h-8 bg-[#FEEF75] rounded-full flex items-center justify-center text-yellow-900 shadow-sm hover:scale-110 transition-transform cursor-pointer"
+              title="Change Photo"
+            >
+              <i className="fa-solid fa-camera text-xs"></i>
+            </button>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 mb-2">
+            <h1 className="text-3xl font-black text-gray-900">{user.name}</h1>
+            <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
+              <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">#{user.id}</span>
+              <span className="flex items-center gap-1 text-green-600 font-bold">
+                <i className="fa-solid fa-circle-check"></i> {user.status}
+              </span>
+              <span>Member Since: {user.joinedDate}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 mb-2">
+            {!isEditing ? (
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors shadow-sm"
+              >
+                <i className="fa-solid fa-pen-to-square mr-2"></i> Edit Profile
+              </button>
+            ) : (
+              <>
+                <button 
+                  onClick={() => { setIsEditing(false); setTempData(user); }}
+                  className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSave}
+                  className="px-5 py-2.5 bg-[#D9F17F] text-green-900 rounded-xl text-sm font-bold hover:bg-green-300 transition-colors shadow-sm"
+                >
+                  Save Changes
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
-      {saved && (
-        <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-2 rounded mb-4">
-          ✅ Profile updated successfully!
-        </div>
-      )}
-
-      <form onSubmit={handleSave} className="space-y-5">
-        {/* Name */}
-        <div>
-          <label className="block font-medium text-gray-700">Full Name</label>
-          {editMode ? (
-            <input
-              type="text"
-              name="name"
-              value={profile.name}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded-lg"
-              required
-            />
-          ) : (
-            <p className="text-gray-800">{profile.name}</p>
-          )}
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="block font-medium text-gray-700">Email</label>
-          {editMode ? (
-            <input
-              type="email"
-              name="email"
-              value={profile.email}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded-lg"
-              required
-            />
-          ) : (
-            <p className="text-gray-800">{profile.email}</p>
-          )}
-        </div>
-
-        {/* Phone */}
-        <div>
-          <label className="block font-medium text-gray-700">Phone</label>
-          {editMode ? (
-            <input
-              type="tel"
-              name="phone"
-              value={profile.phone}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded-lg"
-              required
-            />
-          ) : (
-            <p className="text-gray-800">{profile.phone}</p>
-          )}
-        </div>
-
-        {/* Age & Gender */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block font-medium text-gray-700">Age</label>
-            {editMode ? (
-              <input
-                type="number"
-                name="age"
-                value={profile.age}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded-lg"
-                required
-              />
-            ) : (
-              <p className="text-gray-800">{profile.age}</p>
-            )}
-          </div>
-          <div>
-            <label className="block font-medium text-gray-700">Gender</label>
-            {editMode ? (
-              <select
-                name="gender"
-                value={profile.gender}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded-lg"
-                required
+      {/* --- CONTENT GRID --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* LEFT COLUMN: NAVIGATION & STATUS */}
+        <div className="space-y-6">
+          
+          {/* Navigation Tabs */}
+          <div className="bg-white rounded-3xl p-2 border border-gray-100 shadow-sm flex flex-col gap-1">
+            {[
+              { id: 'personal', label: 'Personal Details', icon: 'fa-user' },
+              { id: 'fitness', label: 'Fitness & Goals', icon: 'fa-heart-pulse' },
+              { id: 'settings', label: 'Security & Documents', icon: 'fa-shield-halved' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left ${
+                  activeTab === tab.id 
+                    ? 'bg-[#CDE7FE] text-blue-900' 
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
               >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            ) : (
-              <p className="text-gray-800">{profile.gender}</p>
-            )}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activeTab === tab.id ? 'bg-white/50' : 'bg-gray-100'}`}>
+                  <i className={`fa-solid ${tab.icon}`}></i>
+                </div>
+                {tab.label}
+              </button>
+            ))}
           </div>
+
+          {/* Membership Status Card */}
+          <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-4 opacity-5">
+                <i className="fa-solid fa-id-card text-8xl"></i>
+             </div>
+             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Membership</h3>
+             <div className="mb-4">
+                <p className="text-xs text-gray-500 mb-1">Current Plan</p>
+                <p className="text-xl font-black text-blue-600">{user.membership.plan}</p>
+             </div>
+             <div className="flex justify-between text-sm text-gray-600 mb-4 border-b border-gray-100 pb-4">
+                <div>
+                   <p className="text-xs text-gray-400">Start Date</p>
+                   <p className="font-bold">{user.membership.startDate}</p>
+                </div>
+                <div className="text-right">
+                   <p className="text-xs text-gray-400">Expiry Date</p>
+                   <p className="font-bold">{user.membership.endDate}</p>
+                </div>
+             </div>
+             <div>
+                <p className="text-xs text-gray-400 mb-2">Features Included:</p>
+                <div className="flex flex-wrap gap-2">
+                   {user.membership.features.map((f, i) => (
+                      <span key={i} className="px-2 py-1 bg-gray-50 border border-gray-200 rounded text-[10px] font-medium text-gray-600">{f}</span>
+                   ))}
+                </div>
+             </div>
+          </div>
+
+          {/* Assigned Trainer Card */}
+          <div className="bg-gradient-to-br from-[#fcfdfd] to-[#fffbeb] rounded-3xl p-6 border border-[#FEEF75] shadow-sm">
+             <h3 className="text-sm font-bold text-yellow-900 uppercase tracking-wider mb-4">Your Trainer</h3>
+             <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-full bg-[#FEEF75] flex items-center justify-center text-yellow-900 font-bold text-xl">
+                   {user.trainer.name[0]}
+                </div>
+                <div>
+                   <p className="font-bold text-gray-900">{user.trainer.name}</p>
+                   <p className="text-xs text-gray-500">{user.trainer.specialization}</p>
+                </div>
+             </div>
+             <Link to="/member/chat" className="block w-full py-2.5 bg-white border border-[#FEEF75] text-yellow-900 rounded-xl text-xs font-bold text-center hover:bg-yellow-50 transition-colors">
+                <i className="fa-regular fa-comments mr-2"></i> Chat with Trainer
+             </Link>
+          </div>
+
         </div>
 
-        {/* Save / Cancel */}
-        {editMode && (
-          <div className="flex gap-4 mt-4">
-            <button
-              type="submit"
-              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
-            >
-              Save Changes
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditMode(false)}
-              className="bg-gray-300 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
-            >
-              Cancel
-            </button>
-          </div>
-        )}
-      </form>
+        {/* RIGHT COLUMN: MAIN FORMS */}
+        <div className="lg:col-span-2">
+          
+          {/* TAB 1: PERSONAL DETAILS */}
+          {activeTab === 'personal' && (
+            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm animate-fade-in">
+               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <i className="fa-solid fa-user-pen text-[#CDE7FE]"></i> Personal Information
+               </h2>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Name (Editable) */}
+                  <div className="group">
+                     <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">Full Name</label>
+                     <input 
+                        type="text" 
+                        name="name"
+                        disabled={!isEditing}
+                        value={tempData.name}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-[#CDE7FE] focus:ring-4 focus:ring-[#CDE7FE]/20 transition-all font-medium disabled:opacity-70 disabled:cursor-not-allowed"
+                     />
+                  </div>
+
+                  {/* Email (Read Only - Admin Controlled) */}
+                  <div className="group relative">
+                     <label className="block text-xs font-bold text-gray-500 mb-2 uppercase flex justify-between">
+                        Email Address <i className="fa-solid fa-lock text-gray-300" title="Contact Admin to change"></i>
+                     </label>
+                     <input 
+                        type="email" 
+                        value={tempData.email}
+                        disabled
+                        className="w-full px-4 py-3 rounded-xl bg-gray-100 border-transparent text-gray-500 font-medium cursor-not-allowed"
+                     />
+                     {isEditing && (
+                        <button onClick={() => handleRequestChange('Email')} className="absolute top-9 right-3 text-xs text-blue-500 hover:underline">Request Change</button>
+                     )}
+                  </div>
+
+                  {/* Phone (Editable) */}
+                  <div className="group">
+                     <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">Phone Number</label>
+                     <input 
+                        type="tel" 
+                        name="phone"
+                        disabled={!isEditing}
+                        value={tempData.phone}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-[#CDE7FE] focus:ring-4 focus:ring-[#CDE7FE]/20 transition-all font-medium disabled:opacity-70"
+                     />
+                  </div>
+
+                  {/* Emergency Contact (Editable) */}
+                  <div className="group">
+                     <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">Emergency Contact</label>
+                     <input 
+                        type="tel" 
+                        name="emergencyContact"
+                        disabled={!isEditing}
+                        value={tempData.emergencyContact}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-[#CDE7FE] focus:ring-4 focus:ring-[#CDE7FE]/20 transition-all font-medium disabled:opacity-70"
+                     />
+                  </div>
+
+                  {/* Address (Editable - Full Width) */}
+                  <div className="group md:col-span-2">
+                     <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">Address</label>
+                     <textarea 
+                        name="address"
+                        rows="3"
+                        disabled={!isEditing}
+                        value={tempData.address}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-[#CDE7FE] focus:ring-4 focus:ring-[#CDE7FE]/20 transition-all font-medium disabled:opacity-70 resize-none"
+                     ></textarea>
+                  </div>
+               </div>
+            </div>
+          )}
+
+          {/* TAB 2: FITNESS INFO */}
+          {activeTab === 'fitness' && (
+            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm animate-fade-in">
+               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <i className="fa-solid fa-dumbbell text-[#D9F17F]"></i> Fitness Profile
+               </h2>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div>
+                     <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">Height (cm)</label>
+                     <input 
+                        type="number" 
+                        name="height"
+                        disabled={!isEditing}
+                        value={tempData.fitness.height}
+                        onChange={(e) => handleInputChange(e, 'fitness')}
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-[#D9F17F] focus:ring-4 focus:ring-[#D9F17F]/20 transition-all font-bold text-lg disabled:bg-gray-50"
+                     />
+                  </div>
+                  <div>
+                     <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">Weight (kg)</label>
+                     <input 
+                        type="number" 
+                        name="weight"
+                        disabled={!isEditing}
+                        value={tempData.fitness.weight}
+                        onChange={(e) => handleInputChange(e, 'fitness')}
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-[#D9F17F] focus:ring-4 focus:ring-[#D9F17F]/20 transition-all font-bold text-lg disabled:bg-gray-50"
+                     />
+                  </div>
+                  <div className="md:col-span-2">
+                     <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">Fitness Goal</label>
+                     <select 
+                        name="goal"
+                        disabled={!isEditing}
+                        value={tempData.fitness.goal}
+                        onChange={(e) => handleInputChange(e, 'fitness')}
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-[#D9F17F] focus:ring-4 focus:ring-[#D9F17F]/20 transition-all font-medium disabled:opacity-70"
+                     >
+                        <option>Weight Loss</option>
+                        <option>Muscle Gain</option>
+                        <option>Endurance</option>
+                        <option>Flexibility</option>
+                        <option>General Fitness</option>
+                     </select>
+                  </div>
+               </div>
+
+               <div className="bg-[#f8fbff] p-5 rounded-2xl border border-blue-100">
+                  <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
+                     <i className="fa-solid fa-user-doctor"></i> Trainer Notes <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded">Read Only</span>
+                  </h3>
+                  <p className="text-sm text-gray-600 italic leading-relaxed">
+                     "{user.fitness.notes}"
+                  </p>
+               </div>
+            </div>
+          )}
+
+          {/* TAB 3: SECURITY & DOCS */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6 animate-fade-in">
+               
+               {/* Change Password */}
+               <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                     <i className="fa-solid fa-lock text-[#FEEF75]"></i> Security Settings
+                  </h2>
+                  <form onSubmit={handlePasswordChange} className="space-y-4">
+                     <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2">Current Password</label>
+                        <input 
+                           type="password" 
+                           value={passwords.current}
+                           onChange={e => setPasswords({...passwords, current: e.target.value})}
+                           className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-gray-400"
+                           placeholder="••••••••"
+                        />
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                           <label className="block text-xs font-bold text-gray-500 mb-2">New Password</label>
+                           <input 
+                              type="password" 
+                              value={passwords.new}
+                              onChange={e => setPasswords({...passwords, new: e.target.value})}
+                              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-gray-400"
+                              placeholder="••••••••"
+                           />
+                        </div>
+                        <div>
+                           <label className="block text-xs font-bold text-gray-500 mb-2">Confirm Password</label>
+                           <input 
+                              type="password" 
+                              value={passwords.confirm}
+                              onChange={e => setPasswords({...passwords, confirm: e.target.value})}
+                              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-gray-400"
+                              placeholder="••••••••"
+                           />
+                        </div>
+                     </div>
+                     <button type="submit" className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors">
+                        Update Password
+                     </button>
+                  </form>
+               </div>
+
+               {/* Documents */}
+               <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                     <i className="fa-solid fa-file-shield text-gray-400"></i> Documents
+                  </h2>
+                  <div className="space-y-4">
+                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200 border-dashed">
+                        <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-red-500 shadow-sm">
+                              <i className="fa-solid fa-file-medical"></i>
+                           </div>
+                           <div>
+                              <p className="text-sm font-bold text-gray-900">Medical Certificate</p>
+                              <p className="text-xs text-gray-500">Uploaded on Jan 15, 2024</p>
+                           </div>
+                        </div>
+                        <button className="text-xs font-bold text-blue-600 hover:underline">View</button>
+                     </div>
+
+                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200 border-dashed">
+                        <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-gray-500 shadow-sm">
+                              <i className="fa-solid fa-id-card"></i>
+                           </div>
+                           <div>
+                              <p className="text-sm font-bold text-gray-900">ID Proof (Aadhar/Passport)</p>
+                              <p className="text-xs text-gray-500">Verified by Admin</p>
+                           </div>
+                        </div>
+                        <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">Verified</span>
+                     </div>
+
+                     <button className="w-full py-3 border-2 border-dashed border-gray-300 rounded-2xl text-gray-500 font-bold text-sm hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-center gap-2">
+                        <i className="fa-solid fa-cloud-arrow-up"></i> Upload New Document
+                     </button>
+                  </div>
+               </div>
+
+            </div>
+          )}
+
+        </div>
+      </div>
     </div>
   );
 };

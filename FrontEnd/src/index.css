@@ -1,1 +1,42 @@
 @import "tailwindcss";
+
+/* --- GLOBAL CUSTOM SCROLLBAR --- */
+
+/* Width and Height */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px; /* For horizontal scrollbars */
+}
+
+/* Track (Background) */
+::-webkit-scrollbar-track {
+  background: #f8fafc; /* Very light gray/slate-50 to blend in */
+  border-radius: 4px;
+}
+
+/* Handle (Thumb) */
+::-webkit-scrollbar-thumb {
+  background: #CDE7FE; /* Brand Light Blue */
+  border-radius: 10px;
+  border: 2px solid #f8fafc; /* Creates a padding effect around the thumb */
+}
+
+/* Handle on Hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #D9F17F; /* Brand Lime/Green */
+}
+
+/* Firefox Support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #CDE7FE #f8fafc;
+}
+
+/* Optional: Hide scrollbar for specific utility class if needed */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
