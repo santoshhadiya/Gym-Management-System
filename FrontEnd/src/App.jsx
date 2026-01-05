@@ -65,6 +65,7 @@ import Registration from './components/all/Registration'
 import PlansAnalysis from './components/Analysis/PlansAnalysis'
 import MemberPayments from './pages/admin/MemberPayments'
 import PlansMembers from './pages/member/PlansMembers'
+import AssignedMembers from './pages/trainer/AssignedMembers'
 
 const App = () => {
   return (
@@ -104,7 +105,7 @@ const App = () => {
         <Route path="trainer" element={<TrainerLayout />}>
           <Route index element={<Dashboard_Trainer />} />
           <Route path="profile" element={<Profile_Trainer />} />
-          <Route path="members" element={<Members />} />
+          <Route path="members" element={<AssignedMembers/>} />
           <Route path="workout-diet" element={<ManageWorkoutDiet />} />
           <Route path="monitor-progress" element={<MonitorProgress />} />
           <Route path="feedbacks" element={<Feedbacks />} />
