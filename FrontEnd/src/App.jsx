@@ -133,7 +133,7 @@ const App = () => {
           <Route path="dietPlans" element={<DietPlans />} />
         </Route>
        
-        <Route path="visitor" element={<VisitorLayout />}>
+        <Route path="/" element={<VisitorLayout />}>
           <Route index element={<Home />} /> {/* /visitor */}
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
