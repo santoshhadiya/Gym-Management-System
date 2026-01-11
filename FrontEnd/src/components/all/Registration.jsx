@@ -23,7 +23,7 @@ const RegisterPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -35,13 +35,36 @@ const RegisterPage = () => {
 
     setLoading(true);
 
-    // Simulate API Registration
-    setTimeout(() => {
-      console.log("Registered:", { ...formData, role });
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+          role: role // Sending the selected role
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Registration successful
+        alert("Registration Successful! Please login.");
+        navigate("/login");
+      } else {
+        setError(data.message || "Registration failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Registration Error:", err);
+      setError("Server error. Please try again later.");
+    } finally {
       setLoading(false);
-      // Redirect to Login after successful registration
-      navigate("/");
-    }, 1500);
+    }
   };
 
   return (
@@ -63,7 +86,7 @@ const RegisterPage = () => {
 
         </div>
         <div>
-          {/* Role Selector (Optional for Registration) */}
+          {/* Role Selector */}
           <div className="flex justify-between gap-3 mb-6">
             {['trainer', 'member', 'admin'].map((r) => (
               <button
@@ -117,9 +140,23 @@ const RegisterPage = () => {
                     required
                   />
                 </div>
+                
+                 {/* Phone */}
+                 <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="tel"
+                    name="phone"
+                    className="w-full bg-[#f1f4f9] border border-[#dcdde1] pl-12 pr-4 py-3.5 rounded-xl focus:ring-2 focus:ring-[#FEEF75] outline-none transition placeholder-gray-400"
+                    placeholder="Phone Number"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
               </div>
 
-              <div className='gap-2 flex flex-col'>
+              <div className='gap-2 flex flex-col w-[50%]'>
                 {/* Password */}
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -162,7 +199,7 @@ const RegisterPage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-[50%] bg-[#FEEF75] cursor-pointer hover:bg-[#ffca2b] text-gray-900 font-bold py-4 rounded-full shadow-md transition-all active:scale-[0.98] mt-2"
+                className="w-[50%] bg-[#FEEF75] cursor-pointer hover:bg-[#ffca2b] text-gray-900 font-bold py-4 rounded-full shadow-md transition-all active:scale-[0.98] mt-2 disabled:opacity-50"
               >
                 {loading ? "Creating Account..." : "Register"}
               </button>
