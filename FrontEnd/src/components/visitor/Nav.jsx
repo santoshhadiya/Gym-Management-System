@@ -32,13 +32,13 @@ const Nav = () => {
   }, [location]);
 
   const navLinks = [
-    { name: "Home", path: "/visitor" },
-    { name: "About", path: "/visitor/about" },
-    { name: "Services", path: "/visitor/services" },
-    { name: "Trainers", path: "/visitor/trainers" },
-    { name: "Plans", path: "/visitor/plans" },
-    { name: "Gallery", path: "/visitor/gallery" },
-    { name: "Contact", path: "/visitor/contact" },
+    { name: "Home", path: "/" },
+    { name: "About", path: "/about" },
+    { name: "Services", path: "/services" },
+    { name: "Trainers", path: "/trainers" },
+    { name: "Plans", path: "/plans" },
+    { name: "Gallery", path: "/gallery" },
+    { name: "Contact", path: "/contact" },
   ];
 
   return (
@@ -53,7 +53,7 @@ const Nav = () => {
         <div className="container mx-auto px-6 flex justify-between items-center">
           
           {/* --- LOGO --- */}
-          <Link to="/visitor" className="flex items-center gap-3 group">
+          <Link to="" className="flex items-center gap-3 group">
             <div className="relative w-10 h-10 flex items-center justify-center">
                <div className="absolute inset-0 bg-[#D9F17F] rounded-xl rotate-6 group-hover:rotate-12 transition-transform"></div>
                <img src={logo} alt="Logo" className="relative w-8 h-8 object-contain z-10" />
@@ -86,7 +86,7 @@ const Nav = () => {
           {/* --- DESKTOP ACTIONS --- */}
           <div className="hidden xl:flex items-center gap-4">
             <Link 
-              to="/visitor/offers" 
+              to="/offers" 
               className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-red-600 transition-colors"
             >
               <div className="w-8 h-8 rounded-full bg-[#FEEF75] flex items-center justify-center text-yellow-900">
@@ -101,7 +101,7 @@ const Nav = () => {
               Log In
             </Link>
 
-            <Link to="/visitor/plans">
+            <Link to="/plans">
               <button className="px-6 py-2.5 bg-gray-900 text-white rounded-full text-sm font-bold hover:bg-red-600 transition-all shadow-lg hover:shadow-red-600/30 transform hover:-translate-y-0.5">
                 Join Now
               </button>
@@ -159,7 +159,7 @@ const Nav = () => {
             </ul>
 
             <div className="mt-6 pt-6 border-t border-gray-100 space-y-4">
-               <Link to="/visitor/offers" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#FEEF75]/20 text-yellow-900 font-bold hover:bg-[#FEEF75]/40 transition-colors">
+               <Link to="/offers" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#FEEF75]/20 text-yellow-900 font-bold hover:bg-[#FEEF75]/40 transition-colors">
                   <i className="fa-solid fa-gift text-yellow-600"></i> View Offers
                </Link>
                
@@ -170,7 +170,7 @@ const Nav = () => {
           </div>
 
           <div className="mt-auto pt-6">
-            <Link to="/visitor/plans">
+            <Link to="/plans">
               <button className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-red-600 transition-colors shadow-lg">
                 Become a Member
               </button>
