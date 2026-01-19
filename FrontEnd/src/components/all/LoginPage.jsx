@@ -14,11 +14,12 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { user, setUser } = useGlobalContext()
-  // Inject Font Awesome for the logo icon
 
   useEffect(() => {
-    console.log(user?.name)
-  }, [user])
+    if (user) {
+      navigate(`/${user.role}`, { replace: true });
+    }
+  }, [])
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -74,7 +75,7 @@ const LoginPage = () => {
             trainer: "/trainer",
             member: "/member",
           };
-          navigate(routes[backendRole] || "/");
+          navigate(routes[backendRole] || "/", { replace: true });
         } else {
           // Mismatch: User is valid, but selected wrong role tab
           setError(`Access denied. You are registered as a ${backendRole}, not a ${role}.`);

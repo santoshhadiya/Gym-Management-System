@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useGlobalContext } from '../../context/GlobalContext';
 
 // --- INTERNAL COMPONENT: TRAINER NAVIGATION (Top Bar) ---
 const Nav_Trainer = ({ onMenuClick }) => {
   return (
     <section className="w-full bg-white rounded-3xl px-6 py-4 mb-6 shadow-sm border border-gray-100 transition-all duration-300">
       <div className="flex items-center justify-between">
-        
+
         {/* Left: Greeting & Mobile Toggle */}
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={onMenuClick}
             className="lg:hidden w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:text-yellow-600 transition-colors cursor-pointer"
           >
             <i className="fa-solid fa-bars"></i>
           </button>
-          
+
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               Hello, Coach! <span className="inline-block animate-pulse">💪</span>
@@ -26,7 +27,7 @@ const Nav_Trainer = ({ onMenuClick }) => {
 
         {/* Right: Search & Actions */}
         <div className="flex items-center gap-3 md:gap-5">
-          
+
           {/* Search Box (Hidden on mobile) */}
           <div className="relative hidden md:block">
             <input
@@ -47,13 +48,13 @@ const Nav_Trainer = ({ onMenuClick }) => {
 
           {/* Profile */}
           <div className="flex items-center gap-3 cursor-pointer group pl-2 border-l border-gray-100">
-             <div className="text-right hidden xl:block">
-                <p className="text-sm font-bold text-gray-900 group-hover:text-yellow-700 transition-colors">Raj Mehta</p>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Senior Trainer</p>
-             </div>
-             <div className="w-10 h-10 rounded-full bg-[#CDE7FE] flex items-center justify-center text-blue-900 font-bold border-2 border-white shadow-md group-hover:scale-105 transition-transform">
-                RM
-             </div>
+            <div className="text-right hidden xl:block">
+              <p className="text-sm font-bold text-gray-900 group-hover:text-yellow-700 transition-colors">Raj Mehta</p>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Senior Trainer</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-[#CDE7FE] flex items-center justify-center text-blue-900 font-bold border-2 border-white shadow-md group-hover:scale-105 transition-transform">
+              RM
+            </div>
           </div>
 
         </div>
@@ -64,6 +65,13 @@ const Nav_Trainer = ({ onMenuClick }) => {
 
 // --- INTERNAL COMPONENT: SIDEBAR ---
 const Sidebar_Trainer = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
+  const { user, setUser } = useGlobalContext()
+  const logOutTrainer = () => {
+    setUser(null);
+    localStorage.removeItem("userInfo");
+    navigate("/login", { replace: true });
+  }
   const navItems = [
     { path: '/trainer', label: 'Dashboard', icon: 'fa-table-columns' },
     { path: '/trainer/profile', label: 'My Profile', icon: 'fa-user' },
@@ -82,8 +90,8 @@ const Sidebar_Trainer = ({ isOpen, onClose }) => {
   return (
     <>
       {/* Mobile Overlay */}
-      <div 
-        className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} 
+      <div
+        className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
         onClick={onClose}
       ></div>
 
@@ -92,7 +100,7 @@ const Sidebar_Trainer = ({ isOpen, onClose }) => {
         fixed lg:static top-0 left-0 h-full w-72 bg-white border-r border-gray-100 z-50 flex flex-col transition-transform duration-300 shadow-2xl lg:shadow-none
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        
+
         {/* Logo */}
         <div className="h-24 flex items-center px-8 shrink-0">
           <div className="flex items-center gap-3">
@@ -104,7 +112,7 @@ const Sidebar_Trainer = ({ isOpen, onClose }) => {
             </span>
           </div>
           <button onClick={onClose} className="lg:hidden ml-auto text-gray-400 hover:text-gray-600">
-             <i className="fa-solid fa-xmark text-xl"></i>
+            <i className="fa-solid fa-xmark text-xl"></i>
           </button>
         </div>
 
@@ -117,14 +125,13 @@ const Sidebar_Trainer = ({ isOpen, onClose }) => {
               end={item.path === '/trainer'}
               onClick={() => onClose && window.innerWidth < 1024 && onClose()}
               className={({ isActive }) =>
-                `flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 cursor-pointer group ${
-                  isActive 
-                    ? 'bg-[#FEEF75] text-yellow-900 shadow-sm' 
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                `flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 cursor-pointer group ${isActive
+                  ? 'bg-[#FEEF75] text-yellow-900 shadow-sm'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                 }`
               }
             >
-              <div className={`w-6 text-center transition-colors ${({isActive}) => isActive ? 'text-yellow-900' : 'text-gray-400 group-hover:text-gray-600'}`}>
+              <div className={`w-6 text-center transition-colors ${({ isActive }) => isActive ? 'text-yellow-900' : 'text-gray-400 group-hover:text-gray-600'}`}>
                 <i className={`fa-solid ${item.icon}`}></i>
               </div>
               <span>{item.label}</span>
@@ -134,17 +141,18 @@ const Sidebar_Trainer = ({ isOpen, onClose }) => {
 
         {/* Quick Action Card */}
         <div className="p-5 shrink-0">
-           <div className="bg-[#fcfdfd] border border-gray-100 rounded-2xl p-4 relative overflow-hidden group hover:border-[#FEEF75] transition-colors">
-              <div className="absolute -right-4 -top-4 w-16 h-16 bg-[#FEEF75] rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
-              <h4 className="text-sm font-bold text-gray-900 relative z-10">Quick Action</h4>
-              <button className="mt-3 w-full py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-yellow-500 hover:text-white transition-colors shadow-sm cursor-pointer relative z-10 flex items-center justify-center gap-2">
-                 <i className="fa-solid fa-plus"></i> Log Session
-              </button>
-           </div>
+          <div className="bg-[#fcfdfd] border border-gray-100 rounded-2xl p-4 relative overflow-hidden group hover:border-[#FEEF75] transition-colors">
+            <div className="absolute -right-4 -top-4 w-16 h-16 bg-[#FEEF75] rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+            <h4 className="text-sm font-bold text-gray-900 relative z-10">Quick Action</h4>
+            <button className="mt-3 w-full py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-yellow-500 hover:text-white transition-colors shadow-sm cursor-pointer relative z-10 flex items-center justify-center gap-2">
+              <i className="fa-solid fa-plus"></i> Log Session
+            </button>
+          </div>
 
-           <button className="mt-4 w-full flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer">
-              <i className="fa-solid fa-right-from-bracket"></i> Logout
-           </button>
+          <button className="mt-4 w-full flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            onClick={logOutTrainer}>
+            <i className="fa-solid fa-right-from-bracket"></i> Logout
+          </button>
         </div>
 
       </aside>
@@ -176,7 +184,7 @@ const TrainerLayout = () => {
 
   return (
     <div className="flex min-h-screen bg-[#fafafa] font-sans text-gray-800">
-      
+
       {/* Scrollbar Styles */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
@@ -191,14 +199,14 @@ const TrainerLayout = () => {
       {/* Main Content Area */}
       <main className="flex-1  overflow-y-auto bg-[#fafafa] custom-scrollbar relative">
         <div className="p-6 md:p-8 max-w-[1600px] mx-auto">
-            
-            {/* Top Navigation Bar */}
-            <Nav_Trainer onMenuClick={() => setIsMobileMenuOpen(true)} />
-            
-            {/* Page Content */}
-            <div className="mt-6 animate-fade-in-up">
-                <Outlet />
-            </div>
+
+          {/* Top Navigation Bar */}
+          <Nav_Trainer onMenuClick={() => setIsMobileMenuOpen(true)} />
+
+          {/* Page Content */}
+          <div className="mt-6 animate-fade-in-up">
+            <Outlet />
+          </div>
 
         </div>
       </main>

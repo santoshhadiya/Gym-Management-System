@@ -68,6 +68,7 @@ import PlansMembers from './pages/member/PlansMembers'
 import AssignedMembers from './pages/trainer/AssignedMembers'
 import { useGlobalContext } from './context/GlobalContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import ScrollToTop from './components/ScrollToTop'
 
 const App = () => {
   const { user } = useGlobalContext()
@@ -75,7 +76,7 @@ const App = () => {
 
     <BrowserRouter>
       {/* <div>hello</div> */}
-
+     <ScrollToTop/>
       <Routes>
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<Registration />} />
