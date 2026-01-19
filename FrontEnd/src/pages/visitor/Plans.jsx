@@ -136,7 +136,7 @@ const Plans = () => {
                   ))}
                 </ul>
 
-                <Link to="/visitor/contact" className="block">
+                <Link to="/contact" className="block">
                   <button className={`w-full py-4 rounded-xl font-bold text-sm transition-all shadow-md ${plan.buttonColor}`}>
                     Choose Plan
                   </button>
@@ -186,7 +186,7 @@ const Plans = () => {
               <p className="text-gray-400 mb-8">
                 Our team is happy to help you find the perfect plan for your goals.
               </p>
-              <Link to="/visitor/contact">
+              <Link to="/contact">
                 <button className="px-10 py-4 bg-[#D9F17F] text-green-900 rounded-full font-bold text-sm hover:bg-green-400 transition-all shadow-lg transform hover:scale-105">
                   Contact Support
                 </button>
