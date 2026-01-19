@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import logo from "../../assets/logo.png"; // Commented out to fix build error
-
+import logo from "../../assets/logo.png";
+import { useContext } from 'react';
+import { GlobalProvider, useGlobalContext } from '../../context/GlobalContext';
 const LoginPage = () => {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("member"); // default to member
+  const [role, setRole] = useState("member"); // default UI selection
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // Add error state
-
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-
+  const { user, setUser } = useGlobalContext()
   // Inject Font Awesome for the logo icon
+
+  useEffect(() => {
+    console.log(user?.name)
+  }, [user])
+
   useEffect(() => {
     const link = document.createElement("link");
     link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
@@ -27,11 +33,18 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
+    // 1. Basic Validation
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter both email and password.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      // API Call to Backend
+      // 2. API Call
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: {
@@ -43,25 +56,39 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Save user info & token
-        localStorage.setItem("userInfo", JSON.stringify(data));
+        // 3. Role Validation
+        const backendRole = data.role; // Role from DB ('member', 'admin', 'trainer')
+        setUser({
+          name: data.name,
+          role: data.role,
+          email: data.email,
+          id: data._id
+        })
+        // Normalize for comparison (in case backend sends 'Member' vs 'member')
+        if (role.toLowerCase() === backendRole.toLowerCase()) {
+          // Success: Store data and Redirect
+          localStorage.setItem("userInfo", JSON.stringify(data));
 
-        // Use role from backend, or fallback to selected role
-        const userRole = data.role || role;
+          const routes = {
+            admin: "/admin",
+            trainer: "/trainer",
+            member: "/member",
+          };
+          navigate(routes[backendRole] || "/");
+        } else {
+          // Mismatch: User is valid, but selected wrong role tab
+          setError(`Access denied. You are registered as a ${backendRole}, not a ${role}.`);
+          // Optional: You could auto-switch them, but 'proper login' implies enforcing the choice.
+        }
 
-        const routes = {
-          admin: "/admin",
-          trainer: "/trainer",
-          member: "/member",
-        };
-        navigate(routes[userRole] || "/");
       } else {
-        setError(data.message || "Invalid credentials. Please try again.");
+        // 4. API Error Handling
+        setError(data.message || "Invalid email or password.");
       }
     } catch (err) {
+      // 5. Network/Server Error Handling
       console.error("Login Error:", err);
-      // Fallback for dev/demo if backend is offline, remove in prod
-      setError("Server unreachable. Check backend connection.");
+      setError("Unable to connect to the server. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -72,13 +99,13 @@ const LoginPage = () => {
       <div className="bg-white p-8 flex flex-col md:flex-row rounded-[2rem] shadow-xl w-full max-w-4xl gap-10 text-center h-fit items-center justify-center">
 
         <div className='flex flex-col items-center justify-center w-full md:w-1/2'>
-          {/* Logo Section - Fixed */}
+          {/* Logo Section */}
           <div className="flex justify-center mb-6">
-             <img src={logo} className='h-40'/>
+            <img src={logo} className='h-40' />
           </div>
 
           <h2 className="text-3xl font-black text-gray-800 mb-2">Welcome Back!</h2>
-          <p className="text-gray-500 text-sm mb-8">Please sign in to your Songar's GYM account.</p>
+          <p className="text-gray-500 text-sm mb-8">Please sign in to your Songar's GYM account. </p>
         </div>
 
         <div className="w-full md:w-1/2">
@@ -88,7 +115,7 @@ const LoginPage = () => {
               <button
                 key={r}
                 type="button"
-                onClick={() => setRole(r)}
+                onClick={() => { setRole(r); setError(""); }}
                 className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${role === r
                   ? 'bg-[#FEEF75] text-gray-900 shadow-sm'
                   : 'text-gray-400 hover:text-gray-600 hover:bg-white'
@@ -99,10 +126,11 @@ const LoginPage = () => {
             ))}
           </div>
 
-          {/* Error Message */}
+          {/* Error Display */}
           {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
-              <i className="fa-solid fa-circle-exclamation"></i> {error}
+            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold flex items-center gap-2">
+              <i className="fa-solid fa-circle-exclamation"></i>
+              {error}
             </div>
           )}
 
@@ -144,12 +172,12 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#D9F17F] hover:bg-[#cbf056] text-green-900 font-black py-4 rounded-xl shadow-lg hover:shadow-green-500/20 transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+              className="w-full bg-[#FEEF75] hover:bg-[#ffca2b] text-black font-black py-4 rounded-xl shadow-lg hover:shadow-green-500/20 transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed mt-2 flex justify-center items-center gap-2"
             >
               {loading ? (
-                <span className="flex items-center justify-center gap-2">
+                <>
                   <i className="fa-solid fa-circle-notch fa-spin"></i> Signing In...
-                </span>
+                </>
               ) : "Login to Dashboard"}
             </button>
           </form>
@@ -159,7 +187,7 @@ const LoginPage = () => {
               Forgot Password?
             </button>
             <p className="text-gray-500">
-              Don't have an account? <button onClick={() => navigate("/register")} className="font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">Register Now</button>
+              Don't have an account? <button onClick={() => navigate("/register")} className="font-bold text-black cursor-pointer hover:underline transition-colors">Register Now</button>
             </p>
           </div>
         </div>

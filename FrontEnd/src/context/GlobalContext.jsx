@@ -7,7 +7,7 @@ const GlobalContext = createContext();
 // 2. Create the Provider Component
 export const GlobalProvider = ({ children }) => {
   // --- State Definitions ---
-  const [user, setUser] = useState(null); // { name, role, email, etc. }
+  const [user, setUser] = useState( JSON.parse(localStorage.getItem("userInfo")) || null); // { name, role, email, etc. }
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Initial load check
   const [theme, setTheme] = useState('light'); // Example setting
@@ -96,6 +96,7 @@ export const GlobalProvider = ({ children }) => {
   // --- Context Value ---
   const value = {
     user,
+    setUser,
     isAuthenticated,
     isLoading,
     theme,

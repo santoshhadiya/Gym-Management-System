@@ -66,73 +66,82 @@ import PlansAnalysis from './components/Analysis/PlansAnalysis'
 import MemberPayments from './pages/admin/MemberPayments'
 import PlansMembers from './pages/member/PlansMembers'
 import AssignedMembers from './pages/trainer/AssignedMembers'
+import { useGlobalContext } from './context/GlobalContext'
+import ProtectedRoute from './components/ProtectedRoute'
 
 const App = () => {
+  const { user } = useGlobalContext()
   return (
 
     <BrowserRouter>
       {/* <div>hello</div> */}
-      
+
       <Routes>
-        <Route path="login" element={<LoginPage/>} />
-        <Route path="register" element={<Registration/>} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<Registration />} />
 
-        <Route path="admin" element={<AdminLayout />}>
-          <Route index element={<Dashboard_Admin />} />
-          <Route path="members" element={<ManageMember />} />
-          <Route path="trainers" element={<ManageTrainer />} />
-          <Route path="payments" element={<MemberPayments />} />
-          <Route path="payment-history" element={<PaymentHistory />} />
-          <Route path="membership-plans" element={<MembershipPlan />} />
-          <Route path="membership-plans-analysis" element={<PlansAnalysis/>} />
-          <Route path="assign-trainers" element={<AssignTrainers />} />
-          <Route path="performance-reports" element={<PerformanceReport_admin />} />
-          <Route path="staff-schedules" element={<StaffSchedules />} />
-          <Route path="verify-accounts" element={<VerifyAccounts />} />
-          <Route path="bookings" element={<ManageBooking />} />
-          <Route path="announcements" element={<Announcements />} />
-          <Route path="financial-reports" element={<FinancialReports />} />
-          <Route path="media-gallery" element={<MediaGallery />} />
-          <Route path="offers" element={<ManageOffers />} />
-          <Route path="equipment-tracking" element={<EquipmentTracking />} />
-          <Route path="monitor-progress" element={<MonitorProgress_admin />} />
-          <Route path="chat-members" element={<ChatWithMember_admin />} />
-          <Route path="chat-trainers" element={<ChatWithTrainer />} />
-          <Route path="feedbacks" element={<Feedbacks_admin />} />
-          <Route path="update-session" element={<UpdateSessions />} />
+        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route path="admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard_Admin />} />
+            <Route path="members" element={<ManageMember />} />
+            <Route path="trainers" element={<ManageTrainer />} />
+            <Route path="payments" element={<MemberPayments />} />
+            <Route path="payment-history" element={<PaymentHistory />} />
+            <Route path="membership-plans" element={<MembershipPlan />} />
+            <Route path="membership-plans-analysis" element={<PlansAnalysis />} />
+            <Route path="assign-trainers" element={<AssignTrainers />} />
+            <Route path="performance-reports" element={<PerformanceReport_admin />} />
+            <Route path="staff-schedules" element={<StaffSchedules />} />
+            <Route path="verify-accounts" element={<VerifyAccounts />} />
+            <Route path="bookings" element={<ManageBooking />} />
+            <Route path="announcements" element={<Announcements />} />
+            <Route path="financial-reports" element={<FinancialReports />} />
+            <Route path="media-gallery" element={<MediaGallery />} />
+            <Route path="offers" element={<ManageOffers />} />
+            <Route path="equipment-tracking" element={<EquipmentTracking />} />
+            <Route path="monitor-progress" element={<MonitorProgress_admin />} />
+            <Route path="chat-members" element={<ChatWithMember_admin />} />
+            <Route path="chat-trainers" element={<ChatWithTrainer />} />
+            <Route path="feedbacks" element={<Feedbacks_admin />} />
+            <Route path="update-session" element={<UpdateSessions />} />
+          </Route>
         </Route>
 
-        <Route path="trainer" element={<TrainerLayout />}>
-          <Route index element={<Dashboard_Trainer />} />
-          <Route path="profile" element={<Profile_Trainer />} />
-          <Route path="members" element={<AssignedMembers/>} />
-          <Route path="workout-diet" element={<ManageWorkoutDiet />} />
-          <Route path="monitor-progress" element={<MonitorProgress />} />
-          <Route path="feedbacks" element={<Feedbacks />} />
-          <Route path="session-reports" element={<SessionReports />} />
-          <Route path="performance-reports" element={<PerformanceReport />} />
-          <Route path="availability" element={<Availability />} />
-          <Route path="payments" element={<MemberPayments />} />
-          <Route path="chat/member" element={<ChatWithMember />} />
-          <Route path="chat/owner" element={<ChatWithOwner />} />
+        <Route element={<ProtectedRoute allowedRoles={["trainer"]} />}>
+          <Route path="trainer" element={<TrainerLayout />}>
+            <Route index element={<Dashboard_Trainer />} />
+            <Route path="profile" element={<Profile_Trainer />} />
+            <Route path="members" element={<AssignedMembers />} />
+            <Route path="workout-diet" element={<ManageWorkoutDiet />} />
+            <Route path="monitor-progress" element={<MonitorProgress />} />
+            <Route path="feedbacks" element={<Feedbacks />} />
+            <Route path="session-reports" element={<SessionReports />} />
+            <Route path="performance-reports" element={<PerformanceReport />} />
+            <Route path="availability" element={<Availability />} />
+            <Route path="payments" element={<MemberPayments />} />
+            <Route path="chat/member" element={<ChatWithMember />} />
+            <Route path="chat/owner" element={<ChatWithOwner />} />
+          </Route>
         </Route>
 
-        <Route path="member" element={<MemberLayout />}>
-          <Route index element={<Dashboard />} /> {/* /member */}
-          <Route path="profile" element={<Profile />} />
-          <Route path="membership" element={<Membership />} />
-          <Route path="plans" element={<PlansMembers/>} />
-          <Route path="progress" element={<Progress />} />
-          <Route path="booking" element={<Booking />} />
-          <Route path="chat" element={<Chat />} />
-          <Route path="feedback" element={<Feedback />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="invoices" element={<Invoices />} />
-          <Route path="renew" element={<Renew />} />
-          <Route path="workout" element={<Workout />} />
-          <Route path="dietPlans" element={<DietPlans />} />
+        <Route element={<ProtectedRoute allowedRoles={["member"]} />}>
+          <Route path="member" element={<MemberLayout />}>
+            <Route index element={<Dashboard />} /> {/* /member */}
+            <Route path="profile" element={<Profile />} />
+            <Route path="membership" element={<Membership />} />
+            <Route path="plans" element={<PlansMembers />} />
+            <Route path="progress" element={<Progress />} />
+            <Route path="booking" element={<Booking />} />
+            <Route path="chat" element={<Chat />} />
+            <Route path="feedback" element={<Feedback />} />
+            <Route path="payment" element={<Payment />} />
+            <Route path="invoices" element={<Invoices />} />
+            <Route path="renew" element={<Renew />} />
+            <Route path="workout" element={<Workout />} />
+            <Route path="dietPlans" element={<DietPlans />} />
+          </Route>
         </Route>
-       
+
         <Route path="/" element={<VisitorLayout />}>
           <Route index element={<Home />} /> {/* /visitor */}
           <Route path="about" element={<About />} />
@@ -142,7 +151,7 @@ const App = () => {
           <Route path="services" element={<Services />} />
           <Route path="trainers" element={<Trainers />} />
           <Route path="plans" element={<Plans />} />
-          <Route path="inquiry" element={<Inquiry />} />  
+          <Route path="inquiry" element={<Inquiry />} />
           <Route path="policies" element={<Policies />} />
           <Route path="reviews" element={<Reviews />} />
         </Route>

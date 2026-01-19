@@ -1,10 +1,10 @@
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
+const User = require("../models/User");
+const jwt = require("jsonwebtoken");
 
 // Generate JWT
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'secret', {
-    expiresIn: '30d',
+  return jwt.sign({ id }, process.env.JWT_SECRET || "secret", {
+    expiresIn: "30d",
   });
 };
 
@@ -12,13 +12,13 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 // @access  Public
 exports.registerUser = async (req, res) => {
-  const { name, email, password, phone } = req.body;
+  const { name, email, password, phone, role } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     // Default role is 'member' for public registration
@@ -27,8 +27,8 @@ exports.registerUser = async (req, res) => {
       email,
       password,
       phone,
-      role: 'member',
-      status: 'Pending' // Requires Admin Approval
+      role,
+      status: "Active", // Requires Admin Approval
     });
 
     if (user) {
@@ -40,7 +40,7 @@ exports.registerUser = async (req, res) => {
         token: generateToken(user._id),
       });
     } else {
-      res.status(400).json({ message: 'Invalid user data' });
+      res.status(400).json({ message: "Invalid user data" });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -55,13 +55,16 @@ exports.loginUser = async (req, res) => {
 
   try {
     // Check for user email
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
 
     if (user && (await user.matchPassword(password))) {
-      
       // Check if active
-      if (user.status !== 'Active') {
-         return res.status(401).json({ message: `Account is ${user.status}. Please contact admin.` });
+      if (user.status !== "Active") {
+        return res
+          .status(401)
+          .json({
+            message: `Account is ${user.status}. Please contact admin.`,
+          });
       }
 
       res.json({
@@ -72,7 +75,7 @@ exports.loginUser = async (req, res) => {
         token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(401).json({ message: "Invalid email or password" });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
