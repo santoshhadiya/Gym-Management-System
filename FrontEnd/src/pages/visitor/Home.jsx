@@ -44,12 +44,12 @@ const Home = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <Link to="/visitor/plans">
+              <Link to="/plans">
                 <button className="w-full sm:w-auto px-8 py-4 bg-[#FEEF75] text-yellow-900 rounded-full font-bold text-sm hover:bg-yellow-300 transition-all transform hover:scale-105 shadow-lg shadow-yellow-500/20">
                   View Memberships
                 </button>
               </Link>
-              <Link to="/visitor/contact">
+              <Link to="/contact">
                 <button className="w-full sm:w-auto px-8 py-4 bg-white/10 backdrop-blur-md border border-white/30 text-white rounded-full font-bold text-sm hover:bg-white/20 transition-all">
                   Book a Free Trial
                 </button>
@@ -136,7 +136,7 @@ const Home = () => {
               <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">Explore Programs</h2>
               <p className="text-gray-500">Find the training style that fits your goals.</p>
             </div>
-            <Link to="/visitor/services">
+            <Link to="/services">
               <button className="hidden md:block text-blue-600 font-bold hover:underline">See All Programs <i className="fa-solid fa-arrow-right ml-1"></i></button>
             </Link>
           </div>
@@ -213,12 +213,12 @@ const Home = () => {
                 Your future self is waiting. Don't let another day pass without taking action.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/visitor/contact">
+                <Link to="/contact">
                   <button className="px-10 py-4 bg-[#D9F17F] text-green-900 rounded-full font-bold text-sm hover:bg-green-400 transition-all shadow-lg transform hover:scale-105">
                     Start Your Journey
                   </button>
                 </Link>
-                <Link to="/visitor/plans">
+                <Link to="/plans">
                   <button className="px-10 py-4 bg-transparent border border-gray-600 text-white rounded-full font-bold text-sm hover:bg-white/10 transition-all">
                     View Plans
                   </button>
