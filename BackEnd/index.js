@@ -1,31 +1,35 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const connectDB = require('./config/db'); 
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const connectDB = require("./config/db");
+const planRoutes = require("./routes/planRoutes");
+const userRoutes = require('./routes/userRoutes');
 
 dotenv.config();
 connectDB(); // Connect with my database
 
 const app = express();
 
-// middlewares 
+// middlewares
 app.use(cors());
 
 // Body parser to handle JSON data
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Route Imports 
-const authRoutes = require('./routes/authRoutes');
-const adminRoutes = require('./routes/adminRoutes');
+// Route Imports
+const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 // --- Mount Routes ---
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use('/api/plans', planRoutes);
+app.use('/api/users', userRoutes);
 
 // --- Base Route for API Health Check ---
-app.get('/', (req, res) => {
-  res.send('Gym Management API is running...');
+app.get("/", (req, res) => {
+  res.send("Gym Management API is running...");
 });
 
 // --- Error Handling Middleware ---
@@ -34,7 +38,7 @@ app.use((err, req, res, next) => {
   res.status(statusCode);
   res.json({
     message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+    stack: process.env.NODE_ENV === "production" ? null : err.stack,
   });
 });
 

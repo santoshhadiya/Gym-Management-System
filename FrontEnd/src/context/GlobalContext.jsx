@@ -7,7 +7,7 @@ const GlobalContext = createContext();
 // 2. Create the Provider Component
 export const GlobalProvider = ({ children }) => {
   // --- State Definitions ---
-  const [user, setUser] = useState( JSON.parse(localStorage.getItem("userInfo")) || null); // { name, role, email, etc. }
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("userInfo")) || null); // { name, role, email, etc. }
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Initial load check
   const [theme, setTheme] = useState('light'); // Example setting
@@ -23,9 +23,9 @@ export const GlobalProvider = ({ children }) => {
       if (token && storedUser) {
         try {
           // Optional: Verify token validity with a /me endpoint
-           const { data } = await api.get('/auth/me'); 
-           setUser(data);
-           setIsAuthenticated(true);
+          const { data } = await api.get('/auth/me');
+          setUser(data);
+          setIsAuthenticated(true);
         } catch (error) {
           console.error("Token verification failed", error);
           logout(); // Clear invalid data
@@ -38,24 +38,24 @@ export const GlobalProvider = ({ children }) => {
   }, []);
 
   // --- Actions ---
-  
+
   // Login Action
   const login = async (email, password) => {
     try {
       const { data } = await api.post('/auth/login', { email, password });
-      
+
       setUser(data); // Assuming backend returns user object inside data
       setIsAuthenticated(true);
-      
+
       localStorage.setItem('gymUser', JSON.stringify(data));
       localStorage.setItem('gymToken', data.token); // Assuming token is in data.token
-      
+
       return { success: true };
     } catch (error) {
       console.error("Login failed", error.response?.data?.message || error.message);
-      return { 
-        success: false, 
-        message: error.response?.data?.message || "Login failed. Please try again." 
+      return {
+        success: false,
+        message: error.response?.data?.message || "Login failed. Please try again."
       };
     }
   };
@@ -81,7 +81,7 @@ export const GlobalProvider = ({ children }) => {
 
       // Send to backend
       await api.put('/users/profile', updates);
-      
+
     } catch (error) {
       console.error("Update failed", error);
       // Revert or show error notification logic here
@@ -92,7 +92,7 @@ export const GlobalProvider = ({ children }) => {
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
-
+  const BACKEND_URL = "http://localhost:5000";
   // --- Context Value ---
   const value = {
     user,
@@ -104,6 +104,7 @@ export const GlobalProvider = ({ children }) => {
     logout,
     updateUser,
     toggleTheme,
+    BACKEND_URL,
     api, // Expose axios instance for use in other components
   };
 

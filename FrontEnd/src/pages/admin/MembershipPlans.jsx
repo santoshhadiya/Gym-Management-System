@@ -1,79 +1,60 @@
-import React, { useState } from "react";
-import PlansAnalysis from "../../components/Analysis/PlansAnalysis";
+import React, { useState, useEffect } from "react";
+import PlansAnalysis from "../../components/Analysis/PlansAnalysis"; 
+import { useGlobalContext } from "../../context/GlobalContext"; 
 
 const MembershipPlans = () => {
-  // --- MOCK DATA ---
-  const [plans, setPlans] = useState([
-    {
-      id: 1,
-      name: "Basic Monthly",
-      duration: 30, // in days
-      durationLabel: "1 Month",
-      price: 1500,
-      originalPrice: 2000,
-      discount: 25,
-      accessLevel: "Gym Only",
-      features: ["Gym Access", "Locker Room", "Free Wi-Fi"],
-      description: "Perfect for beginners getting started with fitness.",
-      status: "Active",
-      createdDate: "2023-01-10",
-      analytics: { enrolled: 120, revenue: 180000, popular: false }
-    },
-    {
-      id: 2,
-      name: "Quarterly Pro",
-      duration: 90,
-      durationLabel: "3 Months",
-      price: 4000,
-      originalPrice: 4500,
-      discount: 11,
-      accessLevel: "Gym + Group",
-      features: ["All Basic Benefits", "Group Classes", "Diet Consultation"],
-      description: "Commit to a season of change with extra perks.",
-      status: "Active",
-      createdDate: "2023-03-15",
-      analytics: { enrolled: 85, revenue: 340000, popular: true }
-    },
-    {
-      id: 3,
-      name: "Yearly Elite",
-      duration: 365,
-      durationLabel: "1 Year",
-      price: 12000,
-      originalPrice: 15000,
-      discount: 20,
-      accessLevel: "All Access",
-      features: ["All Pro Benefits", "Unlimited PT Sessions", "Merchandise Pack", "Spa Access"],
-      description: "The ultimate package for serious fitness enthusiasts.",
-      status: "Active",
-      createdDate: "2022-11-20",
-      analytics: { enrolled: 45, revenue: 540000, popular: false }
-    },
-    {
-      id: 4,
-      name: "Student Saver",
-      duration: 30,
-      durationLabel: "1 Month",
-      price: 1000,
-      originalPrice: 1500,
-      discount: 33,
-      accessLevel: "Off-Peak Only",
-      features: ["Gym Access (10AM-4PM)", "Student ID Required"],
-      description: "Budget-friendly option for students.",
-      status: "Inactive",
-      createdDate: "2024-01-05",
-      analytics: { enrolled: 10, revenue: 10000, popular: false }
-    }
-  ]);
-
   // --- STATE ---
-  const [viewState, setViewState] = useState("list"); // 'list', 'form',"analysis"
+  const {BACKEND_URL}=useGlobalContext()
+  const [plans, setPlans] = useState([]); // Initialize empty, fetch from DB
+  const [loading, setLoading] = useState(true);
+  
+  const [viewState, setViewState] = useState("list"); // 'list', 'form'
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    id: null, name: "", duration: "", durationLabel: "", price: "",
-    originalPrice: "", accessLevel: "Gym Only", description: "",
-    features: "", status: "Active"
+    id: null, // Frontend ID for editing check, backend uses _id
+    _id: null, // Backend ID
+    name: "",
+    duration: "",
+    durationLabel: "",
+    price: "",
+    originalPrice: "",
+    accessLevel: "Gym Only",
+    description: "",
+    features: "",
+    status: "Active"
   });
+
+  // --- FETCH DATA ---
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const fetchPlans = async () => {
+    try {
+      setLoading(true);
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = userInfo?.token;
+
+      // we hit the admin route to see all plans including inactive plans also
+      // or public route if just viewing active. Admin panel should see all.
+      const res = await fetch(`${BACKEND_URL}/api/plans/admin`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch plans");
+
+      const data = await res.json();
+      setPlans(data);
+    } catch (error) {
+      console.error("Error fetching plans:", error);
+      // Fallback to mock data if backend fails/not ready? 
+      // setPlans(MOCK_DATA); 
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // --- HELPERS ---
   const getStatusColor = (status) => {
@@ -90,7 +71,7 @@ const MembershipPlans = () => {
   // --- CRUD OPERATIONS ---
   const handleAddClick = () => {
     setFormData({
-      id: null, name: "", duration: "", durationLabel: "", price: "",
+      id: null, _id: null, name: "", duration: "", durationLabel: "", price: "",
       originalPrice: "", accessLevel: "Gym Only", description: "",
       features: "", status: "Active"
     });
@@ -101,48 +82,106 @@ const MembershipPlans = () => {
   const handleEditClick = (plan) => {
     setFormData({
       ...plan,
-      features: plan.features.join(", ") // Convert array to string for text input
+      features: Array.isArray(plan.features) ? plan.features.join(", ") : plan.features // Handle array to string conversion
     });
     setIsEditing(true);
     setViewState("form");
   };
 
-  const handleSavePlan = (e) => {
+  const handleSavePlan = async (e) => {
     e.preventDefault();
 
     const processedFeatures = formData.features.split(",").map(f => f.trim()).filter(f => f !== "");
     const discount = calculateDiscount(Number(formData.price), Number(formData.originalPrice));
 
     const planData = {
-      ...formData,
+      name: formData.name,
       price: Number(formData.price),
       originalPrice: Number(formData.originalPrice),
       duration: Number(formData.duration),
+      durationLabel: formData.durationLabel,
+      accessLevel: formData.accessLevel,
+      description: formData.description,
       features: processedFeatures,
       discount: discount,
-      analytics: isEditing ? (plans.find(p => p.id === formData.id)?.analytics || { enrolled: 0, revenue: 0 }) : { enrolled: 0, revenue: 0, popular: false }
+      status: formData.status,
+      // Analytics usually backend calculated, but passing placeholders if schema requires
     };
 
-    if (isEditing) {
-      setPlans(plans.map(p => p.id === formData.id ? { ...p, ...planData } : p));
-    } else {
-      setPlans([...plans, { ...planData, id: Date.now(), createdDate: new Date().toISOString().split('T')[0] }]);
+    try {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = userInfo?.token;
+
+      let res;
+      if (isEditing && formData._id) {
+        // UPDATE
+        res = await fetch(`${BACKEND_URL}/api/plans/admin/${formData._id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(planData),
+        });
+      } else {
+        // CREATE
+        res = await fetch(`${BACKEND_URL}/api/plans/admin`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ ...planData, durationInDays: Number(formData.duration) }), // Ensure durationInDays is sent if model requires
+        });
+      }
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to save plan");
+      }
+
+      // Refresh list
+      fetchPlans();
+      setViewState("list");
+      alert(isEditing ? "Plan Updated!" : "Plan Created!");
+
+    } catch (error) {
+      console.error("Save Error:", error);
+      alert(error.message);
     }
-    setViewState("list");
   };
 
-  const handleToggleStatus = (id) => {
-    setPlans(plans.map(p => {
-      if (p.id === id) {
-        return { ...p, status: p.status === "Active" ? "Inactive" : "Active" };
-      }
-      return p;
-    }));
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = userInfo?.token;
+      const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
+
+      const res = await fetch(`${BACKEND_URL}/api/plans/admin/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update status");
+
+      // Update local state to reflect change immediately
+      setPlans(plans.map(p => p._id === id ? { ...p, status: newStatus } : p));
+
+    } catch (error) {
+      console.error("Status Toggle Error:", error);
+      alert("Failed to update status");
+    }
   };
 
   const handleSendNotification = (planName) => {
     alert(`Promotional notification for "${planName}" sent to eligible members!`);
   };
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading Plans...</div>;
 
   return (
     <div className="w-full bg-white rounded-3xl p-8 shadow-sm border border-gray-100 font-sans min-h-screen">
@@ -150,34 +189,15 @@ const MembershipPlans = () => {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-
-
-          {
-            viewState != "list" ? (
-              <div className="flex gap-4 items-center mt-2w-fit cursor-pointer" onClick={() => setViewState("list")}>
-                <i className="fa-solid fa-arrow-left text-sm text-gray-500"></i>
-                <p className="text-sm text-gray-500  cursor-pointer" >Back</p>
-              </div>
-            ) : (
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Membership Plans</h1>
-                <p className="text-sm text-gray-500 mt-1">Manage pricing, features, and subscription offers.</p>
-              </div>)
-          }
+          <h1 className="text-2xl font-bold text-gray-900">Membership Plans</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage pricing, features, and subscription offers.</p>
         </div>
-        <div className="flex gap-4">
-          <div className="flex gap-3">
-            {viewState === "list" && (
-              <button onClick={handleAddClick} className="px-5 py-2 rounded-full bg-[#CDE7FE] text-blue-900 text-sm font-semibold hover:bg-blue-200 transition-colors shadow-sm">
-                <i className="fa-solid fa-plus mr-2"></i> Create New Plan
-              </button>
-            )}
-          </div>
-          <div>
-            <button onClick={() => setViewState('analysis')} className="px-5 py-2 rounded-full bg-[#CDE7FE] text-blue-900 text-sm font-semibold hover:bg-blue-200 transition-colors shadow-sm">
-              <i class="fa-solid fa-chart-line"></i> Analysis
+        <div className="flex gap-3">
+          {viewState === "list" && (
+            <button onClick={handleAddClick} className="px-5 py-2 rounded-full bg-[#CDE7FE] text-blue-900 text-sm font-semibold hover:bg-blue-200 transition-colors shadow-sm">
+              <i className="fa-solid fa-plus mr-2"></i> Create New Plan
             </button>
-          </div>
+          )}
         </div>
       </div>
 
@@ -186,11 +206,11 @@ const MembershipPlans = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map((plan) => (
             <div
-              key={plan.id}
+              key={plan._id || plan.id}
               className={`relative border rounded-3xl p-6 transition-all duration-300 flex flex-col group ${plan.status === 'Inactive' ? 'bg-gray-50 border-gray-200 opacity-75' : 'bg-white border-gray-100 hover:shadow-lg'}`}
             >
-              {/* Popular Badge */}
-              {plan.analytics.popular && plan.status === 'Active' && (
+              {/* Popular Badge (Mock logic for now, or from analytics field) */}
+              {plan.analytics?.popular && plan.status === 'Active' && (
                 <div className="absolute top-0 right-0 bg-[#FEEF75] text-yellow-900 text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-2xl shadow-sm z-10">
                   MOST POPULAR
                 </div>
@@ -208,7 +228,7 @@ const MembershipPlans = () => {
 
               {/* Plan Details */}
               <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
-              <p className="text-sm text-gray-500 mb-4">{plan.description}</p>
+              <p className="text-sm text-gray-500 mb-4 line-clamp-2">{plan.description}</p>
 
               {/* Pricing */}
               <div className="mb-4">
@@ -232,27 +252,27 @@ const MembershipPlans = () => {
               <div className="flex-1 mb-6 border-t border-gray-100 pt-4">
                 <p className="text-xs font-bold text-gray-400 uppercase mb-2">Features</p>
                 <ul className="space-y-2">
-                  {plan.features.slice(0, 3).map((feature, idx) => (
+                  {plan.features?.slice(0, 3).map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
                       <i className="fa-solid fa-check text-green-500 mt-0.5 text-xs"></i>
                       <span className="truncate">{feature}</span>
                     </li>
                   ))}
-                  {plan.features.length > 3 && (
+                  {plan.features?.length > 3 && (
                     <li className="text-xs text-blue-500 font-medium pl-5">+ {plan.features.length - 3} more features</li>
                   )}
                 </ul>
               </div>
 
-              {/* Analytics Mini-Dashboard */}
+              {/* Analytics Mini-Dashboard (Mocked if data missing) */}
               <div className="bg-gray-50 rounded-xl p-3 mb-4 grid grid-cols-2 gap-2 text-center border border-gray-100">
                 <div>
                   <p className="text-[10px] text-gray-500 uppercase">Enrolled</p>
-                  <p className="text-sm font-bold text-gray-800">{plan.analytics.enrolled}</p>
+                  <p className="text-sm font-bold text-gray-800">{plan.analytics?.enrolled || 0}</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-500 uppercase">Revenue/Mo</p>
-                  <p className="text-sm font-bold text-gray-800">₹{(plan.analytics.revenue / 1000).toFixed(1)}k</p>
+                  <p className="text-sm font-bold text-gray-800">₹{((plan.analytics?.revenue || 0) / 1000).toFixed(1)}k</p>
                 </div>
               </div>
 
@@ -265,7 +285,7 @@ const MembershipPlans = () => {
                   Edit
                 </button>
                 <button
-                  onClick={() => handleToggleStatus(plan.id)}
+                  onClick={() => handleToggleStatus(plan._id, plan.status)}
                   className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${plan.status === 'Active' ? 'bg-white border border-red-100 text-red-500 hover:bg-red-50' : 'bg-[#D9F17F] text-green-900 hover:bg-green-300'}`}
                 >
                   {plan.status === 'Active' ? 'Deactivate' : 'Activate'}
@@ -289,7 +309,9 @@ const MembershipPlans = () => {
       {/* 2. ADD / EDIT FORM */}
       {viewState === "form" && (
         <div className="max-w-3xl mx-auto">
-
+          <button onClick={() => setViewState("list")} className="mb-6 text-sm text-gray-500 hover:text-gray-800 flex items-center gap-2">
+            <i className="fa-solid fa-arrow-left"></i> Back to Plans
+          </button>
 
           <div className="bg-gray-50 p-8 rounded-3xl border border-gray-200 shadow-sm">
             <h2 className="text-xl font-bold text-gray-900 mb-6">{isEditing ? "Edit Plan Details" : "Create New Plan"}</h2>
@@ -365,11 +387,6 @@ const MembershipPlans = () => {
         </div>
       )}
 
-      {
-        viewState == "analysis" && (
-          <PlansAnalysis />
-        )
-      }
     </div>
   );
 };
