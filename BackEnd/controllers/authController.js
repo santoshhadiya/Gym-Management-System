@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const Member = require("../models/Member");
 
 // Generate JWT
 const generateToken = (id) => {
@@ -31,6 +32,14 @@ exports.registerUser = async (req, res) => {
       status: "Active", // Requires Admin Approval
     });
 
+    // Create Member profile if role is member
+    if (user.role === "member") {
+      await Member.create({
+        user: user._id,
+        status: "Active"
+      });
+    }
+
     if (user) {
       res.status(201).json({
         _id: user._id,
@@ -60,11 +69,9 @@ exports.loginUser = async (req, res) => {
     if (user && (await user.matchPassword(password))) {
       // Check if active
       if (user.status !== "Active") {
-        return res
-          .status(401)
-          .json({
-            message: `Account is ${user.status}. Please contact admin.`,
-          });
+        return res.status(401).json({
+          message: `Account is ${user.status}. Please contact admin.`,
+        });
       }
 
       res.json({

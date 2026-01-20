@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const planRoutes = require("./routes/planRoutes");
 const userRoutes = require('./routes/userRoutes');
+const memberRoutes = require("./routes/memberRoutes");
 
 dotenv.config();
 connectDB(); // Connect with my database
@@ -26,6 +27,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/users', userRoutes);
+app.use("/api/members", memberRoutes);
 
 // --- Base Route for API Health Check ---
 app.get("/", (req, res) => {

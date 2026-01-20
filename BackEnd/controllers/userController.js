@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const User = require("../models/User");
 
 // @desc    Get user profile (Self)
 // @route   GET /api/users/profile
@@ -6,12 +6,12 @@ const User = require('../models/User');
 exports.getUserProfile = async (req, res) => {
   try {
     // req.user is set by the authMiddleware
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user.id).select("-password");
 
     if (user) {
       res.json(user);
     } else {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: "User not found" });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -31,18 +31,14 @@ exports.updateUserProfile = async (req, res) => {
       user.phone = req.body.phone || user.phone;
       user.address = req.body.address || user.address;
       user.profileImage = req.body.profileImage || user.profileImage;
-      
+
       // Update password if provided
       if (req.body.password) {
         user.password = req.body.password;
       }
-      
-      // Handle Role Specific Updates (Optional: prevent members from editing these if strictly managed by admin/trainer)
-      // For now, allowing basic updates or you can restrict this block
-      if (user.role === 'member' && req.body.fitnessGoal) {
-         user.memberDetails.fitnessGoal = req.body.fitnessGoal;
-      }
+
       // Add more specific field updates as needed...
+      console.log(user);
 
       const updatedUser = await user.save();
 
@@ -54,14 +50,18 @@ exports.updateUserProfile = async (req, res) => {
         role: updatedUser.role,
         address: updatedUser.address,
         profileImage: updatedUser.profileImage,
-        memberDetails: updatedUser.memberDetails,
+
         trainerDetails: updatedUser.trainerDetails,
         // Send back token if needed, or rely on existing token
       });
     } else {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: "User not found" });
     }
   } catch (error) {
+    console.error("❌ updateUserProfile FAILED");
+    console.error(error); // FULL error
+    console.error(error.message); // Message
+    console.error(error.errors); // Validation errors (important)
     res.status(500).json({ message: error.message });
   }
 };

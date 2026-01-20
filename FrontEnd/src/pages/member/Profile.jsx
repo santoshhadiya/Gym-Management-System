@@ -14,7 +14,7 @@ const Profile = () => {
    const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
 
    const fileInputRef = useRef(null);
-   
+
    // --- STYLE INJECTION ---
    useEffect(() => {
       const linkToast = document.createElement("link");
@@ -40,45 +40,49 @@ const Profile = () => {
             setLoading(true);
             // Ensure the path is correct relative to your axios baseURL
             // If baseURL ends with /api, use 'users/profile' (no leading slash) to avoid double slashes if any
-            const res = await api.get('/users/profile');
-            const data = res.data;
+            const res = await api.get('/members/profile');
+            const member = res.data;
 
             const formattedUser = {
-               id: data._id,
-               name: data.name,
-               email: data.email,
-               phone: data.phone,
-               address: data.address || "",
-               profileImage: data.profileImage || "https://i.pravatar.cc/150?u=101",
-               status: data.status,
-               joinedDate: new Date(data.createdAt).toLocaleDateString(),
+               id: member.user._id,
+               name: member.user.name,
+               email: member.user.email,
+               phone: member.user.phone,
+               address: member.user.address || "",
+               profileImage: member.user.profileImage || "https://i.pravatar.cc/150?u=101",
+               status: member.status,
+               joinedDate: new Date(member.createdAt).toLocaleDateString(),
 
                membership: {
-                  plan: data.memberDetails?.plan || "No Plan Active",
-                  startDate: data.memberDetails?.startDate ? new Date(data.memberDetails.startDate).toLocaleDateString() : "-",
-                  endDate: data.memberDetails?.expiryDate ? new Date(data.memberDetails.expiryDate).toLocaleDateString() : "-",
-                  status: data.status === 'Active' ? "Active" : "Inactive",
-                  features: ["Gym Access", "Locker Room", "Free Wi-Fi"]
+                  planId: member.plan?._id || null,
+                  plan: member.plan?.name || "No Plan Active",
+                  startDate: member.startDate
+                     ? new Date(member.startDate).toLocaleDateString()
+                     : "-",
+                  endDate: member.expiryDate
+                     ? new Date(member.expiryDate).toLocaleDateString()
+                     : "-",
+                  features: member.plan?.features || [],
                },
 
                trainer: {
-                  name: data.memberDetails?.assignedTrainer ? "Assigned" : "Unassigned",
+                  name: member.assignedTrainer?.name || "Unassigned",
                   specialization: "-",
-                  id: data.memberDetails?.assignedTrainer
                },
 
                fitness: {
-                  height: data.memberDetails?.height || 0,
-                  weight: data.memberDetails?.currentWeight || 0,
-                  goal: data.memberDetails?.fitnessGoal || "General Fitness",
-                  notes: "No remarks yet."
-               }
+                  height: member.height || 0,
+                  weight: member.currentWeight || 0,
+                  goal: member.fitnessGoal || "General Fitness",
+                  notes: member.notes || "No remarks yet.",
+               },
             };
+
 
             setProfile(formattedUser);
             setTempData(formattedUser);
          } catch (error) {
-           /*  console.error("Error fetching profile:", error); */
+            /*  console.error("Error fetching profile:", error); */
             // toast.error("Failed to load profile data");
          } finally {
             setLoading(false);
@@ -114,7 +118,16 @@ const Profile = () => {
             address: tempData.address,
          };
 
-         await api.put('/users/profile', payload);
+         await api.put('/users/profile', {
+            name: tempData.name,
+            phone: tempData.phone,
+            address: tempData.address,
+         });
+         await api.put('/members/profile', {
+            height: tempData.fitness.height,
+            currentWeight: tempData.fitness.weight,
+            fitnessGoal: tempData.fitness.goal,
+         });
 
          setProfile(tempData);
          setIsEditing(false);
