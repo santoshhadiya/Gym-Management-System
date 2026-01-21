@@ -5,6 +5,7 @@ const {
   getMemberProfile,
   updateMemberProfile,
   getAllMembers,
+  getAllMembersAll,
 } = require("../controllers/memberController");
 
 console.log("✅ memberRoutes loaded");
@@ -19,5 +20,6 @@ router
 
 // Admin / Trainer routes
 router.get("/", protect, authorize("admin", "trainer"), getAllMembers);
+router.get("/all", protect, authorize("admin"), getAllMembersAll);
 
 module.exports = router;

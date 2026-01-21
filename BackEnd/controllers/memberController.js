@@ -64,3 +64,25 @@ exports.getAllMembers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// GET /api/members/all
+exports.getAllMembersAll = async (req, res) => {
+  const members = await Member.find()
+    .populate("user", "name")
+    .populate("plan", "name")
+    .populate("assignedTrainer", "name");
+
+  res.json(
+    members.map((m) => ({
+      _id: m._id,
+      name: m.user.name,
+      plan: m.plan?.name || "-",
+      trainerId: m.assignedTrainer?._id || null,
+      trainerName: m.assignedTrainer?.name || null,
+      assignedDate: m.assignedDate
+        ? m.assignedDate.toISOString().split("T")[0]
+        : "-",
+      status: m.assignedTrainer ? "Active" : "Unassigned",
+    }))
+  );
+};
