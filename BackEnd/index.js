@@ -3,9 +3,9 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const planRoutes = require("./routes/planRoutes");
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require("./routes/userRoutes");
 const memberRoutes = require("./routes/memberRoutes");
-
+const paymentRotes = require("./routes/paymentRoutes");
 dotenv.config();
 connectDB(); // Connect with my database
 
@@ -25,9 +25,10 @@ const adminRoutes = require("./routes/adminRoutes");
 // --- Mount Routes ---
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
-app.use('/api/plans', planRoutes);
-app.use('/api/users', userRoutes);
+app.use("/api/plans", planRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/members", memberRoutes);
+app.use("/api/payments", paymentRotes);
 
 // --- Base Route for API Health Check ---
 app.get("/", (req, res) => {

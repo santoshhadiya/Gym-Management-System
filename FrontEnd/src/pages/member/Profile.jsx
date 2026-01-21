@@ -42,7 +42,6 @@ const Profile = () => {
             // If baseURL ends with /api, use 'users/profile' (no leading slash) to avoid double slashes if any
             const res = await api.get('/members/profile');
             const member = res.data;
-
             const formattedUser = {
                id: member.user._id,
                name: member.user.name,
@@ -51,16 +50,16 @@ const Profile = () => {
                address: member.user.address || "",
                profileImage: member.user.profileImage || "https://i.pravatar.cc/150?u=101",
                status: member.status,
-               joinedDate: new Date(member.createdAt).toLocaleDateString(),
+               joinedDate: new Date(member.createdAt).toLocaleDateString('en-GB'),
 
                membership: {
                   planId: member.plan?._id || null,
                   plan: member.plan?.name || "No Plan Active",
                   startDate: member.startDate
-                     ? new Date(member.startDate).toLocaleDateString()
+                     ? new Date(member.startDate).toLocaleDateString('en-GB')
                      : "-",
                   endDate: member.expiryDate
-                     ? new Date(member.expiryDate).toLocaleDateString()
+                     ? new Date(member.expiryDate).toLocaleDateString('en-GB')
                      : "-",
                   features: member.plan?.features || [],
                },

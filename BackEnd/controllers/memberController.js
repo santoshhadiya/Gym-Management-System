@@ -10,6 +10,7 @@ exports.getMemberProfile = async (req, res) => {
   try {
     const member = await Member.findOne({ user: req.user.id })
       .populate("user", "-password")
+      .populate("plan")
       .populate("assignedTrainer", "name email");
 
     if (!member) {
