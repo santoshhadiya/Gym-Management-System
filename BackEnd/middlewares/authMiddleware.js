@@ -23,7 +23,7 @@ const protect = async (req, res, next) => {
   return res.status(401).json({ message: "Not authorized, no token" });
 };
 
-// 🔒 Role-based authorization
+//  Role-based authorization
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
@@ -31,6 +31,7 @@ const authorize = (...roles) => {
         message: `Role (${req.user?.role}) is not allowed to access this resource`,
       });
     }
+   
     next();
   };
 };

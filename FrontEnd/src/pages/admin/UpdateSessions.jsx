@@ -27,7 +27,7 @@ const UpdateSessions = () => {
       time: "07:00", 
       duration: "60 mins", 
       status: "Upcoming", 
-      attendance: "Pending", 
+      
       notes: "" 
     },
     { 
@@ -41,7 +41,7 @@ const UpdateSessions = () => {
       time: "18:00", 
       duration: "45 mins", 
       status: "Completed", 
-      attendance: "Present", 
+     
       notes: "Focus on legs today." 
     },
     { 
@@ -55,7 +55,7 @@ const UpdateSessions = () => {
       time: "06:00", 
       duration: "60 mins", 
       status: "Cancelled", 
-      attendance: "-", 
+     
       notes: "Member requested cancel.",
       cancelReason: "Health issue"
     },
@@ -138,7 +138,7 @@ const UpdateSessions = () => {
 
   const handleSave = (e) => {
     e.preventDefault();
-    if (!formData.memberId || !formData.trainerId || !formData.date || !formData.time) {
+    if ( !formData.trainerId || !formData.date || !formData.time) {
       toast.error("Please fill all required fields.");
       return;
     }
@@ -159,14 +159,12 @@ const UpdateSessions = () => {
       trainerId: parseInt(formData.trainerId),
       memberName: member.name,
       trainerName: trainer.name,
-      attendance: isEditing ? formData.attendance : "Pending"
     };
 
     if (isEditing) {
       setSessions(prev => prev.map(s => s.id === newSession.id ? newSession : s));
       toast.success("Session updated successfully.");
-      // Notify
-      toast.info(`Notification sent to ${member.name} & ${trainer.name}`);
+      
     } else {
       setSessions([newSession, ...sessions]);
       toast.success("New session scheduled.");
@@ -174,12 +172,7 @@ const UpdateSessions = () => {
     setShowModal(false);
   };
 
-  const handleAttendance = (id, status) => {
-    setSessions(prev => prev.map(s => 
-      s.id === id ? { ...s, attendance: status, status: "Completed" } : s
-    ));
-    toast.success(`Attendance marked: ${status}`);
-  };
+  
 
   const initiateCancel = (id) => {
     setSessionToCancel(id);
@@ -204,7 +197,7 @@ const UpdateSessions = () => {
     if (selectedIds.length === 0) return;
     if(window.confirm(`Mark ${selectedIds.length} sessions as Completed?`)) {
       setSessions(prev => prev.map(s => 
-        selectedIds.includes(s.id) ? { ...s, status: "Completed", attendance: "Present" } : s
+        selectedIds.includes(s.id) ? { ...s, status: "Completed" } : s
       ));
       toast.success("Bulk update successful.");
       setSelectedIds([]);
@@ -315,9 +308,9 @@ const UpdateSessions = () => {
                  />
               </th>
               <th className="px-6 py-4 font-semibold text-gray-900">Session Info</th>
-              <th className="px-6 py-4 font-semibold text-gray-900">Member & Trainer</th>
+              <th className="px-6 py-4 font-semibold text-gray-900">Trainer</th>
               <th className="px-6 py-4 font-semibold text-gray-900 text-center">Status</th>
-              <th className="px-6 py-4 font-semibold text-gray-900 text-center">Attendance</th>
+              
               <th className="px-6 py-4 font-semibold text-gray-900 text-right">Actions</th>
             </tr>
           </thead>
@@ -347,12 +340,9 @@ const UpdateSessions = () => {
                    <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
                          <i className="fa-solid fa-user text-gray-400 text-xs"></i> 
-                         <span className="text-gray-900 font-medium">{s.memberName}</span>
+                         <span className="text-gray-900 font-medium">{s.trainerName}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs">
-                         <i className="fa-solid fa-dumbbell text-gray-400 text-[10px]"></i> 
-                         <span>{s.trainerName}</span>
-                      </div>
+                      
                    </div>
                 </td>
                 <td className="px-6 py-4 text-center">
@@ -361,18 +351,7 @@ const UpdateSessions = () => {
                    </span>
                 </td>
                 
-                <td className="px-6 py-4 text-center">
-                   {s.status === 'Upcoming' ? (
-                      <div className="flex justify-center gap-2">
-                         <button onClick={() => handleAttendance(s.id, "Present")} className="text-[10px] bg-green-50 text-green-700 px-2 py-1 rounded border border-green-200 hover:bg-green-100 cursor-pointer">P</button>
-                         <button onClick={() => handleAttendance(s.id, "Absent")} className="text-[10px] bg-red-50 text-red-700 px-2 py-1 rounded border border-red-200 hover:bg-red-100 cursor-pointer">A</button>
-                      </div>
-                   ) : (
-                      <span className={`text-xs font-medium ${s.attendance === 'Present' ? 'text-green-600' : s.attendance === 'Absent' ? 'text-red-500' : 'text-gray-400'}`}>
-                         {s.attendance}
-                      </span>
-                   )}
-                </td>
+               
 
                 <td className="px-6 py-4 text-right">
                    <div className="flex justify-end gap-2">
@@ -413,19 +392,6 @@ const UpdateSessions = () => {
                   
                   {/* Selectors */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
-                     <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-2">Member</label>
-                        <select 
-                           required 
-                           value={formData.memberId} 
-                           onChange={e => setFormData({...formData, memberId: e.target.value})}
-                           className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white cursor-pointer"
-                           disabled={isEditing}
-                        >
-                           <option value="">Select Member</option>
-                           {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                        </select>
-                     </div>
                      <div>
                         <label className="block text-xs font-bold text-gray-500 mb-2">Trainer</label>
                         <select 

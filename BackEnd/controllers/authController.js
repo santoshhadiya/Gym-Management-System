@@ -100,3 +100,69 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+// @desc    Admin onboard a trainer
+// @route   POST /api/auth/register-trainer
+// @access  Private (Admin)
+exports.registerTrainer = async (req, res) => {
+  try {
+    const { name, email, phone, password, trainerDetails } = req.body;
+
+    //  Check existing user
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: "Trainer already exists" });
+    }
+
+    // Create trainer user
+    const trainer = await User.create({
+      name,
+      email,
+      phone,
+      password,        // hashed by pre-save hook
+      role: "trainer",
+      trainerDetails,  // specialization, experience, etc.
+    });
+
+    res.status(201).json({
+      _id: trainer._id,
+      name: trainer.name,
+      email: trainer.email,
+      role: trainer.role,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Change password (trainer)
+// @route   PUT /api/auth/change-password
+// @access  Private
+exports.changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    const user = await User.findById(req.user.id).select("+password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await user.matchPassword(oldPassword);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Old password is incorrect" });
+    }
+
+    user.password = newPassword; //  hashed by pre-save hook
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

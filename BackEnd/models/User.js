@@ -1,48 +1,47 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs'); 
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Please add a name'],
-    trim: true
+    required: [true, "Please add a name"],
+    trim: true,
   },
   email: {
     type: String,
-    required: [true, 'Please add an email'],
+    required: [true, "Please add an email"],
     unique: true,
     match: [
       /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please add a valid email'
-    ]
+      "Please add a valid email",
+    ],
   },
   password: {
     type: String,
-    required: [true, 'Please add a password'],
+    required: [true, "Please add a password"],
     minlength: 6,
-    select: false // Security: Do not return password by default
+    select: false, // Security: Do not return password by default
   },
   phone: {
     type: String,
-    required: [true, 'Please add a phone number']
+    required: [true, "Please add a phone number"],
   },
   role: {
     type: String,
-    enum: ['member', 'trainer', 'admin'],
-    default: 'member'
+    enum: ["member", "trainer", "admin"],
+    default: "member",
   },
   status: {
     type: String,
-    enum: ['Pending', 'Active', 'Inactive', 'Blocked'],
-    default: 'Active'
+    enum: ["Pending", "Active", "Inactive", "Blocked"],
+    default: "Active",
   },
   profileImage: {
     type: String,
-    default: 'https://static.thenounproject.com/png/561365-200.png' 
+    default: "https://static.thenounproject.com/png/561365-200.png",
   },
   address: String,
-  
- 
+
   // --- Trainer Specific Data ---
   // (Populated only if role === 'trainer')
   trainerDetails: {
@@ -52,16 +51,35 @@ const UserSchema = new mongoose.Schema({
     bio: String,
     activeClients: {
       type: Number,
-      default: 0
+      default: 0,
     },
     rating: {
       type: Number,
-      default: 5.0
+      default: 5.0,
+    },
+    totalSessions: {
+      // ✅ ADD
+      type: Number,
+      default: 0,
     },
     schedule: {
-      type: Object, // Can store availability JSON
-      default: {}
-    }
+      type: String,
+      default: "",
+    },
+    salary: {
+      monthly: {
+        type: Number,
+        default: 0,
+      },
+      status: {
+        type: String,
+        enum: ["Paid", "Pending"],
+        default: "Pending",
+      },
+      lastPayment: {
+        type: Date,
+      },
+    },
   },
 
   // --- System Fields ---
@@ -69,22 +87,21 @@ const UserSchema = new mongoose.Schema({
   resetPasswordExpire: Date,
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 // Encrypt password using bcrypt before saving to DB
-UserSchema.pre('save', async function () {
-  if (!this.isModified('password')) return;
+UserSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-
 // Method to verify password during login
-UserSchema.methods.matchPassword = async function(enteredPassword) {
+UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model("User", UserSchema);
