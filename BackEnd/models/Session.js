@@ -31,7 +31,7 @@ const sessionSchema = new mongoose.Schema({
   notes: String,
   capacity: {
     type: Number,
-    default: 1, // 1 = personal, >1 = group
+    default: 10, // 1 = personal, >1 = group
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

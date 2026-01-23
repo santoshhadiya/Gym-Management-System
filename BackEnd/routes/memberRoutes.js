@@ -6,9 +6,10 @@ const {
   updateMemberProfile,
   getAllMembers,
   getAllMembersAll,
+  createMember,
+  updateMemberByAdmin,
+  deactivateMember,
 } = require("../controllers/memberController");
-
-console.log("✅ memberRoutes loaded");
 
 const { protect, authorize } = require("../middlewares/authMiddleware");
 
@@ -19,6 +20,9 @@ router
   .put(protect, authorize("member"), updateMemberProfile);
 
 // Admin / Trainer routes
+router.post("/", protect, authorize("admin"), createMember);
+router.put("/:id", protect, authorize("admin"), updateMemberByAdmin);
+router.put("/:id/deactivate", protect, authorize("admin"), deactivateMember);
 router.get("/", protect, authorize("admin", "trainer"), getAllMembers);
 router.get("/all", protect, authorize("admin"), getAllMembersAll);
 

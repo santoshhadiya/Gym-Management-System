@@ -305,7 +305,7 @@ const Profile = () => {
                      </div>
                      <div>
                         <p className="font-bold text-gray-900">{profile.trainer.name}</p>
-                        <p className="text-xs text-gray-500">{profile.trainer.specialization}</p>
+                        
                      </div>
                   </div>
                   <Link to="/member/chat" className="block w-full py-2.5 bg-white border border-[#FEEF75] text-yellow-900 rounded-xl text-xs font-bold text-center hover:bg-yellow-50 transition-colors">

@@ -23,7 +23,8 @@ const UpdateSessions = () => {
    // Form State
    const [formData, setFormData] = useState({
       _id: null, trainerId: "", type: "Personal Training",
-      date: "", time: "", duration: "60 mins", status: "Upcoming", notes: ""
+      date: "", time: "", duration: "60 mins", status: "Upcoming", notes: "",
+      capacity: 10 // Default capacity
    });
 
    // Cancel Modal State
@@ -97,14 +98,16 @@ const UpdateSessions = () => {
          // Map nested objects back to form IDs for editing
          setFormData({
             ...session,
-            trainerId: session.trainer?._id || ""
+            trainerId: session.trainer?._id || "",
+            capacity: session.capacity || 10
          });
          setIsEditing(true);
       } else {
          const today = new Date().toISOString().split('T')[0];
          setFormData({
             _id: null, trainerId: "", type: "Personal Training",
-            date: today, time: "", duration: "60 mins", status: "Upcoming", notes: ""
+            date: today, time: "", duration: "60 mins", status: "Upcoming", notes: "",
+            capacity: 10
          });
          setIsEditing(false);
       }
@@ -133,6 +136,7 @@ const UpdateSessions = () => {
          duration: formData.duration,
          status: formData.status,
          notes: formData.notes,
+         capacity: Number(formData.capacity),
       };
 
       try {
@@ -342,8 +346,9 @@ const UpdateSessions = () => {
                                        <i className="fa-regular fa-calendar"></i> {s.date}
                                        <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
                                        <i className="fa-regular fa-clock"></i> {s.time} ({s.duration})
+                                       <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                       <span className="font-bold text-blue-600">Cap: {s.capacity || 10}</span>
                                     </span>
-                                    {/* Member display removed as per requirement */}
                                     {s.notes && <span className="text-[10px] text-blue-500 mt-1 italic">Note: {s.notes}</span>}
                                  </div>
                               </td>
@@ -416,7 +421,6 @@ const UpdateSessions = () => {
                               {trainers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
                            </select>
                         </div>
-                        {/* Member Selector REMOVED */}
                      </div>
 
                      {/* Type & Duration */}
@@ -428,9 +432,8 @@ const UpdateSessions = () => {
                               value={formData.type}
                               onChange={e => setFormData({ ...formData, type: e.target.value })}
                               className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white cursor-pointer"
-                           >
-
-                           </input>
+                              placeholder="Personal Training"
+                           />
                         </div>
                         <div>
                            <label className="block text-xs font-bold text-gray-500 mb-2">Duration</label>
@@ -442,6 +445,19 @@ const UpdateSessions = () => {
                               placeholder="e.g. 60 mins"
                            />
                         </div>
+                     </div>
+
+                     {/* Capacity */}
+                     <div className="mb-4">
+                        <label className="block text-xs font-bold text-gray-500 mb-2">Capacity (Max Participants)</label>
+                        <input
+                           type="number"
+                           min="1"
+                           value={formData.capacity}
+                           onChange={e => setFormData({ ...formData, capacity: e.target.value })}
+                           className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm"
+                           placeholder="10"
+                        />
                      </div>
 
                      {/* Date & Time */}
