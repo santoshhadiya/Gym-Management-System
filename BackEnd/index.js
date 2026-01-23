@@ -10,6 +10,8 @@ const trainerRoutes=require("./routes/trainerRoutes")
 const assignmentRoutes=require("./routes/assignmentRoutes")
 const sessionRoutes=require("./routes/sessionRoutes");
 const bookingRoutes=require("./routes/sessionBookingRoutes")
+const offerRoutes = require("./routes/offerRoutes");
+const Plan = require("./models/Plan");
 
 dotenv.config();
 connectDB(); // Connect with my database
@@ -38,7 +40,7 @@ app.use("/api/trainers", trainerRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/session-bookings", bookingRoutes);
-
+app.use("/api/offers", offerRoutes);
 // --- Base Route for API Health Check ---
 app.get("/", (req, res) => {
   res.send("Gym Management API is running...");
@@ -53,6 +55,22 @@ app.use((err, req, res, next) => {
     stack: process.env.NODE_ENV === "production" ? null : err.stack,
   });
 });
+
+setInterval(async () => {
+  const today = new Date();
+
+  const expiredPlans = await Plan.find({
+    "offer.isActive": true,
+    "offer.endDate": { $lt: today },
+  });
+
+  for (let plan of expiredPlans) {
+    plan.price = plan.offer.originalPrice;
+    plan.offer.isActive = false;
+    await plan.save();
+  }
+
+}, 1000 * 60 * 60); // every 1 hour
 
 // --- Server Startup ---
 const PORT = process.env.PORT || 5000;
