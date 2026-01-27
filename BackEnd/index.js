@@ -35,7 +35,15 @@ const server = http.createServer(app); // ✅ Create HTTP server
 const io = initSocket(server);
 
 // Middlewares
-app.use(cors());
+
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://songars-gym.onrender.com"
+  ],
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
