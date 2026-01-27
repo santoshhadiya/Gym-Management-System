@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import logo from "../../assets/logo.png";
 import { useContext } from 'react';
-import { GlobalProvider, useGlobalContext } from '../../context/GlobalContext';
+import { useGlobalContext } from '../../context/GlobalContext';
 const LoginPage = () => {
-
+  const { BACKEND_URL } = useGlobalContext()
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("member"); // default UI selection
@@ -46,7 +46,7 @@ const LoginPage = () => {
 
     try {
       // 2. API Call
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

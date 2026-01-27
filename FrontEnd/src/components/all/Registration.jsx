@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
 import logo from "../../assets/logo.png"; // Removed to fix build error
+import { useGlobalContext } from '../../context/GlobalContext';
 
 const RegisterPage = () => {
+  const {BACKEND_URL}=useGlobalContext()
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -59,7 +61,7 @@ const RegisterPage = () => {
 
     try {
       // 2. API Call
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
