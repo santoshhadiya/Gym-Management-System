@@ -10,6 +10,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import { ToastContainer, toast } from 'react-toastify';
+import { useGlobalContext } from "../../context/GlobalContext";
 
 // Register ChartJS components
 ChartJS.register(
@@ -21,10 +22,8 @@ ChartJS.register(
   Legend
 );
 
-// Use backend URL from env or default to localhost
-const BACKEND_URL = "http://localhost:5000";
-
 const Feedbacks = () => {
+   const {BACKEND_URL}=useGlobalContext()
   // --- STATE ---
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);

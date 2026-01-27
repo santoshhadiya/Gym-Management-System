@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { io } from "socket.io-client";
-
-const BACKEND_URL = "http://localhost:5000";
+import { useGlobalContext } from '../../context/GlobalContext';
 
 const ChatWithTrainer = () => {
+    const {BACKEND_URL}=useGlobalContext();
   // --- STATE (LOGIC UNTOUCHED) ---
   const [trainers, setTrainers] = useState([]); 
   const [conversations, setConversations] = useState([]); 

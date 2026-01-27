@@ -5,7 +5,7 @@ import { useGlobalContext } from "../../context/GlobalContext";
 
 
 const MembershipPlans = () => {
-  const { BACKEND_URL } = useGlobalContext() || { BACKEND_URL: "http://localhost:5000" };
+  const { BACKEND_URL } = useGlobalContext() 
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   
