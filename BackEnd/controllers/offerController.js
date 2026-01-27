@@ -123,3 +123,32 @@ exports.deactivateOffer = async (req, res) => {
     console.log(err);
   }
 };
+
+
+// Get ACTIVE offers (Public)
+exports.getPublicOffers = async (req, res) => {
+  try {
+    const offers = await Offer.find({ 
+      isActive: true,
+      endDate: { $gte: new Date() } // Only future expiration
+    }).populate("plan", "name price originalPrice");
+
+    // Transform for UI
+    const formatted = offers.map(o => ({
+      id: o._id,
+      title: `${o.plan?.name || "Plan"} Special`,
+      description: `Get huge savings on our ${o.plan?.name} plan. Limited time offer!`,
+      discount: o.discountType === 'percentage' ? `${o.discountValue}% OFF` : `Flat ₹${o.discountValue} OFF`,
+      code: "AUTO-APPLIED", // or generate based on ID
+      category: "Membership",
+      expiry: new Date(o.endDate).toLocaleDateString(),
+      color: "bg-[#D9F17F]", // Default styling
+      textColor: "text-green-900",
+      icon: "fa-tag"
+    }));
+
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

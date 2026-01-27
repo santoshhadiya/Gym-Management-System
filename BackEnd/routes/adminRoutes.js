@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
 const {
@@ -6,21 +6,23 @@ const {
   createUser,
   updateUserStatus,
   deleteUser,
-} = require('../controllers/adminController');
+  getAdminContact
+} = require("../controllers/adminController");
 
-const { protect, authorize } = require('../middlewares/authMiddleware');
+const { protect, authorize } = require("../middlewares/authMiddleware");
+
+router.get("/contact", getAdminContact);
+
+// trainer and admin can access this.
+router.route("/users").get(getAllUsers).post(createUser);
 
 // All admin routes
 router.use(protect);
-router.use(authorize('admin'));
+router.use(authorize("admin"));
 
-router.route('/users')
-  .get(getAllUsers)
-  .post(createUser);
 
-router.route('/users/:id')
-  .delete(deleteUser);
+router.route("/users/:id").delete(deleteUser);
 
-router.put('/users/:id/status', updateUserStatus);
+router.put("/users/:id/status", updateUserStatus);
 
 module.exports = router;

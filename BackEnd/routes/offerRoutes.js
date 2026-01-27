@@ -5,9 +5,13 @@ const {
   createOffer,
   deactivateOffer,
   getOffers,
+  getPublicOffers, 
 } = require("../controllers/offerController");
 
 const { protect, authorize } = require("../middlewares/authMiddleware");
+
+// Public route for visitors/members
+router.get("/public", getPublicOffers);
 
 // Admin only
 router.post("/", protect, authorize("admin"), createOffer);

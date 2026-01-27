@@ -69,6 +69,7 @@ import AssignedMembers from './pages/trainer/AssignedMembers'
 import { useGlobalContext } from './context/GlobalContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import ScrollToTop from './components/ScrollToTop'
+import ViewInquiry from './pages/admin/ViewInquiry'
 
 const App = () => {
   const { user } = useGlobalContext()
@@ -103,6 +104,8 @@ const App = () => {
             <Route path="monitor-progress" element={<MonitorProgress_admin />} />
             <Route path="chat-members" element={<ChatWithMember_admin />} />
             <Route path="chat-trainers" element={<ChatWithTrainer />} />
+            <Route path="view-inquiry" element={<ViewInquiry/>} />
+
             <Route path="feedbacks" element={<Feedbacks_admin />} />
             <Route path="update-session" element={<UpdateSessions />} />
           </Route>

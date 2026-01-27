@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from 'react-toastify';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,6 +9,7 @@ import {
   Legend
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
+import { ToastContainer, toast } from 'react-toastify';
 
 // Register ChartJS components
 ChartJS.register(
@@ -21,324 +21,284 @@ ChartJS.register(
   Legend
 );
 
+// Use backend URL from env or default to localhost
+const BACKEND_URL = "http://localhost:5000";
+
 const Feedbacks = () => {
+  // --- STATE ---
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [filterType, setFilterType] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
+  
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [replyText, setReplyText] = useState("");
+
   // --- STYLE INJECTION ---
   useEffect(() => {
-    const linkToast = document.createElement("link");
-    linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
-    linkToast.rel = "stylesheet";
-    document.head.appendChild(linkToast);
+    const link = document.createElement("link");
+    link.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+    
+    const font = document.createElement("link");
+    font.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
+    font.rel = "stylesheet";
+    document.head.appendChild(font);
 
-    const linkFA = document.createElement("link");
-    linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
-    linkFA.rel = "stylesheet";
-    document.head.appendChild(linkFA);
-
-    return () => {
-      document.head.removeChild(linkToast);
-      document.head.removeChild(linkFA);
+    return () => { 
+       document.head.removeChild(link); 
+       document.head.removeChild(font);
     };
   }, []);
 
-  // --- MOCK DATA ---
-  const [feedbacks, setFeedbacks] = useState([
-    {
-      id: 1,
-      member: "Riya Patel",
-      avatar: "https://i.pravatar.cc/150?u=1",
-      type: "Trainer",
-      rating: 5,
-      message: "Raj is an amazing trainer! He really pushes me to my limits in a good way.",
-      date: "2024-10-25",
-      status: "New",
-      reply: ""
-    },
-    {
-      id: 2,
-      member: "Amit Sharma",
-      avatar: "https://i.pravatar.cc/150?u=2",
-      type: "Session",
-      rating: 4,
-      message: "Great session yesterday, but could we focus more on stretching next time?",
-      date: "2024-10-24",
-      status: "Reviewed",
-      reply: "Noted Amit! Will incorporate more mobility work."
-    },
-    {
-      id: 3,
-      member: "Priya Shah",
-      avatar: "https://i.pravatar.cc/150?u=3",
-      type: "Trainer",
-      rating: 2,
-      message: "Felt a bit neglected during the group class. Need more form correction.",
-      date: "2024-10-20",
-      status: "Resolved",
-      reply: "Apologies Priya. I will ensure personal attention in the next batch."
-    }
-  ]);
+  // --- FETCH DATA ---
+  const fetchFeedbacks = async () => {
+    try {
+      setLoading(true);
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = userInfo?.token;
 
-  // --- STATE ---
-  const [viewState, setViewState] = useState("list"); // 'list', 'analytics'
-  const [filterRating, setFilterRating] = useState("All");
-  const [filterType, setFilterType] = useState("All");
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  const [selectedFeedback, setSelectedFeedback] = useState(null);
-  const [replyText, setReplyText] = useState("");
-  const [showReplyModal, setShowReplyModal] = useState(false);
+      // Ensure we are fetching from the real backend endpoint
+      const res = await fetch(`${BACKEND_URL}/api/feedback/trainer`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-  // --- HELPERS ---
-  const getRatingStars = (rating) => {
-    return Array(5).fill(0).map((_, i) => (
-      <i key={i} className={`fa-solid fa-star text-xs ${i < rating ? 'text-yellow-400' : 'text-gray-200'}`}></i>
-    ));
-  };
-
-  const getStatusStyle = (status) => {
-    switch(status) {
-      case "New": return "bg-blue-50 text-blue-700 border-blue-200";
-      case "Reviewed": return "bg-[#FEEF75] text-yellow-900 border-yellow-200";
-      case "Resolved": return "bg-[#D9F17F] text-green-900 border-green-200";
-      default: return "bg-gray-100 text-gray-600";
+      if (!res.ok) throw new Error("Failed to load feedbacks");
+      
+      const data = await res.json();
+      setFeedbacks(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load feedback data");
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchFeedbacks();
+  }, []);
 
   // --- ACTIONS ---
-  const handleOpenReply = (feedback) => {
+  const handleReplyClick = (feedback) => {
     setSelectedFeedback(feedback);
     setReplyText(feedback.reply || "");
     setShowReplyModal(true);
   };
 
-  const handleSubmitReply = () => {
-    if (!replyText.trim()) {
-       toast.warn("Please enter a reply.");
-       return;
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = userInfo?.token;
+
+      await fetch(`${BACKEND_URL}/api/feedback/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      toast.success("Status updated");
+      fetchFeedbacks();
+    } catch (err) {
+      toast.error("Update failed");
     }
-    setFeedbacks(prev => prev.map(f => 
-      f.id === selectedFeedback.id ? { ...f, reply: replyText, status: "Reviewed" } : f
-    ));
-    toast.success("Reply posted successfully.");
-    setShowReplyModal(false);
   };
 
-  // --- ANALYTICS DATA ---
-  const ratingDist = [1, 2, 3, 4, 5].map(r => feedbacks.filter(f => f.rating === r).length);
-  const avgRating = (feedbacks.reduce((acc, curr) => acc + curr.rating, 0) / feedbacks.length).toFixed(1);
-  
+  const handleSubmitReply = async () => {
+    if (!replyText.trim()) {
+       toast.warn("Please write a reply.");
+       return;
+    }
+
+    try {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = userInfo?.token;
+
+      const res = await fetch(`${BACKEND_URL}/api/feedback/${selectedFeedback._id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ reply: replyText })
+      });
+
+      if (!res.ok) throw new Error("Reply failed");
+
+      toast.success("Reply sent successfully");
+      setShowReplyModal(false);
+      setReplyText("");
+      fetchFeedbacks();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // --- FILTERING ---
+  const filteredFeedbacks = feedbacks.filter(fb => {
+    const matchesType = filterType === "All" || fb.type === filterType;
+    const matchesStatus = filterStatus === "All" || 
+                          (filterStatus === "Reviewed" ? fb.status === "Reviewed" : fb.status !== "Reviewed");
+    return matchesType && matchesStatus;
+  });
+
+  // --- CHART DATA ---
+  const ratingsCount = [0, 0, 0, 0, 0]; // 1 to 5 stars
+  filteredFeedbacks.forEach(fb => {
+     if (fb.rating >= 1 && fb.rating <= 5) {
+        ratingsCount[fb.rating - 1]++;
+     }
+  });
+
   const chartData = {
     labels: ["1 Star", "2 Stars", "3 Stars", "4 Stars", "5 Stars"],
-    datasets: [{
-      label: "Feedback Count",
-      data: ratingDist,
-      backgroundColor: ["#ef4444", "#f97316", "#FEEF75", "#CDE7FE", "#D9F17F"],
-      borderRadius: 6
-    }]
+    datasets: [
+      {
+        label: "Feedback Count",
+        data: ratingsCount,
+        backgroundColor: [
+          "#fee2e2", "#ffedd5", "#fef9c3", "#dcfce7", "#bbf7d0",
+        ],
+        borderRadius: 8,
+      },
+    ],
   };
 
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: { 
-       x: { grid: { display: false } }, 
-       y: { beginAtZero: true, ticks: { stepSize: 1 } } 
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+    },
+    scales: {
+      y: { beginAtZero: true, grid: { display: false } },
+      x: { grid: { display: false } }
     }
   };
 
-  // --- FILTERING ---
-  const filteredFeedbacks = feedbacks.filter(f => {
-    const matchesSearch = f.member.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          f.message.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRating = filterRating === "All" || 
-                          (filterRating === "High" && f.rating >= 4) || 
-                          (filterRating === "Critical" && f.rating <= 2) ||
-                          (filterRating === "Mid" && f.rating === 3);
-    const matchesType = filterType === "All" || f.type === filterType;
-    
-    return matchesSearch && matchesRating && matchesType;
-  });
-
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-6 pb-10 font-sans">
+    <div className="w-full bg-white rounded-3xl p-8 shadow-sm border border-gray-100 font-sans min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900">Member Feedback</h1>
-          <p className="text-sm text-gray-500 mt-1">Review ratings and improve your training quality.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Feedback Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">Review member ratings and respond to suggestions.</p>
         </div>
         
-        <div className="flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
-           <button 
-             onClick={() => setViewState("list")}
-             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${viewState === 'list' ? 'bg-[#CDE7FE] text-blue-900 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
+        <div className="flex gap-3">
+           
+           
+           <select 
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#CDE7FE]"
            >
-             Feedback List
-           </button>
-           <button 
-             onClick={() => setViewState("analytics")}
-             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${viewState === 'analytics' ? 'bg-[#CDE7FE] text-blue-900 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
-           >
-             Performance
-           </button>
+              <option value="All">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Reviewed">Reviewed</option>
+           </select>
         </div>
       </div>
 
-      {/* --- LIST VIEW --- */}
-      {viewState === 'list' && (
-        <>
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-             <div className="bg-[#fcfdfd] p-5 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
-                <div>
-                   <p className="text-xs font-bold text-gray-400 uppercase">Average Rating</p>
-                   <h3 className="text-3xl font-black text-gray-900">{avgRating} <span className="text-lg text-yellow-400">★</span></h3>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-[#FEEF75] flex items-center justify-center text-yellow-900 text-xl">
-                   <i className="fa-solid fa-medal"></i>
-                </div>
-             </div>
-             <div className="bg-[#fcfdfd] p-5 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
-                <div>
-                   <p className="text-xs font-bold text-gray-400 uppercase">Total Reviews</p>
-                   <h3 className="text-3xl font-black text-gray-900">{feedbacks.length}</h3>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-[#CDE7FE] flex items-center justify-center text-blue-900 text-xl">
-                   <i className="fa-regular fa-comments"></i>
-                </div>
-             </div>
-          </div>
+      {/* STATS & CHART */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+         <div className="space-y-6">
+            <div className="bg-[#f8fbff] p-6 rounded-3xl border border-blue-50">
+               <p className="text-xs text-blue-400 font-bold uppercase tracking-wider mb-2">Total Feedback</p>
+               <h2 className="text-4xl font-black text-gray-900">{filteredFeedbacks.length}</h2>
+            </div>
+            <div className="bg-[#f0fdf4] p-6 rounded-3xl border border-green-50">
+               <p className="text-xs text-green-500 font-bold uppercase tracking-wider mb-2">Avg Rating</p>
+               <h2 className="text-4xl font-black text-gray-900 flex items-center gap-2">
+                  {(filteredFeedbacks.reduce((acc, curr) => acc + curr.rating, 0) / (filteredFeedbacks.length || 1)).toFixed(1)}
+                  <span className="text-xl text-green-400">★</span>
+               </h2>
+            </div>
+         </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 mb-6 bg-gray-50 p-2 rounded-2xl border border-gray-100 items-center">
-             <div className="relative flex-grow md:max-w-xs">
-                <input
-                   type="text"
-                   placeholder="Search member..."
-                   value={searchTerm}
-                   onChange={(e) => setSearchTerm(e.target.value)}
-                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm"
-                />
-                <i className="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-             </div>
-             
-             <div className="flex items-center gap-2 overflow-x-auto">
-                <select 
-                   value={filterType} 
-                   onChange={(e) => setFilterType(e.target.value)}
-                   className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] cursor-pointer"
-                >
-                   <option value="All">All Types</option>
-                   <option value="Trainer">Trainer</option>
-                   <option value="Session">Session</option>
-                </select>
+         <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm h-64">
+            <h3 className="font-bold text-gray-900 mb-4 text-sm">Rating Distribution</h3>
+            <div className="h-48">
+               <Bar data={chartData} options={chartOptions} />
+            </div>
+         </div>
+      </div>
 
-                <select 
-                   value={filterRating} 
-                   onChange={(e) => setFilterRating(e.target.value)}
-                   className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] cursor-pointer"
-                >
-                   <option value="All">All Ratings</option>
-                   <option value="High">High (4-5)</option>
-                   <option value="Mid">Average (3)</option>
-                   <option value="Critical">Critical (1-2)</option>
-                </select>
-             </div>
-          </div>
-
-          {/* Feedback Grid */}
-          <div className="grid grid-cols-1 gap-4">
-             {filteredFeedbacks.map(fb => (
-                <div key={fb.id} className={`bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all ${fb.rating <= 2 ? 'border-red-100 bg-red-50/20' : 'border-gray-100'}`}>
-                   <div className="flex flex-col md:flex-row justify-between gap-4">
-                      
-                      {/* User Info */}
-                      <div className="flex gap-4">
-                         <img src={fb.avatar} alt={fb.member} className="w-12 h-12 rounded-full object-cover border border-gray-100 shadow-sm" />
-                         <div>
-                            <h3 className="font-bold text-gray-900 text-sm">{fb.member}</h3>
-                            <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                               <span className="bg-gray-100 px-2 py-0.5 rounded">{fb.type}</span>
-                               <span>• {fb.date}</span>
-                            </div>
-                            <div className="flex gap-1 mt-1.5">{getRatingStars(fb.rating)}</div>
-                         </div>
-                      </div>
-
-                      {/* Status Badge */}
-                      <div className="md:text-right flex flex-col items-start md:items-end gap-2">
-                         <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${getStatusStyle(fb.status)}`}>
-                            {fb.status}
-                         </span>
-                         {fb.rating <= 2 && (
-                            <span className="text-[10px] font-bold text-red-500 flex items-center gap-1">
-                               <i className="fa-solid fa-triangle-exclamation"></i> Critical
-                            </span>
-                         )}
-                      </div>
-                   </div>
-
-                   {/* Message */}
-                   <div className="mt-4 bg-white p-4 rounded-xl border border-gray-100 shadow-inner">
-                      <p className="text-sm text-gray-700 italic">"{fb.message}"</p>
-                      {fb.reply && (
-                         <div className="mt-3 pt-3 border-t border-gray-100">
-                            <p className="text-xs font-bold text-blue-600 mb-1 flex items-center gap-1">
-                               <i className="fa-solid fa-reply fa-flip-horizontal"></i> Your Reply:
-                            </p>
-                            <p className="text-xs text-gray-600">{fb.reply}</p>
-                         </div>
-                      )}
-                   </div>
-
-                   {/* Actions */}
-                   <div className="mt-4 flex gap-2 justify-end pt-2">
-                      <button 
-                         onClick={() => handleOpenReply(fb)}
-                         className="px-4 py-2 rounded-lg text-xs font-bold bg-[#CDE7FE] text-blue-900 hover:bg-blue-200 transition-colors flex items-center gap-2"
-                      >
-                         <i className="fa-solid fa-reply"></i> {fb.reply ? "Edit Reply" : "Reply"}
-                      </button>
-                   </div>
-                </div>
-             ))}
-             {filteredFeedbacks.length === 0 && (
-                <div className="text-center py-16 text-gray-400">
-                   <p>No feedback found.</p>
-                </div>
-             )}
-          </div>
-        </>
-      )}
-
-      {/* --- ANALYTICS VIEW --- */}
-      {viewState === 'analytics' && (
+      {/* FEEDBACK LIST */}
+      {loading ? (
+         <div className="text-center py-20 text-gray-400">Loading feedback...</div>
+      ) : (
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
-               <h3 className="font-bold text-gray-900 mb-4">Rating Distribution</h3>
-               <div className="h-64">
-                  <Bar data={chartData} options={chartOptions} />
+            {filteredFeedbacks.map((fb) => (
+               <div key={fb._id} className={`p-6 rounded-[2rem] border transition-all hover:shadow-md ${fb.status === 'New' || fb.status === 'Pending' ? 'bg-white border-red-100' : 'bg-gray-50 border-gray-100'}`}>
+                  
+                  <div className="flex justify-between items-start mb-4">
+                     <div className="flex items-center gap-3">
+                        {fb.avatar ? (
+                           <img src={fb.avatar} alt={fb.member} className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                           <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
+                              {fb.member[0]}
+                           </div>
+                        )}
+                        <div>
+                           <h4 className="font-bold text-gray-900 text-sm">{fb.member}</h4>
+                           <p className="text-[10px] text-gray-400">{new Date(fb.date).toLocaleDateString()}</p>
+                        </div>
+                     </div>
+                     <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase ${fb.type === 'Trainer' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>
+                        {fb.type}
+                     </span>
+                  </div>
+
+                  <div className="mb-4">
+                     <div className="flex gap-1 mb-2 text-yellow-400 text-xs">
+                        {[...Array(5)].map((_, i) => (
+                           <i key={i} className={`fa-star ${i < fb.rating ? 'fa-solid' : 'fa-regular text-gray-200'}`}></i>
+                        ))}
+                     </div>
+                     <p className="text-gray-600 text-sm italic">"{fb.message}"</p>
+                  </div>
+
+                  {fb.reply && (
+                     <div className="mb-4 p-3 bg-blue-50/50 rounded-xl border border-blue-50">
+                        <p className="text-xs text-blue-800"><span className="font-bold">Admin Reply:</span> {fb.reply}</p>
+                     </div>
+                  )}
+
+                  <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                     <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${fb.status === 'Reviewed' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                        <span className="text-xs font-medium text-gray-500">{fb.status}</span>
+                     </div>
+                     
+                     
+                     
+                  </div>
+
                </div>
-            </div>
-            
-            <div className="bg-[#f8fbff] border border-blue-100 rounded-3xl p-6 shadow-sm flex flex-col justify-center items-center text-center">
-               <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-3xl mb-4">
-                  <i className="fa-solid fa-chart-line"></i>
+            ))}
+            {filteredFeedbacks.length === 0 && (
+               <div className="col-span-full text-center py-12 text-gray-400 bg-gray-50 rounded-[2rem]">
+                  <p>No feedback found.</p>
                </div>
-               <h3 className="font-bold text-gray-900 text-lg">Performance Summary</h3>
-               <p className="text-sm text-gray-600 mt-2 max-w-xs">
-                  Your average rating is <span className="font-bold text-blue-600">{avgRating}</span>. Keep up the good work! Focus on consistency in session quality.
-               </p>
-            </div>
+            )}
          </div>
       )}
 
       {/* --- REPLY MODAL --- */}
       {showReplyModal && selectedFeedback && (
          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                <div className="bg-[#f8f9fa] px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                   <h3 className="font-bold text-gray-900">Reply to {selectedFeedback.member}</h3>
                   <button onClick={() => setShowReplyModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
@@ -356,18 +316,15 @@ const Feedbacks = () => {
                      value={replyText}
                      onChange={(e) => setReplyText(e.target.value)}
                      className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-blue-400 mb-4 resize-none"
-                     placeholder="Type your response or acknowledgment..."
+                     placeholder="Type your response or internal note..."
                   ></textarea>
 
-                  <div className="flex gap-3">
-                     <button onClick={() => setShowReplyModal(false)} className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-50">Cancel</button>
-                     <button 
-                        onClick={handleSubmitReply}
-                        className="flex-1 py-2.5 bg-[#FEEF75] text-yellow-900 font-bold rounded-xl hover:bg-yellow-300 shadow-sm transition-colors"
-                     >
-                        Post Reply
-                     </button>
-                  </div>
+                  <button 
+                     onClick={handleSubmitReply}
+                     className="w-full py-3 bg-[#FEEF75] text-yellow-900 font-bold rounded-xl hover:bg-yellow-300 shadow-sm transition-colors cursor-pointer"
+                  >
+                     Send Response
+                  </button>
                </div>
             </div>
          </div>

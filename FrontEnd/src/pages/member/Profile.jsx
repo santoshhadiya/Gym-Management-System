@@ -38,8 +38,7 @@ const Profile = () => {
       const fetchProfile = async () => {
          try {
             setLoading(true);
-            // Ensure the path is correct relative to your axios baseURL
-            // If baseURL ends with /api, use 'users/profile' (no leading slash) to avoid double slashes if any
+            
             const res = await api.get('/members/profile');
             const member = res.data;
             const formattedUser = {
@@ -305,7 +304,7 @@ const Profile = () => {
                      </div>
                      <div>
                         <p className="font-bold text-gray-900">{profile.trainer.name}</p>
-                        
+
                      </div>
                   </div>
                   <Link to="/member/chat" className="block w-full py-2.5 bg-white border border-[#FEEF75] text-yellow-900 rounded-xl text-xs font-bold text-center hover:bg-yellow-50 transition-colors">

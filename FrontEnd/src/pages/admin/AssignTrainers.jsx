@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from 'react-toastify';
 import { useGlobalContext } from "../../context/GlobalContext";
 
-
 const AssignTrainers = () => {
-  const { api } = useGlobalContext() 
-  
+
+  const { api } = useGlobalContext()
+
   // --- STYLE INJECTION ---
   useEffect(() => {
     const linkToast = document.createElement("link");
@@ -31,13 +31,13 @@ const AssignTrainers = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // --- UI STATE ---
-  const [viewState, setViewState] = useState("current"); // 'current', 'history'
+  const [viewState, setViewState] = useState("current");
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState("assign"); // 'assign', 'reassign'
+  const [modalType, setModalType] = useState("assign");
 
   // Form State
   const [selectedTrainer, setSelectedTrainer] = useState("");
-  const [selectedMembers, setSelectedMembers] = useState([]); // Array of strings (IDs)
+  const [selectedMembers, setSelectedMembers] = useState([]);
   const [changeReason, setChangeReason] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,7 +49,7 @@ const AssignTrainers = () => {
 
       const [tRes, mRes, hRes] = await Promise.all([
         api.get("/trainers"),
-        api.get("/members"), // Use /members to get object populated data (trainer: { _id, name } or null)
+        api.get("/members"),
         api.get("/assignments/history"),
       ]);
 
@@ -119,7 +119,6 @@ const AssignTrainers = () => {
       return;
     }
 
-    // Validation: Trainer Load
     if (trainer.activeClients + selectedMembers.length > trainer.capacity) {
       toast.error(`Overload Warning! ${trainer.name} only has space for ${trainer.capacity - trainer.activeClients} more clients.`);
       return;
@@ -129,16 +128,16 @@ const AssignTrainers = () => {
       setIsSubmitting(true);
 
       // --- API CALL ---
+      // The backend assignmentController will handle creating the automatic "Hello" message
       await api.post("/assignments", {
         trainerId: selectedTrainer,
         memberIds: selectedMembers,
         reason: modalType === "reassign" ? changeReason : "Bulk Assignment",
       });
 
-      toast.success("Assignment successful");
+      toast.success(`Assigned & Intro Message Sent!`);
       setShowModal(false);
 
-      // --- RE-FETCH DATA FROM DB ---
       await fetchData();
 
     } catch (error) {
@@ -162,7 +161,7 @@ const AssignTrainers = () => {
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Trainer Assignments</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage client allocations and workloads.</p>
+          <p className="text-sm text-gray-500 mt-1">Manage client allocations. Intro msg sent automatically on assignment.</p>
         </div>
         <div className="flex bg-gray-100 p-1 rounded-xl">
           <button
@@ -240,20 +239,17 @@ const AssignTrainers = () => {
                     <th className="px-6 py-4 font-semibold text-gray-900">Member</th>
                     <th className="px-6 py-4 font-semibold text-gray-900">Plan</th>
                     <th className="px-6 py-4 font-semibold text-gray-900">Assigned Trainer</th>
-                    
+                    <th className="px-6 py-4 font-semibold text-gray-900 text-center">Since</th>
                     <th className="px-6 py-4 font-semibold text-gray-900 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {filteredMembers.map((member) => {
-                    // Match logic: if member.trainer is an object, use it directly (populated).
-                    // If it is null, then unassigned.
-                    const assignedTrainer = member.trainer; 
-                    
+                    const assignedTrainer = member.trainer;
+
                     return (
                       <tr key={member._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 font-medium text-gray-900">{member.name}</td>
-                        {/* Access plan name safely whether populated or not, though /members typically populates it */}
                         <td className="px-6 py-4 text-gray-500">{member.plan?.name || "No Plan"}</td>
                         <td className="px-6 py-4">
                           {assignedTrainer ? (
@@ -267,7 +263,9 @@ const AssignTrainers = () => {
                             <span className="text-gray-400 italic">Unassigned</span>
                           )}
                         </td>
-                        
+                        <td className="px-6 py-4 text-center text-xs">
+                          {member.assignedDate ? new Date(member.assignedDate).toLocaleDateString() : "-"}
+                        </td>
                         <td className="px-6 py-4 text-right">
                           {assignedTrainer ? (
                             <div className="flex justify-end gap-2">

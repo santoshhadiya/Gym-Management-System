@@ -1,20 +1,29 @@
 const User = require("../models/User");
 const Member = require("../models/Member");
+
 // GET /api/trainers
 exports.getAllTrainers = async (req, res) => {
   const trainers = await User.find({ role: "trainer" }).select(
-    "name trainerDetails",
+    "name profileImage trainerDetails",
   );
 
   res.json(
     trainers.map((t) => ({
+      id: t._id, // Map _id to id for frontend compatibility if needed, or use _id
       _id: t._id,
       name: t.name,
-      specialization: t.trainerDetails?.specialization,
+      image: t.profileImage,
+      specialization: t.trainerDetails?.specialization || "General",
+      experience: t.trainerDetails?.experience || "N/A",
+      rating: t.trainerDetails?.rating || 0,
+      certifications: t.trainerDetails?.certifications || [],
+      bio: t.trainerDetails?.bio || "No bio available.",
+      schedule: t.trainerDetails?.schedule || "Not set",
       capacity: t.trainerDetails?.capacity || 10,
       activeClients: t.trainerDetails?.activeClients || 0,
       status:
-        t.trainerDetails?.activeClients >= t.trainerDetails?.capacity
+        (t.trainerDetails?.activeClients || 0) >=
+        (t.trainerDetails?.capacity || 10)
           ? "Full"
           : "Active",
     })),
@@ -133,16 +142,55 @@ exports.updateTrainerProfile = async (req, res) => {
       });
     }
 
-
     try {
       const updatedTrainer = await trainer.save();
     } catch (error) {
       console.log(error);
     }
 
-
     res.json(updatedTrainer);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/trainers/:id/members/all (Connected to Frontend Client List)
+exports.getTrainerMembersAll = async (req, res) => {
+  try {
+    const members = await Member.find({
+      assignedTrainer: req.params.id,
+    })
+      .populate("user", "name email phone profileImage status createdAt")
+      .populate("plan", "name");
+
+    res.json(
+      members.map((m) => ({
+        _id: m._id,
+        name: m.user.name,
+        image: m.user.profileImage || `https://i.pravatar.cc/150?u=${m._id}`,
+        plan: m.plan?.name || "No Plan",
+        goal: m.fitnessGoal || "General Fitness",
+        status: m.user.status,
+        assignedDate: m.assignedDate
+          ? m.assignedDate.toISOString().split("T")[0]
+          : "N/A",
+        // Logic for progress calculation would go here; for now, we pass data points
+        progress: m.user.status === "Active" ? "On Track" : "Low Attendance",
+        details: {
+          age: m.age || "N/A",
+          height: m.height || 0,
+          weight: m.currentWeight || 0,
+          targetWeight: m.targetWeight || 0,
+          attendance: 80, // Mock attendance logic
+        },
+      })),
+    );
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch trainer members",
+      error: error.message,
+    });
   }
 };

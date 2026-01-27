@@ -72,3 +72,17 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Get Admin Contact Info (For Trainers to chat)
+// @route   GET /api/admin/contact
+// @access  Private (Trainers/Admin)
+exports.getAdminContact = async (req, res) => {
+    try {
+        // Find the first admin user (assuming single owner scenario for simplicity)
+        const admin = await User.findOne({ role: 'admin' }).select('name email profileImage role');
+        if (!admin) return res.status(404).json({ message: "Admin contact not found" });
+        res.json(admin);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}

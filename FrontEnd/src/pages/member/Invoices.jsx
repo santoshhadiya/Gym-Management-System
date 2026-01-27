@@ -1,308 +1,428 @@
 import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
+import logo from "../../assets/logo.png"
+// Importing @react-pdf/renderer from a CDN to ensure it resolves correctly in the browser
+import {
+   Document,
+   Page,
+   Text,
+   View,
+   StyleSheet,
+   PDFDownloadLink,
+   Image
+} from '@react-pdf/renderer';
+import { useGlobalContext } from '../../context/GlobalContext';
+
+// --- PDF STYLES ---
+const pdfStyles = StyleSheet.create({
+   page: { padding: 40, fontSize: 11, color: '#222', backgroundColor: '#FFFFFF' },
+
+   // Header Section
+   header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      borderBottomWidth: 3,
+      borderBottomColor: '#D32F2F', // Brand Red
+      paddingBottom: 20,
+      marginBottom: 25
+   },
+   logo: { width: 80, height: 60 }, // Adjust size as needed
+   brandName: { fontSize: 24, fontWeight: 'bold', color: '#000', textTransform: 'uppercase' },
+   tagline: { fontSize: 9, color: '#D32F2F', letterSpacing: 1, marginTop: 2 },
+
+   invoiceTitle: { fontSize: 28, fontWeight: 'bold', color: '#111', textAlign: 'right' },
+   invoiceNo: { fontSize: 10, color: '#666', textAlign: 'right', marginTop: 4 },
+
+   // Info Section
+   infoSection: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 40 },
+   infoBox: { width: '45%' },
+   label: { fontSize: 9, textTransform: 'uppercase', color: '#D32F2F', fontWeight: 'bold', marginBottom: 4 },
+   value: { fontSize: 11, fontWeight: 'bold', color: '#000', marginBottom: 2 },
+   address: { fontSize: 9, color: '#555', lineHeight: 1.4 },
+
+   // Table Styling
+   tableHeader: {
+      flexDirection: 'row',
+      backgroundColor: '#111', // Black Header
+      padding: 8,
+      borderRadius: 2
+   },
+   tableHeaderText: { color: '#FFF', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' },
+   tableRow: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEE',
+      paddingVertical: 10,
+      paddingHorizontal: 8
+   },
+   colDesc: { flex: 3 },
+   colAmt: { flex: 1, textAlign: 'right' },
+
+   // Totals Section
+   totalSection: { marginTop: 30, alignItems: 'flex-end' },
+   totalRow: { flexDirection: 'row', width: '40%', justifyContent: 'space-between', marginBottom: 5, paddingRight: 8 },
+
+   grandTotalBox: {
+      backgroundColor: '#D32F2F', // Red Box
+      padding: 12,
+      width: '45%',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 10,
+      borderRadius: 4
+   },
+   grandTotalLabel: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
+   grandTotalAmount: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
+
+   // Footer
+   footer: {
+      position: 'absolute',
+      bottom: 30,
+      left: 40,
+      right: 40,
+      textAlign: 'center',
+      borderTopWidth: 1,
+      borderTopColor: '#EEE',
+      paddingTop: 10,
+      color: '#999',
+      fontSize: 8,
+      textTransform: 'uppercase'
+   }
+});
+// --- PDF COMPONENT ---
+const GymInvoicePDF = ({ inv }) => (
+   <Document title={`Invoice_${inv.id}`}>
+      <Page size="A4" style={pdfStyles.page}>
+
+         {/* HEADER: Logo & Title */}
+         <View style={pdfStyles.header}>
+            <View>
+               <Image src={logo} style={pdfStyles.logo} />
+               <Text style={pdfStyles.brandName}>Songar's GYM</Text>
+               <Text style={pdfStyles.tagline}>STRENGTH • DISCIPLINE • RESULTS</Text>
+               <Text style={pdfStyles.address}>Shastrinagar, Ahmedabad, Gujarat</Text>
+            </View>
+            <View>
+               <Text style={pdfStyles.invoiceTitle}>INVOICE</Text>
+               <Text style={pdfStyles.invoiceNo}>NO: #{inv.id}</Text>
+               <Text style={[pdfStyles.address, { textAlign: 'right', marginTop: 5 }]}>
+                  Date: {inv.date}
+               </Text>
+            </View>
+         </View>
+
+         {/* CUSTOMER & PAYMENT INFO */}
+         <View style={pdfStyles.infoSection}>
+            <View style={pdfStyles.infoBox}>
+               <Text style={pdfStyles.label}>Member Details</Text>
+               <Text style={pdfStyles.value}>{inv.member.name}</Text>
+               <Text style={pdfStyles.address}>Member ID: {inv._id?.slice(-6).toUpperCase()}</Text>
+            </View>
+            <View style={[pdfStyles.infoBox, { textAlign: 'right' }]}>
+               <Text style={pdfStyles.label}>Payment Method</Text>
+               <Text style={pdfStyles.value}>{inv.method}</Text>
+               <Text style={pdfStyles.address}>Status: PAID</Text>
+            </View>
+         </View>
+
+         {/* ITEM TABLE */}
+         <View style={pdfStyles.tableHeader}>
+            <Text style={[pdfStyles.colDesc, pdfStyles.tableHeaderText]}>Description</Text>
+            <Text style={[pdfStyles.colAmt, pdfStyles.tableHeaderText]}>Amount</Text>
+         </View>
+
+         <View style={pdfStyles.tableRow}>
+            <View style={pdfStyles.colDesc}>
+               <Text style={{ fontWeight: 'bold' }}>{inv.plan} Membership</Text>
+               <Text style={{ fontSize: 9, color: '#666', marginTop: 2 }}>Full access to gym facilities & trainer guidance.</Text>
+            </View>
+            <Text style={pdfStyles.colAmt}>rs.{inv.total.toLocaleString()}</Text>
+         </View>
+
+         {/* SUMMARY */}
+         <View style={pdfStyles.totalSection}>
+
+
+            <View style={pdfStyles.grandTotalBox}>
+               <Text style={pdfStyles.grandTotalLabel}>TOTAL PAID</Text>
+               <Text style={pdfStyles.grandTotalAmount}>rs.{inv.total.toLocaleString()}</Text>
+            </View>
+         </View>
+
+         {/* FOOTER */}
+         <View style={pdfStyles.footer}>
+            <Text>Thank you for being part of Songar's Gym! Stay Fit, Stay Strong.</Text>
+            <Text style={{ marginTop: 4 }}>This is a computer-generated receipt and does not require a physical signature.</Text>
+         </View>
+      </Page>
+   </Document>
+);
 
 const Invoices = () => {
-  // --- STYLE INJECTION ---
-  useEffect(() => {
-    const linkToast = document.createElement("link");
-    linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
-    linkToast.rel = "stylesheet";
-    document.head.appendChild(linkToast);
+   const { BACKEND_URL } = useGlobalContext();
 
-    const linkFA = document.createElement("link");
-    linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
-    linkFA.rel = "stylesheet";
-    document.head.appendChild(linkFA);
+   // --- STATE ---
+   const [invoices, setInvoices] = useState([]);
+   const [loading, setLoading] = useState(true);
+   const [selectedInvoice, setSelectedInvoice] = useState(null);
+   const [showModal, setShowModal] = useState(false);
 
-    return () => {
-      document.head.removeChild(linkToast);
-      document.head.removeChild(linkFA);
-    };
-  }, []);
+   // --- STYLE INJECTION ---
+   useEffect(() => {
+      const linkToast = document.createElement("link");
+      linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
+      linkToast.rel = "stylesheet";
+      document.head.appendChild(linkToast);
 
-  // --- MOCK DATA ---
-  const [invoices] = useState([
-    {
-      id: 'INV-2024-001',
-      date: '2024-01-15',
-      plan: 'Yearly Elite Membership',
-      amount: 12000,
-      tax: 2160,
-      total: 14160,
-      method: 'UPI',
-      status: 'Paid',
-      member: { name: "Santosh Hadiya", id: "MEM001", address: "Ahmedabad, Gujarat" }
-    },
-    {
-      id: 'INV-2024-002',
-      date: '2024-06-10',
-      plan: 'Personal Training (10 Sessions)',
-      amount: 5000,
-      tax: 900,
-      total: 5900,
-      method: 'Card',
-      status: 'Paid',
-      member: { name: "Santosh Hadiya", id: "MEM001", address: "Ahmedabad, Gujarat" }
-    },
-    {
-      id: 'INV-2024-003',
-      date: '2024-09-01',
-      plan: 'Nutrition Plan - Q3',
-      amount: 1500,
-      tax: 270,
-      total: 1770,
-      method: 'Pending',
-      status: 'Unpaid',
-      member: { name: "Santosh Hadiya", id: "MEM001", address: "Ahmedabad, Gujarat" }
-    },
-  ]);
+      const linkFA = document.createElement("link");
+      linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
+      linkFA.rel = "stylesheet";
+      document.head.appendChild(linkFA);
 
-  // --- STATE ---
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+      return () => {
+         document.head.removeChild(linkToast);
+         document.head.removeChild(linkFA);
+      };
+   }, []);
 
-  // --- HELPERS ---
-  const getStatusStyle = (status) => {
-    switch(status) {
-      case 'Paid': return "bg-[#D9F17F] text-green-900 border-green-200";
-      case 'Unpaid': return "bg-[#FEEF75] text-yellow-900 border-yellow-200";
-      case 'Overdue': return "bg-red-50 text-red-600 border-red-200";
-      default: return "bg-gray-100 text-gray-500 border-gray-200";
-    }
-  };
+   // --- FETCH DATA ---
+   const fetchInvoices = async () => {
+      try {
+         setLoading(true);
+         const userInfoRaw = localStorage.getItem("userInfo");
+         const userInfo = userInfoRaw ? JSON.parse(userInfoRaw) : null;
+         const token = userInfo?.token;
 
-  // --- ACTIONS ---
-  const handleViewInvoice = (invoice) => {
-    setSelectedInvoice(invoice);
-    setShowModal(true);
-  };
+         const res = await fetch(`${BACKEND_URL}/api/payments/my`, {
+            headers: { Authorization: `Bearer ${token}` }
+         });
 
-  const handleDownload = (id) => {
-    toast.success(`Downloading Invoice #${id}...`);
-  };
+         if (!res.ok) throw new Error("Failed to load invoices");
+         const data = await res.json();
 
-  const handlePrint = () => {
-    window.print();
-  };
+         const formattedInvoices = data.map(payment => {
+            const amount = payment.amount || 0;
+            const baseAmount = Math.round(amount / 1.18);
+            const tax = amount - baseAmount;
 
-  // --- FILTERING ---
-  const filteredInvoices = invoices.filter(inv => {
-    const matchesSearch = inv.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          inv.plan.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === "All" || inv.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+            return {
+               id: payment.transactionId || `INV-${(payment._id || "").slice(-6).toUpperCase()}`,
+               _id: payment._id,
+               date: payment.createdAt ? new Date(payment.createdAt).toISOString().split('T')[0] : "N/A",
+               plan: payment.plan?.name || "Member Subscription",
+               amount: baseAmount,
+               tax: tax,
+               total: amount,
+               method: payment.method || "Other",
+               status: payment.status === 'Success' || payment.status === 'Paid' ? 'Paid' : 'Pending',
+               member: { name: userInfo?.name || "Member" }
+            };
+         });
+         setInvoices(formattedInvoices);
+      } catch (err) {
+         console.error(err);
+         toast.error("Failed to load invoices");
+         // Mock data for preview if backend fails
+         setInvoices([
+            { id: "INV-B82A1C", _id: "651f...", date: "2023-10-15", plan: "Monthly Premium", amount: 42, tax: 8, total: 50, method: "UPI", status: "Paid", member: { name: "John Doe" } },
+            { id: "INV-C112F4", _id: "6520...", date: "2023-10-20", plan: "Quarterly Basic", amount: 102, tax: 18, total: 120, method: "Card", status: "Pending", member: { name: "John Doe" } }
+         ]);
+      } finally {
+         setLoading(false);
+      }
+   };
 
-  return (
-    <div className="w-full max-w-6xl mx-auto space-y-8 pb-10 font-sans">
-      <ToastContainer position="top-right" autoClose={3000} />
+   useEffect(() => {
+      fetchInvoices();
+   }, []);
 
-      {/* --- HEADER --- */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900">Your Invoices</h1>
-          <p className="text-gray-500 mt-1">View and download your payment receipts.</p>
-        </div>
-      </div>
+   // --- ACTIONS ---
+   const handleView = (invoice) => {
+      setSelectedInvoice(invoice);
+      setShowModal(true);
+   };
 
-      {/* --- CONTROLS --- */}
-      <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-[2rem] border border-gray-100 shadow-sm">
-         <div className="relative flex-grow md:max-w-xs">
-            <input
-               type="text"
-               placeholder="Search Invoice ID..."
-               value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
-               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm transition-all"
-            />
-            <i className="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+   const handlePrint = () => {
+      window.print();
+   };
+
+   if (loading) return <div className="p-10 text-center text-gray-500 font-sans">Loading Invoices...</div>;
+
+   return (
+      <div className="w-full max-w-5xl mx-auto space-y-8 pb-10 font-sans">
+         <ToastContainer position="top-right" autoClose={3000} />
+
+         {/* HEADER */}
+         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+               <h1 className="text-3xl font-black text-gray-900">My Invoices</h1>
+               <p className="text-gray-500 mt-1">View and download your payment history.</p>
+            </div>
          </div>
-         
-         <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0">
-            {['All', 'Paid', 'Unpaid'].map(status => (
-               <button
-                  key={status}
-                  onClick={() => setFilterStatus(status)}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                     filterStatus === status 
-                     ? 'bg-[#CDE7FE] text-blue-900 shadow-sm' 
-                     : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                  }`}
-               >
-                  {status}
-               </button>
-            ))}
+
+         {/* INVOICE LIST */}
+         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+            {invoices.length > 0 ? (
+               <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-gray-500">
+                     <thead className="bg-[#f8f9fa] border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
+                        <tr>
+                           <th className="px-6 py-4 font-bold">Invoice #</th>
+                           <th className="px-6 py-4 font-bold">Date</th>
+                           <th className="px-6 py-4 font-bold">Plan</th>
+                           <th className="px-6 py-4 font-bold text-right">Amount</th>
+                           <th className="px-6 py-4 font-bold text-center">Status</th>
+                           <th className="px-6 py-4 font-bold text-right">Action</th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-gray-100">
+                        {invoices.map((inv) => (
+                           <tr key={inv._id} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-6 py-4 font-mono font-medium text-gray-900">{inv.id}</td>
+                              <td className="px-6 py-4">{inv.date}</td>
+                              <td className="px-6 py-4 text-gray-800">{inv.plan}</td>
+                              <td className="px-6 py-4 text-right font-bold text-gray-900">₹{inv.total.toLocaleString()}</td>
+                              <td className="px-6 py-4 text-center">
+                                 <span className={`px-2 py-1 rounded text-[10px] font-bold border ${inv.status === 'Paid' ? 'bg-[#D9F17F] text-green-900 border-green-200' : 'bg-red-50 text-red-600 border-red-200'
+                                    }`}>
+                                    {inv.status}
+                                 </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                 <div className="flex items-center justify-end gap-3">
+
+
+                                    <PDFDownloadLink
+                                       document={<GymInvoicePDF inv={inv} />}
+                                       fileName={`Invoice_${inv.id}.pdf`}
+                                       className={`flex items-center gap-1 font-bold text-xs ${inv.status === 'Paid' ? 'text-blue-600 hover:text-blue-800' : 'text-gray-300 cursor-not-allowed pointer-events-none'}`}
+                                    >
+                                       {({ loading }) => (
+                                          <span className="flex items-center gap-1">
+                                             <i className={loading ? "fa-solid fa-spinner fa-spin" : "fa-solid fa-download"}></i>
+                                             {loading ? '...' : 'Download'}
+                                          </span>
+                                       )}
+                                    </PDFDownloadLink>
+                                 </div>
+                              </td>
+                           </tr>
+                        ))}
+                     </tbody>
+                  </table>
+               </div>
+            ) : (
+               <div className="text-center py-16">
+                  <i className="fa-solid fa-file-invoice-dollar text-4xl text-gray-200 mb-3"></i>
+                  <p className="text-gray-400">No invoices found.</p>
+               </div>
+            )}
          </div>
+
+         {/* --- INVOICE DETAILS MODAL --- */}
+         {showModal && selectedInvoice && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 print:p-0 print:absolute print:inset-0 print:bg-white print:z-[1000]">
+               <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 print:shadow-none print:rounded-none print:w-full print:max-w-none">
+
+                  {/* Modal Header */}
+                  <div className="bg-[#f8f9fa] px-8 py-6 border-b border-gray-100 flex justify-between items-center print:hidden">
+                     <h3 className="font-bold text-gray-900 text-lg">Invoice Details</h3>
+                     <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i className="fa-solid fa-xmark text-xl"></i>
+                     </button>
+                  </div>
+
+                  {/* Invoice Content */}
+                  <div className="p-8 print:p-10">
+                     <div className="flex justify-between items-start mb-8 border-b border-gray-100 pb-6">
+                        <div>
+                           <h2 className="text-3xl font-black text-gray-900 tracking-tight">INVOICE</h2>
+                           <p className="text-sm text-gray-400 font-mono mt-1">#{selectedInvoice.id}</p>
+                        </div>
+                        <div className="text-right">
+                           <h3 className="font-bold text-xl text-gray-800">Songar's GYM</h3>
+                           <p className="text-xs text-gray-400 mt-1">Shastrinagar, Ahmedabad</p>
+                           <p className="text-xs text-gray-400">Gujarat, India</p>
+                        </div>
+                     </div>
+
+                     <div className="grid grid-cols-2 gap-8 mb-8 text-sm">
+                        <div>
+                           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Billed To</p>
+                           <p className="font-bold text-gray-900 text-lg">{selectedInvoice.member.name}</p>
+                           <p className="text-gray-500">ID: {selectedInvoice._id?.slice(-6).toUpperCase() || 'N/A'}</p>
+                        </div>
+                        <div className="text-right">
+                           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Payment Info</p>
+                           <p className="font-medium text-gray-800">Date: {selectedInvoice.date}</p>
+                           <p className="font-medium text-gray-800">Method: {selectedInvoice.method}</p>
+                        </div>
+                     </div>
+
+                     <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100 print:border-gray-300">
+                        <div className="flex justify-between mb-4 border-b border-gray-200 pb-4">
+                           <span className="font-bold text-gray-700">Description</span>
+                           <span className="font-bold text-gray-700">Amount</span>
+                        </div>
+                        <div className="flex justify-between mb-2 text-sm">
+                           <span className="text-gray-600">{selectedInvoice.plan}</span>
+                           <span className="font-medium text-gray-900">₹{selectedInvoice.amount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between mb-4 text-sm">
+                           <span className="text-gray-500">Tax (GST 18% Incl.)</span>
+                           <span className="font-medium text-gray-500">₹{selectedInvoice.tax.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between pt-4 border-t border-gray-200 items-end">
+                           <span className="font-black text-gray-900 text-lg">Total</span>
+                           <span className="font-black text-[#D9F17F] text-2xl bg-gray-900 px-3 py-1 rounded-lg">₹{selectedInvoice.total.toLocaleString()}</span>
+                        </div>
+                     </div>
+
+                     {/* Footer Actions */}
+                     {selectedInvoice.status === 'Paid' ? (
+                        <div className="flex gap-3 print:hidden">
+                           <button
+                              onClick={handlePrint}
+                              className="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                           >
+                              <i className="fa-solid fa-print"></i> Print
+                           </button>
+
+                           <PDFDownloadLink
+                              document={<GymInvoicePDF inv={selectedInvoice} />}
+                              fileName={`Invoice_${selectedInvoice.id}.pdf`}
+                              className="flex-1"
+                           >
+                              {({ loading }) => (
+                                 <button
+                                    disabled={loading}
+                                    className="w-full py-3 bg-[#D9F17F] text-green-900 rounded-xl font-bold hover:bg-green-300 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                 >
+                                    <i className={`fa-solid ${loading ? 'fa-spinner fa-spin' : 'fa-download'}`}></i>
+                                    {loading ? 'Preparing...' : 'Download PDF'}
+                                 </button>
+                              )}
+                           </PDFDownloadLink>
+                        </div>
+                     ) : (
+                        <div className="mt-4 text-center bg-red-50 border border-red-100 rounded-xl p-4 print:hidden">
+                           <p className="text-sm text-red-600 font-bold mb-2">
+                              <i className="fa-solid fa-triangle-exclamation mr-2"></i>
+                              This invoice is pending payment.
+                           </p>
+                           <p className="text-xs text-red-500">Download and Print options are disabled until payment is cleared.</p>
+                        </div>
+                     )}
+
+                  </div>
+               </div>
+            </div>
+         )}
+
       </div>
-
-      {/* --- INVOICE LIST --- */}
-      <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-[#f8f9fa]">
-              <tr>
-                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Invoice #</th>
-                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Plan / Service</th>
-                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Amount</th>
-                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
-                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filteredInvoices.length > 0 ? filteredInvoices.map((inv) => (
-                <tr key={inv.id} className="hover:bg-gray-50 transition-colors group">
-                  <td className="py-4 px-6 font-mono text-sm font-medium text-gray-700">{inv.id}</td>
-                  <td className="py-4 px-6 text-sm text-gray-600">{inv.date}</td>
-                  <td className="py-4 px-6 text-sm font-bold text-gray-800">{inv.plan}</td>
-                  <td className="py-4 px-6 text-sm font-black text-gray-900 text-right">₹{inv.total.toLocaleString()}</td>
-                  <td className="py-4 px-6 text-center">
-                    <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusStyle(inv.status)}`}>
-                      {inv.status}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6 text-right">
-                    <div className="flex justify-end gap-2">
-                       <button 
-                         onClick={() => handleViewInvoice(inv)}
-                         className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors"
-                         title="View Details"
-                       >
-                          <i className="fa-regular fa-eye text-xs"></i>
-                       </button>
-                       <button 
-                         onClick={() => handleDownload(inv.id)}
-                         disabled={inv.status !== 'Paid'}
-                         className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                           inv.status === 'Paid' 
-                           ? 'bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer' 
-                           : 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                         }`}
-                         title={inv.status === 'Paid' ? "Download PDF" : "Payment Pending"}
-                       >
-                          <i className="fa-solid fa-download text-xs"></i>
-                       </button>
-                    </div>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                   <td colSpan="6" className="py-12 text-center text-gray-400">
-                      <i className="fa-solid fa-file-invoice text-4xl mb-3 opacity-20"></i>
-                      <p>No invoices found.</p>
-                   </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* --- INVOICE DETAILS MODAL --- */}
-      {showModal && selectedInvoice && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-           {/* Added [&::-webkit-scrollbar]:hidden to hide scrollbar in Chrome/Safari/Edge 
-              Added scrollbar-width: none logic via custom inline style below for Firefox support
-           */}
-           <div 
-             className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-fade-in relative flex flex-col [&::-webkit-scrollbar]:hidden"
-             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-           >
-              
-              {/* Modal Header */}
-              <div className="bg-[#f8f9fa] px-8 py-5 border-b border-gray-100 flex justify-between items-center shrink-0 sticky top-0 z-10">
-                 <h2 className="text-xl font-black text-gray-900">INVOICE DETAILS</h2>
-                 <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                    <i className="fa-solid fa-xmark text-xl"></i>
-                 </button>
-              </div>
-
-              {/* Receipt Body */}
-              <div className="p-8 font-mono text-sm">
-                 
-                 {/* Top Row */}
-                 <div className="flex justify-between mb-8">
-                    <div>
-                       <h3 className="text-lg font-bold text-gray-800">Songar's GYM</h3>
-                       <p className="text-gray-500">123 Fitness Street, Naranpura</p>
-                       <p className="text-gray-500">Ahmedabad, Gujarat</p>
-                    </div>
-                    <div className="text-right">
-                       <p className="text-gray-500">Invoice #</p>
-                       <p className="font-bold text-gray-900 text-lg">{selectedInvoice.id}</p>
-                       <p className="text-gray-500 mt-1">Date: {selectedInvoice.date}</p>
-                    </div>
-                 </div>
-
-                 {/* Bill To */}
-                 <div className="mb-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <p className="text-xs text-gray-400 uppercase font-bold mb-1">Billed To</p>
-                    <p className="font-bold text-gray-900">{selectedInvoice.member.name}</p>
-                    <p className="text-gray-500">{selectedInvoice.member.id}</p>
-                    <p className="text-gray-500">{selectedInvoice.member.address}</p>
-                 </div>
-
-                 {/* Line Items */}
-                 <table className="w-full mb-6">
-                    <thead className="border-b border-gray-200">
-                       <tr>
-                          <th className="text-left py-2 text-gray-500">Description</th>
-                          <th className="text-right py-2 text-gray-500">Amount</th>
-                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                       <tr>
-                          <td className="py-4 text-gray-800">{selectedInvoice.plan}</td>
-                          <td className="py-4 text-right font-bold">₹{selectedInvoice.amount.toLocaleString()}</td>
-                       </tr>
-                       <tr>
-                          <td className="py-4 text-gray-500">Tax (18% GST)</td>
-                          <td className="py-4 text-right text-gray-500">₹{selectedInvoice.tax.toLocaleString()}</td>
-                       </tr>
-                    </tbody>
-                 </table>
-
-                 {/* Total */}
-                 <div className="flex justify-between items-center border-t-2 border-gray-800 pt-4 mb-8">
-                    <span className="font-bold text-xl text-gray-900">Total</span>
-                    <span className="font-black text-2xl text-green-600">₹{selectedInvoice.total.toLocaleString()}</span>
-                 </div>
-
-                 {/* Footer Actions */}
-                 {selectedInvoice.status === 'Paid' ? (
-                   <div className="flex gap-4">
-                      <button 
-                         onClick={handlePrint}
-                         className="flex-1 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
-                      >
-                         <i className="fa-solid fa-print"></i> Print
-                      </button>
-                      <button 
-                         onClick={() => handleDownload(selectedInvoice.id)}
-                         className="flex-1 py-3 bg-[#D9F17F] text-green-900 rounded-xl font-bold hover:bg-green-300 transition-colors flex items-center justify-center gap-2"
-                      >
-                         <i className="fa-solid fa-download"></i> Download PDF
-                      </button>
-                   </div>
-                 ) : (
-                    <div className="mt-4 text-center bg-red-50 border border-red-100 rounded-xl p-4">
-                       <p className="text-sm text-red-600 font-bold mb-2">
-                          <i className="fa-solid fa-triangle-exclamation mr-2"></i>
-                          This invoice is pending payment.
-                       </p>
-                       <p className="text-xs text-red-500">Download and Print options are disabled until payment is cleared.</p>
-                    </div>
-                 )}
-
-              </div>
-           </div>
-        </div>
-      )}
-
-    </div>
-  );
+   );
 };
 
 export default Invoices;

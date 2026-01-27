@@ -1,30 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import { useGlobalContext } from "../../context/GlobalContext";
+
 
 const Inquiry = () => {
+  const { BACKEND_URL } = useGlobalContext()
+
   const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Style Injection
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+    return () => { document.head.removeChild(link); };
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    // TODO: send data to backend (Firebase, Formspree, etc.)
-    console.log('Inquiry Submitted:', form);
+    try {
+      // Mock for preview if backend unavailable
+      const isPreview = false;
 
-    // Reset form
-    setForm({ name: '', email: '', phone: '', message: '' });
-    alert('Thank you! Your inquiry has been submitted.');
+      if (!isPreview) {
+        const res = await fetch(`${BACKEND_URL}/api/inquiries`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.message || "Failed to submit inquiry");
+        }
+      } else {
+        // Simulate delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+
+      toast.success('Thank you! Your inquiry has been submitted.');
+      setForm({ name: '', email: '', phone: '', message: '' });
+
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen px-6 py-16 text-gray-800">
+    <div className="bg-gray-100 min-h-screen px-6 py-16 text-gray-800 font-sans">
+      <ToastContainer position="top-right" autoClose={3000} />
+
       {/* Header */}
       <div className="max-w-3xl mx-auto text-center mb-10">
         <h1 className="text-4xl font-bold text-red-600 mb-4">Inquiry Form</h1>
@@ -36,7 +77,7 @@ const Inquiry = () => {
       {/* Form */}
       <form
         onSubmit={handleSubmit}
-        className="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-8 space-y-6"
+        className="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md space-y-6"
       >
         <div>
           <label className="block text-sm font-medium mb-1">Full Name</label>
@@ -88,9 +129,10 @@ const Inquiry = () => {
 
         <button
           type="submit"
-          className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-md transition"
+          disabled={isSubmitting}
+          className="w-full bg-red-600 text-white font-bold py-3 rounded-md hover:bg-red-700 transition duration-300 disabled:bg-red-400"
         >
-          Submit Inquiry
+          {isSubmitting ? "Sending..." : "Submit Inquiry"}
         </button>
       </form>
     </div>

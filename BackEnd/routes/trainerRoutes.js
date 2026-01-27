@@ -1,11 +1,16 @@
 const router = require("express").Router();
-const { getAllTrainers,getAllTrainersData,createTrainer,updateTrainer,getTrainerMembers,deactivateTrainer,getTrainerProfile,updateTrainerProfile } = require("../controllers/trainerController");
+const { getAllTrainers, getAllTrainersData, createTrainer, updateTrainer, getTrainerMembers, deactivateTrainer, getTrainerProfile, updateTrainerProfile,getTrainerMembersAll } = require("../controllers/trainerController");
 const { protect, authorize } = require("../middlewares/authMiddleware");
 
-router.get("/profile",protect,authorize("trainer"),getTrainerProfile);
-router.put("/profile",protect,authorize("trainer"),updateTrainerProfile);
+// Self-profile management
+router.get("/profile", protect, authorize("trainer"), getTrainerProfile);
+router.put("/profile", protect, authorize("trainer"), updateTrainerProfile);
+router.get("/:id/members/all", protect, authorize("trainer"), getTrainerMembersAll);
 
-router.get("/", protect, authorize("admin"), getAllTrainers);
+
+router.get("/", protect, getAllTrainers); 
+
+// Admin specific routes
 router.get("/data", protect, authorize("admin"), getAllTrainersData);
 router.post("/", protect, authorize("admin"), createTrainer);
 router.put("/:id", protect, authorize("admin"), updateTrainer);

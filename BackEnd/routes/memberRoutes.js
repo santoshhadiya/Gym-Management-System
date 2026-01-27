@@ -9,6 +9,7 @@ const {
   createMember,
   updateMemberByAdmin,
   deactivateMember,
+  getAllMembersAllForManageMember,
 } = require("../controllers/memberController");
 
 const { protect, authorize } = require("../middlewares/authMiddleware");
@@ -25,5 +26,6 @@ router.put("/:id", protect, authorize("admin"), updateMemberByAdmin);
 router.put("/:id/deactivate", protect, authorize("admin"), deactivateMember);
 router.get("/", protect, authorize("admin", "trainer"), getAllMembers);
 router.get("/all", protect, authorize("admin"), getAllMembersAll);
+router.get("/all/manage", protect, authorize("admin"), getAllMembersAllForManageMember);
 
 module.exports = router;

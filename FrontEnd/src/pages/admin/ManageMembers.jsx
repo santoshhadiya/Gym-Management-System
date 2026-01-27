@@ -2,39 +2,33 @@ import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from 'react-toastify';
 import { useGlobalContext } from "../../context/GlobalContext";
 
-
 const ManageMember = () => {
   const { api } = useGlobalContext();
-  // --- STATE ---
   const [members, setMembers] = useState([]);
-  const [plans, setPlans] = useState([]); // State for Plans
+  const [plans, setPlans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const [viewState, setViewState] = useState("list"); // 'list', 'form', 'details'
+  const [viewState, setViewState] = useState("list");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterPlan, setFilterPlan] = useState("All");
 
-  // Form State
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     _id: null,
     name: "",
     email: "",
     phone: "",
-    password: "", // Only for adding
+    password: "",
     age: "",
     gender: "Male",
-    plan: "", // Stores Plan ID
+    plan: "",
     height: "",
     currentWeight: "",
     fitnessGoal: ""
   });
 
-  // Selected Member for Details View
   const [selectedMember, setSelectedMember] = useState(null);
 
-  // --- STYLE INJECTION ---
   useEffect(() => {
     const linkToast = document.createElement("link");
     linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
@@ -52,12 +46,11 @@ const ManageMember = () => {
     };
   }, []);
 
-  // --- FETCH DATA ---
   const fetchData = async () => {
     try {
       setIsLoading(true);
       const [membersRes, plansRes] = await Promise.all([
-        api.get("/members/all"),
+        api.get("/members/all/manage"),
         api.get("/plans")
       ]);
       setMembers(membersRes.data);
@@ -73,7 +66,6 @@ const ManageMember = () => {
     fetchData();
   }, []);
 
-  // --- HELPER FUNCTIONS ---
   const getStatusColor = (status) => {
     if (status === "Inactive") return "bg-gray-100 text-gray-500 border-gray-200";
     return "bg-[#D9F17F] text-green-800 border-green-200";
@@ -81,28 +73,12 @@ const ManageMember = () => {
 
   const getPlanName = (planData) => {
     if (!planData) return "No Plan";
-
-    // If populated object
-    if (typeof planData === "object" && planData.name) {
-      return planData.name;
-    }
-
-    // If ObjectId string
-    if (typeof planData === "string") {
-      return planData
-    }
-
-    return "No Plan";
+    return typeof planData === "object" ? planData.name : planData;
   };
 
-
   const handleExportCSV = () => {
-    const headers = ["ID,Name,Email,Phone,Plan,Status,Trainer"];
-
-    const rows = members.map(m =>
-
-      `${m._id},${m.name},${m.email},${m.phone},${getPlanName(m.plan)},${m.status},${m.trainer}`
-    );
+    const headers = ["ID,Name,Email,Phone,Plan,Status"];
+    const rows = members.map(m => `${m._id},${m.name},${m.email},${m.phone},${getPlanName(m.plan)},${m.status}`);
     const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -113,22 +89,16 @@ const ManageMember = () => {
     document.body.removeChild(link);
   };
 
-  // --- CRUD OPERATIONS ---
-
   const handleEditClick = (member) => {
-    // Populate form but DO NOT set password
     setFormData({
       _id: member._id,
       name: member.name,
       email: member.email,
       phone: member.phone,
-      password: "", // Ensure password is cleared
+      password: "",
       age: member.age || "",
       gender: member.gender || "Male",
-
-      // IMPORTANT: Extract Plan ID correctly whether it's populated or raw
       plan: member.plan?._id || member.plan || "",
-
       height: member.height || "",
       currentWeight: member.currentWeight || "",
       fitnessGoal: member.fitnessGoal || ""
@@ -148,382 +118,433 @@ const ManageMember = () => {
 
   const handleSaveMember = async (e) => {
     e.preventDefault();
-
     try {
       if (isEditing) {
-        // Remove password from payload for updates
         const { password, ...updateData } = formData;
         await api.put(`/members/${formData._id}`, updateData);
         toast.success("Member updated successfully");
       } else {
-        if (!formData.password) {
-          toast.error("Password is required for new members");
-          return;
-        }
+        if (!formData.password) return toast.error("Password is required");
         await api.post("/members", formData);
         toast.success("Member registered successfully");
       }
-
       setViewState("list");
-      fetchData(); // Refresh data
+      fetchData();
     } catch (err) {
-      console.error(err);
-      toast.error("Operation failed");
+      toast.error(err.response?.data?.message || "Operation failed");
     }
   };
 
   const handleDeactivate = async (id) => {
-    if (window.confirm("Are you sure you want to deactivate this member? They will not be able to login.")) {
+    if (window.confirm("Change status for this member?")) {
       try {
         await api.put(`/members/${id}/deactivate`);
-        toast.success("Member deactivated");
+        toast.success("Status updated");
         fetchData();
       } catch (err) {
-        toast.error("Failed to deactivate member");
+        toast.error("Failed to update status");
       }
     }
   };
 
-  // --- FILTER LOGIC ---
   const filteredMembers = members.filter(member => {
-    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.phone.includes(searchTerm);
-
-    // Safely get plan ID string for filtering
+    const matchesSearch = (member.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (member.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (member.phone || "").includes(searchTerm);
     const memberPlanId = member.plan?._id || member.plan;
     const matchesPlan = filterPlan === "All" || memberPlanId === filterPlan;
-
     const matchesStatus = filterStatus === "All" || member.status === filterStatus;
-
     return matchesSearch && matchesPlan && matchesStatus;
   });
 
   return (
-    <div className="w-full bg-white rounded-3xl p-8 shadow-sm border border-gray-100 font-sans min-h-screen">
+    <div className="w-full bg-[#fcfcfc] rounded-3xl p-6 md:p-10 font-sans min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* --- HEADER --- */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Manage Members</h1>
-          <p className="text-sm text-gray-500 mt-1">Total Members: {members.length}</p>
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Manage Members</h1>
+          <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+            Overview of your {members.length} gym members
+          </p>
         </div>
-        <div className="flex gap-3">
-          <button
-            onClick={handleExportCSV}
-            className="px-4 py-2 rounded-full border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
-          >
-            <i className="fa-solid fa-download mr-2"></i> Export CSV
+        <div className="flex items-center gap-3">
+          <button onClick={handleExportCSV} className="px-5 py-2.5 rounded-2xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-white hover:shadow-md transition-all duration-300">
+            <i className="fa-solid fa-cloud-arrow-down mr-2"></i> Export CSV
           </button>
-          <button
-            onClick={handleAddClick}
-            className="px-5 py-2 rounded-full bg-[#CDE7FE] text-blue-900 text-sm font-semibold hover:bg-blue-200 transition-colors shadow-sm"
-          >
-            <i className="fa-solid fa-plus mr-2"></i> Add Member
+          <button onClick={handleAddClick} className="px-6 py-2.5 rounded-2xl bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 transition-all duration-300 shadow-lg shadow-gray-200">
+            <i className="fa-solid fa-plus mr-2"></i> Add New Member
           </button>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <i className="fa-solid fa-circle-notch fa-spin text-gray-300 text-3xl"></i>
+        <div className="flex flex-col items-center justify-center py-40">
+          <div className="relative">
+            <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin"></div>
+          </div>
+          <p className="mt-4 text-gray-400 font-medium">Loading your team...</p>
         </div>
       ) : (
         <>
-          {/* 1. VIEW ALL (LIST) */}
           {viewState === "list" && (
             <>
-              {/* Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="relative col-span-2">
-                  <input
-                    type="text"
-                    placeholder="Search by Name, Phone, or Email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm"
+              {/* Filters Bar */}
+              <div className="flex flex-wrap gap-4 mb-8">
+                <div className="relative flex-grow min-w-[300px]">
+                  <input 
+                    type="text" 
+                    placeholder="Search by name, email or phone..." 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                    className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white border border-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all text-sm" 
                   />
-                  <i className="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                  <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
                 </div>
-
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#CDE7FE]"
-                >
+                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-4 py-3 rounded-2xl bg-white border border-gray-100 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 font-medium">
                   <option value="All">All Statuses</option>
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                 </select>
-
-                <select
-                  value={filterPlan}
-                  onChange={(e) => setFilterPlan(e.target.value)}
-                  className="px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#CDE7FE]"
-                >
-                  <option value="All">All Plans</option>
-                  {plans.map(p => (
-                    <option key={p._id} value={p._id}>{p.name}</option>
-                  ))}
+                <select value={filterPlan} onChange={(e) => setFilterPlan(e.target.value)} className="px-4 py-3 rounded-2xl bg-white border border-gray-100 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 font-medium">
+                  <option value="All">All Membership Plans</option>
+                  {plans.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
                 </select>
               </div>
 
-              {/* Table */}
-              <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
-                <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                  <thead className="bg-[#f8f9fa]">
-                    <tr>
-                      <th className="px-6 py-4 font-semibold text-gray-900">Member Info</th>
-                      <th className="px-6 py-4 font-semibold text-gray-900">Membership</th>
-                      <th className="px-6 py-4 font-semibold text-gray-900">Assigned Trainer</th>
-                      <th className="px-6 py-4 font-semibold text-gray-900 text-center">Status</th>
-                      <th className="px-6 py-4 font-semibold text-gray-900 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {filteredMembers.map((member) => (
-                      <tr key={member._id} className="hover:bg-gray-50 transition-colors group">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-[#CDE7FE] flex items-center justify-center text-blue-600 font-bold text-xs">
-                              {member.name.slice(0, 2).toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="font-medium text-gray-900">{member.name}</div>
-                              <div className="text-xs text-gray-400">{member.phone}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className="font-medium text-gray-900">{getPlanName(member.plan)}</span>
-                            <span className="text-xs text-gray-400">Joined: {new Date(member.joinDate).toLocaleDateString()}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <i className="fa-solid fa-user-tie text-gray-300"></i>
-                            <span>{member.trainer || "Unassigned"}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(member.status)}`}>
-                            {member.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2 opacity-100 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => { setSelectedMember(member); setViewState("details"); }} className="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="View Details">
-                              <i className="fa-solid fa-eye"></i>
-                            </button>
-                            <button onClick={() => handleEditClick(member)} className="p-2 text-gray-400 hover:text-green-600 transition-colors" title="Edit">
-                              <i className="fa-solid fa-pen-to-square"></i>
-                            </button>
-                            <button onClick={() => handleDeactivate(member._id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors" title="Deactivate">
-                              <i className="fa-solid fa-ban"></i>
-                            </button>
-                          </div>
-                        </td>
+              {/* Table Container */}
+              <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl shadow-gray-100/50 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="bg-gray-50/50 border-b border-gray-50">
+                        <th className="px-8 py-5 font-bold text-gray-400 uppercase tracking-wider text-[10px]">Member Info</th>
+                        <th className="px-8 py-5 font-bold text-gray-400 uppercase tracking-wider text-[10px]">Membership</th>
+                        <th className="px-8 py-5 font-bold text-gray-400 uppercase tracking-wider text-[10px]">Trainer</th>
+                        <th className="px-8 py-5 font-bold text-gray-400 uppercase tracking-wider text-[10px] text-center">Status</th>
+                        <th className="px-8 py-5 font-bold text-gray-400 uppercase tracking-wider text-[10px] text-right">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {filteredMembers.length === 0 && (
-                  <div className="text-center py-12 text-gray-400">
-                    <i className="fa-solid fa-ghost text-2xl mb-2"></i>
-                    <p>No members found matching your filters.</p>
-                  </div>
-                )}
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {filteredMembers.map((member) => (
+                        <tr key={member._id} className="hover:bg-blue-50/30 transition-all duration-200 group">
+                          <td className="px-8 py-5">
+                            <div className="flex items-center gap-4">
+                              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 font-bold shadow-sm">
+                                {member.name.slice(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{member.name}</div>
+                                <div className="text-xs text-gray-400 font-medium">{member.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-8 py-5">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-gray-800">{getPlanName(member.plan)}</span>
+                              <span className="text-[11px] text-gray-400 font-medium">Joined {new Date(member.joinDate).toLocaleDateString()}</span>
+                            </div>
+                          </td>
+                          <td className="px-8 py-5">
+                             <div className="flex items-center gap-2">
+                               <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                               <span className="text-gray-600 font-medium">{typeof member.trainer === 'object' ? member.trainer?.name : member.trainer || "Unassigned"}</span>
+                             </div>
+                          </td>
+                          <td className="px-8 py-5 text-center">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${getStatusColor(member.status)}`}>
+                              {member.status}
+                            </span>
+                          </td>
+                          <td className="px-8 py-5 text-right">
+                            <div className="flex justify-end gap-1">
+                              <button onClick={() => { setSelectedMember(member); setViewState("details"); }} className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="View Profile"><i className="fa-solid fa-user-gear"></i></button>
+                              <button onClick={() => handleEditClick(member)} className="p-2.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all" title="Edit Details"><i className="fa-solid fa-pen-nib"></i></button>
+                              <button onClick={() => handleDeactivate(member._id)} className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="Toggle Status"><i className="fa-solid fa-ban"></i></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filteredMembers.length === 0 && (
+                    <div className="py-20 text-center text-gray-400">
+                      <i className="fa-solid fa-inbox text-4xl mb-4 opacity-20"></i>
+                      <p className="font-medium">No members match your current filters</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           )}
 
-          {/* 2. ADD / EDIT FORM */}
           {viewState === "form" && (
-            <div className="max-w-4xl mx-auto">
-              <button onClick={() => setViewState("list")} className="mb-6 text-sm text-gray-500 hover:text-gray-800 flex items-center gap-2">
-                <i className="fa-solid fa-arrow-left"></i> Back to List
+            <div className="max-w-4xl mx-auto animate-fadeIn">
+              <button onClick={() => setViewState("list")} className="mb-8 px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-900 flex items-center gap-2 group transition-all">
+                <i className="fa-solid fa-arrow-left-long group-hover:-translate-x-1 transition-transform"></i> Return to List
               </button>
+              
+              <form onSubmit={handleSaveMember} className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-gray-100 shadow-2xl shadow-gray-100">
+                <div className="mb-10 text-center md:text-left">
+                  <h2 className="text-3xl font-black text-gray-900">{isEditing ? "Update Profile" : "Register Member"}</h2>
+                  <p className="text-gray-400 mt-2 text-sm font-medium">Fill in the details below to manage your gym community member.</p>
+                </div>
 
-              <div className="bg-gray-50 p-8 rounded-3xl border border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900 mb-6">{isEditing ? "Edit Member Details" : "Register New Member"}</h2>
+                <div className="space-y-10">
+                  {/* Section: Personal Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                       <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] mb-4">Personal Details</h3>
+                    </div>
+                    
+                    <div className="relative">
+                      <i className="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                      <input required placeholder="Full Name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium placeholder:text-gray-400" />
+                    </div>
 
-                <form onSubmit={handleSaveMember} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="relative">
+                      <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                      <input required type="email" placeholder="Email Address" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium placeholder:text-gray-400" />
+                    </div>
 
-                  {/* Account Info */}
-                  <div className="md:col-span-2">
-                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Account Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <input required type="text" placeholder="Full Name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-300" />
-                      <input required type="email" placeholder="Email Address" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-300" />
-                      <input required type="text" placeholder="Phone Number" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-300" />
+                    <div className="relative">
+                      <i className="fa-solid fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                      <input required placeholder="Phone Number" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium placeholder:text-gray-400" />
+                    </div>
 
-                      {/* Password Field - Only for New Members */}
-                      {!isEditing && (
-                        <input required type="password" placeholder="Password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-300 bg-yellow-50" />
-                      )}
+                    {!isEditing && (
+                      <div className="relative">
+                        <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                        <input required type="password" placeholder="Create Password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-blue-50/50 border-2 border-dashed border-blue-100 focus:ring-2 focus:ring-blue-200 focus:bg-white transition-all font-medium" />
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="relative">
+                           <i className="fa-solid fa-venus-mars absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                           <select value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium appearance-none">
+                              <option value="Male">Male</option>
+                              <option value="Female">Female</option>
+                              <option value="Other">Other</option>
+                           </select>
+                        </div>
+                        <div className="relative">
+                          <i className="fa-solid fa-calendar-day absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                          <input type="number" placeholder="Age" value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium" />
+                        </div>
                     </div>
                   </div>
 
-                  {/* Physical Info */}
-                  <div className="md:col-span-2">
-                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3 mt-2">Physical Profile</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex gap-2">
-                        <input type="number" placeholder="Age" value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-300" />
-                      </div>
-                      <div className="flex gap-2">
-                        <input type="number" placeholder="Height (cm)" value={formData.height} onChange={e => setFormData({ ...formData, height: e.target.value })} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-300" />
-                      </div>
-                      <div className="flex gap-2">
-                        <input type="number" placeholder="Weight (kg)" value={formData.currentWeight} onChange={e => setFormData({ ...formData, currentWeight: e.target.value })} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-300" />
-                      </div>
-                      <div className="md:col-span-3">
-                        <select value={formData.fitnessGoal} onChange={e => setFormData({ ...formData, fitnessGoal: e.target.value })} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-300 bg-white">
-                          <option value="">Select Goal</option>
-                          <option>Weight Loss</option>
-                          <option>Muscle Gain</option>
-                          <option>General Fitness</option>
-                          <option>Endurance</option>
-                        </select>
-                      </div>
+                  {/* Section: Physical Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                       <h3 className="text-[10px] font-black text-green-500 uppercase tracking-[0.2em] mb-4">Physical Metrics</h3>
+                    </div>
+                    <div className="relative">
+                      <i className="fa-solid fa-ruler-vertical absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                      <input type="number" placeholder="Height (cm)" value={formData.height} onChange={e => setFormData({ ...formData, height: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium" />
+                    </div>
+                    <div className="relative">
+                      <i className="fa-solid fa-weight-scale absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                      <input type="number" placeholder="Weight (kg)" value={formData.currentWeight} onChange={e => setFormData({ ...formData, currentWeight: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium" />
                     </div>
                   </div>
 
-                  {/* Membership Info */}
-                  <div className="md:col-span-2">
-                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3 mt-2">Membership & Training</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Dynamic Plan Selector */}
-                      <select
-                        required
-                        value={formData.plan}
-                        onChange={e => setFormData({ ...formData, plan: e.target.value })}
-                        className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-300 bg-white"
-                      >
-                        <option value="">Select Plan</option>
-                        {plans.map(p => (
-                          <option key={p._id} value={p._id}>{p.name} (₹{p.price})</option>
-                        ))}
+                  {/* Section: Membership */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                       <h3 className="text-[10px] font-black text-purple-500 uppercase tracking-[0.2em] mb-4">Membership & Goals</h3>
+                    </div>
+                    <div className="relative">
+                      <i className="fa-solid fa-gem absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                      <select required value={formData.plan} onChange={e => setFormData({ ...formData, plan: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium appearance-none">
+                        <option value="">Choose a Plan</option>
+                        {plans.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
                       </select>
-
-                      {/* Replaced Trainer Select with Disabled Input */}
-                      <input
-                        disabled
-                        value="Unassigned"
-                        className="w-full px-4 py-2 rounded-xl border border-gray-200 bg-gray-100 text-gray-500 focus:outline-none cursor-not-allowed"
-                        placeholder="Trainer (Unassigned)"
-                      />
                     </div>
-                  </div>
-
-                  <div className="md:col-span-2 flex justify-end gap-3 mt-4">
-                    <button type="button" onClick={() => setViewState("list")} className="px-6 py-2 rounded-xl bg-white border border-gray-200 text-gray-600 font-medium hover:bg-gray-50">Cancel</button>
-                    <button type="submit" className="px-6 py-2 rounded-xl bg-[#FEEF75] text-yellow-900 font-bold hover:bg-yellow-300 shadow-sm">
-                      {isEditing ? "Update Member" : "Create Member"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* 3. MEMBER DETAILS (READ ONLY) */}
-          {viewState === "details" && selectedMember && (
-            <div className="max-w-4xl mx-auto">
-              <button onClick={() => setViewState("list")} className="mb-6 text-sm text-gray-500 hover:text-gray-800 flex items-center gap-2">
-                <i className="fa-solid fa-arrow-left"></i> Back to List
-              </button>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                {/* Profile Card */}
-                <div className="bg-gradient-to-br from-[#f8f9fa] to-white p-6 rounded-3xl border border-gray-200 shadow-sm text-center md:col-span-1">
-                  <div className="w-24 h-24 bg-[#CDE7FE] rounded-full mx-auto flex items-center justify-center text-3xl font-bold text-blue-600 mb-4">
-                    {selectedMember.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900">{selectedMember.name}</h2>
-                  <p className="text-sm text-gray-500 mb-4">Member Since: {new Date(selectedMember.joinDate).toLocaleDateString()}</p>
-
-                  <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-6 ${getStatusColor(selectedMember.status)}`}>
-                    {selectedMember.status}
-                  </div>
-
-                  <div className="text-left space-y-3 text-sm">
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="text-gray-400">Plan</span>
-                      <span className="font-medium text-gray-800">{getPlanName(selectedMember.plan)}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="text-gray-400">Trainer</span>
-                      <span className="font-medium text-gray-800">{selectedMember.trainer}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="text-gray-400">Email</span>
-                      <span className="font-medium text-gray-800 truncate w-32 text-right" title={selectedMember.email}>{selectedMember.email}</span>
+                    <div className="relative">
+                      <i className="fa-solid fa-bullseye absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                      <select value={formData.fitnessGoal} onChange={e => setFormData({ ...formData, fitnessGoal: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium appearance-none">
+                         <option value="">Select Primary Goal</option>
+                         <option>Weight Loss</option>
+                         <option>Muscle Gain</option>
+                         <option>General Fitness</option>
+                         <option>Endurance</option>
+                      </select>
                     </div>
                   </div>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="md:col-span-2 space-y-6">
+                <div className="mt-12 flex flex-col md:flex-row justify-end gap-4">
+                  <button type="button" onClick={() => setViewState("list")} className="px-8 py-3 rounded-2xl font-bold text-gray-400 hover:text-gray-900 transition-all order-2 md:order-1">
+                    Discard Changes
+                  </button>
+                  <button type="submit" className="px-12 py-3 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 hover:scale-[1.02] transition-all shadow-xl shadow-blue-100 order-1 md:order-2">
+                    {isEditing ? "Save Profile" : "Register Now"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
-                  {/* Progress & Attendance (HARDCODED/MOCKED FROM API) */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-[#f0fdf4] border border-green-100 p-5 rounded-2xl">
-                      <div className="flex items-center gap-2 mb-2">
-                        <i className="fa-solid fa-check-double text-green-500"></i>
-                        <h3 className="font-semibold text-gray-700 text-sm">Attendance</h3>
+          {viewState === "details" && selectedMember && (
+            <div className="max-w-6xl mx-auto animate-fadeIn">
+              <button onClick={() => setViewState("list")} className="mb-8 px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-900 flex items-center gap-2 group transition-all">
+                <i className="fa-solid fa-arrow-left-long group-hover:-translate-x-1 transition-transform"></i> Back to Members
+              </button>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* Left Sidebar Profile Card */}
+                <div className="lg:col-span-4 space-y-6">
+                  <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100 text-center">
+                    <div className="relative inline-block mb-6">
+                       <div className="w-28 h-28 bg-gradient-to-tr from-blue-500 to-blue-300 rounded-[2rem] mx-auto flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-blue-200">
+                        {selectedMember.name.slice(0, 2).toUpperCase()}
                       </div>
-                      <p className="text-2xl font-bold text-gray-900">{selectedMember.attendance?.present || 0} <span className="text-xs font-normal text-gray-400">Days</span></p>
-                      <p className="text-xs text-gray-500 mt-1">Last Visit: {selectedMember.attendance?.lastVisit || "N/A"}</p>
+                      <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center ${selectedMember.status === 'Active' ? 'bg-green-400' : 'bg-gray-300'}`}>
+                         <i className={`fa-solid ${selectedMember.status === 'Active' ? 'fa-check' : 'fa-xmark'} text-[10px] text-white`}></i>
+                      </div>
+                    </div>
+                    
+                    <h2 className="text-2xl font-black text-gray-900">{selectedMember.name}</h2>
+                    <p className="text-sm text-gray-400 font-medium mb-4">{selectedMember.email}</p>
+                    
+                    <div className="flex flex-wrap justify-center gap-2 mb-8">
+                       <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider">{getPlanName(selectedMember.plan)}</span>
+                       <span className="px-3 py-1 rounded-full bg-gray-50 text-gray-500 text-[10px] font-black uppercase tracking-wider">{selectedMember.fitnessGoal || "No Goal"}</span>
                     </div>
 
-                    <div className="bg-[#fffbeb] border border-yellow-100 p-5 rounded-2xl">
-                      <div className="flex items-center gap-2 mb-2">
-                        <i className="fa-solid fa-dumbbell text-yellow-500"></i>
-                        <h3 className="font-semibold text-gray-700 text-sm">Progress</h3>
-                      </div>
-                      <p className="text-2xl font-bold text-gray-900">{selectedMember.progress?.workouts || 0} <span className="text-xs font-normal text-gray-400">Workouts</span></p>
-                      <p className="text-xs text-gray-500 mt-1">Weight Change: {selectedMember.progress?.weightLoss || "-"}</p>
+                    <div className="space-y-4 pt-6 border-t border-gray-50">
+                       <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400 font-medium">Phone</span>
+                          <span className="text-gray-900 font-bold">{selectedMember.phone}</span>
+                       </div>
+                       <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400 font-medium">Joined On</span>
+                          <span className="text-gray-900 font-bold">{new Date(selectedMember.joinDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                       </div>
+                       <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400 font-medium">Gender</span>
+                          <span className="text-gray-900 font-bold">{selectedMember.gender || "N/A"}</span>
+                       </div>
                     </div>
                   </div>
 
-                  {/* Payment Info */}
-                  <div className="bg-white border border-gray-100 p-6 rounded-3xl shadow-sm">
-                    <h3 className="font-bold text-gray-800 mb-4 flex justify-between items-center">
-                      Payment History
-                      <button className="text-xs text-blue-500 hover:underline">View Full History</button>
-                    </h3>
-                    <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl">
-                      <div>
-                        <p className="text-xs text-gray-400">Last Payment</p>
-                        <p className="font-medium text-gray-900">{selectedMember.payment?.lastPayment || "N/A"}</p>
+                  {/* Physical Metrics Card */}
+                  <div className="bg-gray-900 p-8 rounded-[2rem] text-white">
+                     <h3 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-6">Health Profile</h3>
+                     <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-1">
+                           <p className="text-2xl font-black">{selectedMember.height || "--"} <span className="text-[10px] text-gray-500">CM</span></p>
+                           <p className="text-[10px] text-gray-400 font-bold uppercase">Height</p>
+                        </div>
+                        <div className="space-y-1">
+                           <p className="text-2xl font-black">{selectedMember.currentWeight || "--"} <span className="text-[10px] text-gray-500">KG</span></p>
+                           <p className="text-[10px] text-gray-400 font-bold uppercase">Weight</p>
+                        </div>
+                        <div className="space-y-1">
+                           <p className="text-2xl font-black">{selectedMember.age || "--"}</p>
+                           <p className="text-[10px] text-gray-400 font-bold uppercase">Age</p>
+                        </div>
+                        <div className="space-y-1">
+                           <p className="text-2xl font-black">--</p>
+                           <p className="text-[10px] text-gray-400 font-bold uppercase">BMI Score</p>
+                        </div>
+                     </div>
+                  </div>
+                </div>
+
+                {/* Right Content Area */}
+                <div className="lg:col-span-8 space-y-8">
+                  
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-[#D9F17F] p-8 rounded-[2.5rem] relative overflow-hidden group">
+                      <div className="relative z-10">
+                        <h3 className="text-[11px] text-green-800 font-black uppercase tracking-wider mb-2">Total Paid</h3>
+                        <p className="text-4xl font-black text-green-900">₹{selectedMember.paid || 0}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-400">Pending Dues</p>
-                        <p className={`font-bold ${selectedMember.payment?.pending > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                          ₹{selectedMember.payment?.pending || 0}
-                        </p>
-                      </div>
+                      <i className="fa-solid fa-circle-check absolute -right-4 -bottom-4 text-9xl text-green-800/10 group-hover:scale-110 transition-transform"></i>
                     </div>
-                    <div className="mt-4 flex gap-3">
-                      <button className="flex-1 py-2 bg-[#D9F17F] text-green-900 rounded-xl text-sm font-bold hover:bg-green-300 transition-colors">
-                        Record Payment
-                      </button>
-                      <button className="flex-1 py-2 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
-                        Send Invoice
-                      </button>
+                    
+                    <div className="bg-red-50 p-8 rounded-[2.5rem] border border-red-100 relative overflow-hidden group">
+                      <div className="relative z-10">
+                        <h3 className="text-[11px] text-red-600 font-black uppercase tracking-wider mb-2">Balance Due</h3>
+                        <p className="text-4xl font-black text-red-900">₹{selectedMember.pending || 0}</p>
+                      </div>
+                      <i className="fa-solid fa-clock-rotate-left absolute -right-4 -bottom-4 text-9xl text-red-600/10 group-hover:rotate-12 transition-transform"></i>
                     </div>
                   </div>
 
+                  {/* Payment History List */}
+                  <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100 overflow-hidden">
+                    <div className="p-8 flex justify-between items-center border-b border-gray-50">
+                      <h3 className="font-black text-gray-900 flex items-center gap-3">
+                        <i className="fa-solid fa-receipt text-blue-500"></i>
+                        Recent Payments
+                      </h3>
+                      <button className="text-[10px] font-black uppercase text-blue-500 hover:text-blue-700">View All</button>
+                    </div>
+                    
+                    <div className="px-8 pb-8 pt-2">
+                      {selectedMember.history?.length > 0 ? (
+                        <div className="space-y-3">
+                          {selectedMember.history.map((h, i) => (
+                            <div key={i} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                              <div className="flex items-center gap-4">
+                                 <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-gray-400 border border-gray-100">
+                                    <i className="fa-solid fa-arrow-up-right-dots text-xs"></i>
+                                 </div>
+                                 <div>
+                                   <div className="font-bold text-gray-900">Payment Received</div>
+                                   <div className="text-[10px] text-gray-400 font-bold uppercase">{h.date} via {h.method}</div>
+                                 </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-lg font-black text-gray-900">₹{h.amount}</div>
+                                <div className="text-[10px] text-green-500 font-black uppercase">Success</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-12 text-center">
+                          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i className="fa-solid fa-magnifying-glass-dollar text-gray-200 text-2xl"></i>
+                          </div>
+                          <p className="text-sm text-gray-400 font-medium">No payment history available</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions Bar */}
+                  <div className="flex justify-end gap-3">
+                     <button onClick={() => handleDeactivate(selectedMember._id)} className="px-6 py-3 rounded-2xl border border-gray-200 text-gray-500 font-bold text-sm hover:bg-white transition-all">
+                        {selectedMember.status === 'Active' ? 'Deactivate Account' : 'Reactivate Account'}
+                     </button>
+                     <button onClick={() => handleEditClick(selectedMember)} className="px-8 py-3 rounded-2xl bg-gray-900 text-white font-black text-sm hover:bg-gray-800 shadow-xl shadow-gray-200 transition-all">
+                        Edit Member Details
+                     </button>
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </>
       )}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 };

@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
+import { useGlobalContext } from '../../context/GlobalContext';
+
 
 const Renew = () => {
+   const {BACKEND_URL}=useGlobalContext()
+  const navigate = useNavigate();
+  
+  // --- STATE ---
+  const [currentPlan, setCurrentPlan] = useState(null);
+  const [renewalOptions, setRenewalOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [daysLeft, setDaysLeft] = useState(0);
+
   // --- STYLE INJECTION ---
   useEffect(() => {
     const linkToast = document.createElement("link");
@@ -21,179 +32,143 @@ const Renew = () => {
     };
   }, []);
 
-  // --- MOCK DATA ---
-  const currentPlan = {
-    name: "Yearly Elite",
-    expiryDate: "2025-01-15",
-    daysLeft: 10,
-    status: "Expiring Soon",
-    price: 12000
-  };
+  // --- FETCH DATA ---
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        const token = userInfo?.token;
 
-  const renewalOptions = [
-    {
-      id: 1,
-      name: "Yearly Elite (Renewal)",
-      duration: "12 Months",
-      price: 12000,
-      discount: "10% Loyalty Off",
-      finalPrice: 10800,
-      features: ["Continue current benefits", "No re-joining fee", "2 Free PT Sessions"],
-      recommended: true,
-      color: "bg-[#D9F17F]",
-      btnColor: "bg-green-900 text-[#D9F17F]"
-    },
-    {
-      id: 2,
-      name: "Lifetime Platinum (Upgrade)",
-      duration: "Lifetime",
-      price: 25000,
-      discount: "Limited Offer",
-      finalPrice: 22000,
-      features: ["Lifetime Access", "All Locations", "Priority Support"],
-      recommended: false,
-      color: "bg-[#CDE7FE]",
-      btnColor: "bg-blue-900 text-[#CDE7FE]"
-    },
-    {
-      id: 3,
-      name: "Quarterly Pro (Downgrade)",
-      duration: "3 Months",
-      price: 4000,
-      discount: null,
-      finalPrice: 4000,
-      features: ["Standard Access", "Group Classes"],
-      recommended: false,
-      color: "bg-[#FEEF75]",
-      btnColor: "bg-yellow-900 text-[#FEEF75]"
-    }
-  ];
+        // 1. Get Current Member Profile
+        const memberRes = await fetch(`${BACKEND_URL}/api/members/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!memberRes.ok) throw new Error("Failed to load profile");
+        const memberData = await memberRes.json();
+        
+        // Calculate Days Left
+        if (memberData.expiryDate) {
+           const expiry = new Date(memberData.expiryDate);
+           const today = new Date();
+           const diffTime = expiry - today;
+           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+           setDaysLeft(diffDays > 0 ? diffDays : 0);
+        }
 
-  // --- STATE ---
-  const [selectedPlanId, setSelectedPlanId] = useState(1); // Default to current renewal
-  const [renewalStatus, setRenewalStatus] = useState("Idle"); // Idle, Requested, PaymentPending, Active
+        const currentPlanDetails = memberData.plan ? {
+           ...memberData.plan,
+           expiryDate: memberData.expiryDate ? new Date(memberData.expiryDate).toLocaleDateString() : "-"
+        } : null;
+        
+        setCurrentPlan(currentPlanDetails);
 
-  const selectedOption = renewalOptions.find(o => o.id === selectedPlanId);
+        // 2. Get All Plans for Renewal Options
+        const plansRes = await fetch(`${BACKEND_URL}/api/plans`, {
+           headers: { Authorization: `Bearer ${token}` } // Optional if public
+        });
+        
+        if (!plansRes.ok) throw new Error("Failed to load plans");
+        const allPlans = await plansRes.json();
+
+        // Filter: Show only plans with price >= current plan price (Upgrade/Renew logic)
+        // If no current plan, show all.
+        const currentPrice = currentPlanDetails?.price || 0;
+        const filteredOptions = allPlans.filter(p => p.price >= currentPrice && p.status === 'Active');
+        
+        setRenewalOptions(filteredOptions);
+
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load renewal options");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // --- ACTIONS ---
-  const handleRequestRenewal = () => {
-    if (!selectedOption) return;
-    
-    // Simulate API call
-    toast.info("Sending renewal request...");
-    setTimeout(() => {
-      setRenewalStatus("PaymentPending");
-      toast.success("Request Approved! Please proceed to payment.");
-    }, 1500);
+  const handleSelectPlan = (plan) => {
+    // Redirect to payment page with plan state
+    navigate('/member/payment', { state: { plan } });
   };
+
+  if (loading) return <div className="p-10 text-center text-gray-500">Loading Renewal Options...</div>;
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8 pb-10 font-sans">
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* --- HEADER --- */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-gray-900">Renew Membership</h1>
-          <p className="text-gray-500 mt-1">Don't lose your streak! Extend your plan today.</p>
+          <p className="text-gray-500 mt-1">Extend your fitness journey without interruption.</p>
         </div>
       </div>
 
-      {/* --- CURRENT STATUS CARD --- */}
+      {/* CURRENT PLAN STATUS */}
       <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
-         <div className="absolute top-0 right-0 w-64 h-64 bg-red-50 rounded-full filter blur-[80px] opacity-50"></div>
+         <div className="absolute top-0 right-0 w-64 h-64 bg-[#FEEF75] rounded-full filter blur-[80px] opacity-20"></div>
          
-         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-               <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 text-3xl">
-                  <i className="fa-solid fa-hourglass-half"></i>
-               </div>
-               <div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Current Plan</p>
-                  <h2 className="text-2xl font-black text-gray-900">{currentPlan.name}</h2>
-                  <p className="text-sm font-medium text-red-500 mt-1">
-                     Expires on {currentPlan.expiryDate} ({currentPlan.daysLeft} days left)
-                  </p>
-               </div>
+         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div>
+               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Current Plan</p>
+               <h2 className="text-3xl font-black text-gray-900">{currentPlan?.name || "No Active Plan"}</h2>
+               <p className="text-sm text-gray-500 mt-1">Expires on: <span className="font-bold text-gray-800">{currentPlan?.expiryDate}</span></p>
             </div>
 
-            {renewalStatus === "Idle" && (
-               <div className="text-center md:text-right">
-                  <p className="text-sm text-gray-500 mb-2">Status: <span className="font-bold text-gray-800">{currentPlan.status}</span></p>
-                  <div className="w-full md:w-48 h-2 bg-gray-100 rounded-full overflow-hidden">
-                     <div className="h-full bg-red-500 w-[90%]"></div>
-                  </div>
+            <div className="text-center md:text-right">
+               <div className="inline-block bg-red-50 px-6 py-4 rounded-3xl border border-red-100">
+                  <p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-1">Time Remaining</p>
+                  <p className="text-4xl font-black text-red-500">{daysLeft} <span className="text-sm font-bold text-red-300">Days</span></p>
                </div>
-            )}
+            </div>
          </div>
       </div>
 
-      {/* --- RENEWAL WORKFLOW --- */}
-      {renewalStatus === "PaymentPending" ? (
-         <div className="bg-[#f0fdf4] rounded-[2.5rem] p-10 border border-green-200 text-center animate-fade-in">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-3xl mx-auto mb-6">
-               <i className="fa-solid fa-check"></i>
-            </div>
-            <h2 className="text-2xl font-black text-green-900 mb-2">Request Approved!</h2>
-            <p className="text-green-700 max-w-md mx-auto mb-8">
-               Your request to renew <strong>{selectedOption.name}</strong> for <strong>₹{selectedOption.finalPrice.toLocaleString()}</strong> has been approved. Please complete the payment to activate.
-            </p>
-            <Link to="/member/payment">
-               <button className="px-8 py-4 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all shadow-lg hover:shadow-green-600/30 transform hover:-translate-y-1">
-                  Proceed to Payment <i className="fa-solid fa-arrow-right ml-2"></i>
-               </button>
-            </Link>
+      {/* RENEWAL OPTIONS */}
+      <h3 className="font-bold text-gray-900 text-lg ml-2">Recommended Plans</h3>
+      
+      {renewalOptions.length === 0 ? (
+         <div className="text-center py-12 bg-gray-50 rounded-3xl">
+            <p className="text-gray-500">No upgrade options available at this time.</p>
          </div>
       ) : (
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {renewalOptions.map((option) => (
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {renewalOptions.map((plan) => (
                <div 
-                  key={option.id}
-                  onClick={() => setSelectedPlanId(option.id)}
-                  className={`relative p-6 rounded-[2.5rem] border-2 cursor-pointer transition-all duration-300 hover:shadow-xl flex flex-col ${
-                     selectedPlanId === option.id 
-                     ? `${option.color} border-transparent scale-[1.02]` 
-                     : 'bg-white border-gray-100 hover:border-gray-200'
-                  }`}
+                  key={plan._id} 
+                  className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#CDE7FE] transition-all duration-300 flex flex-col"
                >
-                  {option.recommended && (
-                     <span className="absolute top-6 right-6 bg-black text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                        Best Value
-                     </span>
-                  )}
-
-                  <div className="mb-4">
-                     <h3 className="text-lg font-black text-gray-900 leading-tight">{option.name}</h3>
-                     <p className="text-sm opacity-70 font-medium">{option.duration}</p>
+                  <div className="mb-6">
+                     <h4 className="font-bold text-xl text-gray-900">{plan.name}</h4>
+                     <p className="text-xs text-gray-500 mt-1">{plan.durationLabel} Access</p>
                   </div>
 
                   <div className="mb-6">
-                     <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-black text-gray-900">₹{option.finalPrice.toLocaleString()}</span>
-                        {option.discount && (
-                           <span className="text-sm line-through opacity-50 font-bold">₹{option.price}</span>
-                        )}
-                     </div>
-                     {option.discount && (
-                        <p className="text-xs font-bold text-red-600 mt-1">{option.discount}</p>
+                     <span className="text-3xl font-black text-gray-900">₹{plan.price.toLocaleString()}</span>
+                     {plan.originalPrice > plan.price && (
+                        <p className="text-xs text-gray-400 line-through">₹{plan.originalPrice.toLocaleString()}</p>
                      )}
                   </div>
 
                   <ul className="space-y-3 mb-8 flex-1">
-                     {option.features.map((feat, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm opacity-80">
-                           <i className="fa-solid fa-circle-check mt-1 text-xs"></i> {feat}
+                     {plan.features.slice(0, 4).map((feat, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                           <i className="fa-solid fa-circle-check mt-1 text-xs text-green-500"></i> {feat}
                         </li>
                      ))}
                   </ul>
 
                   <button 
-                     onClick={(e) => { e.stopPropagation(); handleRequestRenewal(); }}
-                     className={`w-full py-3 rounded-xl font-bold text-sm shadow-md transition-all ${
-                        selectedPlanId === option.id ? option.btnColor : 'bg-gray-100 text-gray-500'
-                     }`}
+                     onClick={() => handleSelectPlan(plan)}
+                     className="w-full py-3 rounded-xl font-bold text-sm shadow-md transition-all bg-[#D9F17F] text-green-900 hover:bg-green-300"
                   >
-                     {selectedPlanId === option.id ? "Request Renewal" : "Select Plan"}
+                     Select Plan
                   </button>
                </div>
             ))}
