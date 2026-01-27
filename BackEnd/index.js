@@ -27,22 +27,22 @@ const chatRoutes = require("./routes/chatRoutes");
 
 dotenv.config();
 connectDB();
-
-const app = express();
 const server = http.createServer(app); // ✅ Create HTTP server
-
-// ✅ Initialize Socket.IO
 const io = initSocket(server);
 
-// Middlewares
 
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://songars-gym.onrender.com"
-  ],
-  credentials: true
-}));
+const app = express();
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://songars-gym.onrender.com"],
+    credentials: true,
+  }),
+);
+
+
+// ✅ Initialize Socket.IO
+
+// Middlewares
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -79,33 +79,38 @@ app.use((err, req, res, next) => {
 });
 
 // --- Cron Job: Check Expired Offers Daily ---
-setInterval(async () => {
-  try {
-    const today = new Date();
-    const expiredOffers = await Offer.find({
-      isActive: true,
-      endDate: { $lt: today },
-    });
+setInterval(
+  async () => {
+    try {
+      const today = new Date();
+      const expiredOffers = await Offer.find({
+        isActive: true,
+        endDate: { $lt: today },
+      });
 
-    if (expiredOffers.length > 0) {
-      console.log(`Found ${expiredOffers.length} expired offers. Deactivating...`);
-      
-      for (const offer of expiredOffers) {
-        offer.isActive = false;
-        await offer.save();
+      if (expiredOffers.length > 0) {
+        console.log(
+          `Found ${expiredOffers.length} expired offers. Deactivating...`,
+        );
 
-        const plan = await Plan.findById(offer.plan);
-        if (plan) {
-          plan.price = plan.originalPrice; // Revert price
-          plan.offer = null;
-          await plan.save();
+        for (const offer of expiredOffers) {
+          offer.isActive = false;
+          await offer.save();
+
+          const plan = await Plan.findById(offer.plan);
+          if (plan) {
+            plan.price = plan.originalPrice; // Revert price
+            plan.offer = null;
+            await plan.save();
+          }
         }
       }
+    } catch (error) {
+      console.error("Error in offer expiration check:", error);
     }
-  } catch (error) {
-    console.error("Error in offer expiration check:", error);
-  }
-}, 24 * 60 * 60 * 1000); // Run every 24 hours
+  },
+  24 * 60 * 60 * 1000,
+); // Run every 24 hours
 
 const PORT = process.env.PORT || 5000;
 
