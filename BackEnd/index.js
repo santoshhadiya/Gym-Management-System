@@ -27,23 +27,20 @@ const chatRoutes = require("./routes/chatRoutes");
 
 dotenv.config();
 connectDB();
-const server = http.createServer(app); // ✅ Create HTTP server
-const io = initSocket(server);
+
+
 
 
 const app = express();
+const server = http.createServer(app); // ✅ Create HTTP server
+const io = initSocket(server);
+
 app.use(
   cors({
     origin: ["http://localhost:5173", "https://songars-gym.onrender.com"],
     credentials: true,
   }),
 );
-
-
-// ✅ Initialize Socket.IO
-
-// Middlewares
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
