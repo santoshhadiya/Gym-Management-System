@@ -94,7 +94,7 @@ export const GlobalProvider = ({ children }) => {
   };
 
   const isHosted = true;
-  const BACKEND_URL = !isHosted ? "http://localhost:5000" : "https://gym-management-system-backend-d1g6.onrender.com";
+  const BACKEND_URL = !isHosted ? "http://localhost:5000" : "https://gym-management-system-backend-vive.onrender.com";
 
 
   // --- Context Value ---

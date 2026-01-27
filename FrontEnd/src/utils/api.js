@@ -3,7 +3,7 @@ import axios from "axios";
 const isHosted=true;
 // Create an Axios instance
 const api = axios.create({
-  baseURL: !isHosted ? "http://localhost:5000/api":"https://gym-management-system-backend-d1g6.onrender.com/api",
+  baseURL: !isHosted ? "http://localhost:5000/api":"https://gym-management-system-backend-vive.onrender.com",
   headers: {
     "Content-Type": "application/json",
   },
