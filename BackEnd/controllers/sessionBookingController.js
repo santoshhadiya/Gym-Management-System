@@ -70,3 +70,31 @@ exports.cancelBookingByAdmin = async (req, res) => {
 
   res.json(booking);
 };
+
+
+exports.cancelMyBooking = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const memberId = req.user.id;
+
+    // Find and delete the booking for this specific session and member
+    const booking = await SessionBooking.findOneAndDelete({
+      session: sessionId,
+      member: memberId,
+    });
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found or already cancelled" });
+    }
+
+    // Optional: If you track 'bookedCount' on Session model, decrement it here
+    // await Session.findByIdAndUpdate(sessionId, { $inc: { bookedCount: -1 } });
+
+    res.json({ message: "Booking cancelled successfully" });
+  } catch (err) {
+    console.error("CANCEL ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ... existing cancelBookingByAdmin
