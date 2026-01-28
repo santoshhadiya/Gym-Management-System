@@ -4,7 +4,53 @@ import logo from "../../assets/logo.png"
 import { useGlobalContext } from '../../context/GlobalContext';
 
 // --- INTERNAL COMPONENT: MEMBER NAVIGATION (Top Bar) ---
+// --- INTERNAL COMPONENT: MEMBER NAVIGATION (Top Bar) ---
 const Nav_Member = ({ onMenuClick }) => {
+  const [member, setMember] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        const token = userInfo?.token;
+
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch("http://localhost:5000/api/members/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setMember(data);
+        }
+      } catch (err) {
+        console.error("Failed to load member profile", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const displayName = member?.name || member?.user?.name || "Member";
+  const planName = member?.plan?.name || "Member";
+
+  // Get initials (for avatar)
+  const initials = displayName
+    .split(" ")
+    .map(w => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <section className="w-full bg-gray-100 rounded-3xl px-6 py-4 mb-6 transition-all duration-300">
       <div className="flex items-center justify-between">
@@ -20,26 +66,17 @@ const Nav_Member = ({ onMenuClick }) => {
 
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              Hello, Member! <span className="inline-block hover:animate-wave cursor-default">👋</span>
+              Hello, {loading ? "..." : displayName}!{" "}
+              <span className="inline-block hover:animate-wave cursor-default">👋</span>
             </h1>
-            <p className="text-xs text-gray-500 font-medium">Let's crush your goals today!</p>
+            <p className="text-xs text-gray-500 font-medium">
+              Let's crush your goals today!
+            </p>
           </div>
         </div>
 
-        {/* Right: Search & Actions */}
+        {/* Right: Actions */}
         <div className="flex items-center gap-3 md:gap-5">
-
-          {/* Search Box (Hidden on mobile) */}
-          <div className="relative hidden md:block">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="pl-10 pr-4 py-2.5 rounded-full bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] w-64 transition-all"
-            />
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
-              <i className="fa-solid fa-magnifying-glass"></i>
-            </span>
-          </div>
 
           {/* Notifications */}
           <button className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#FEEF75] hover:text-yellow-800 hover:border-yellow-200 transition-all relative cursor-pointer group shadow-sm">
@@ -50,11 +87,16 @@ const Nav_Member = ({ onMenuClick }) => {
           {/* Profile */}
           <div className="flex items-center gap-3 cursor-pointer group">
             <div className="w-10 h-10 rounded-full bg-[#D9F17F] flex items-center justify-center text-green-900 font-bold border-2 border-white shadow-sm group-hover:scale-105 transition-transform">
-              JD
+              {loading ? "..." : initials}
             </div>
+
             <div className="hidden xl:block text-right">
-              <p className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">John Doe</p>
-              <p className="text-[10px] text-gray-500">Premium Member</p>
+              <p className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                {loading ? "Loading..." : displayName}
+              </p>
+              <p className="text-[10px] text-gray-500">
+                {loading ? "" : planName}
+              </p>
             </div>
           </div>
 
@@ -63,6 +105,7 @@ const Nav_Member = ({ onMenuClick }) => {
     </section>
   );
 };
+
 
 // --- INTERNAL COMPONENT: SIDEBAR ---
 const Sidebar_Member = ({ isOpen, onClose }) => {
@@ -87,6 +130,7 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
     { name: 'Progress', path: '/member/progress', icon: 'fa-chart-line' },
     { name: 'Bookings', path: '/member/booking', icon: 'fa-calendar-check' },
     { name: 'Chat', path: '/member/chat', icon: 'fa-comments' },
+    { name: 'Announcements', path: '/member/announcements', icon: 'fa-comments' },
     { name: 'Feedback', path: '/member/feedback', icon: 'fa-star' },
     { name: 'Payments', path: '/member/payment', icon: 'fa-credit-card' },
     { name: 'Invoices', path: '/member/invoices', icon: 'fa-file-invoice-dollar' },

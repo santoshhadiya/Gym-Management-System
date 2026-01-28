@@ -22,10 +22,10 @@ const Sidebar_Admin = () => {
     { name: "Manage Members", path: "/admin/members", icon: "fa-regular fa-user" },
     { name: "Manage Trainers", path: "/admin/trainers", icon: "fa-solid fa-user-tie" },
     { name: "Membership Plans", path: "/admin/membership-plans", icon: "fa-regular fa-id-card" },
-    { name: "Payments", path: "/admin/payments", icon: "fa-regular fa-credit-card" },
+   /*  { name: "Payments", path: "/admin/payments", icon: "fa-regular fa-credit-card" }, */
     { name: "Payment History", path: "/admin/payment-history", icon: "fa-solid fa-clock-rotate-left" },
     { name: "Assign Trainers", path: "/admin/assign-trainers", icon: "fa-solid fa-user-plus" },
-    { name: "Chat with Members", path: "/admin/chat-members", icon: "fa-regular fa-comments" },
+    /* { name: "Chat with Members", path: "/admin/chat-members", icon: "fa-regular fa-comments" }, */
     { name: "Performance Reports", path: "/admin/performance-reports", icon: "fa-regular fa-file-lines" },
     { name: "Verify Accounts", path: "/admin/verify-accounts", icon: "fa-regular fa-square-check" },
     { name: "Staff Schedules", path: "/admin/staff-schedules", icon: "fa-regular fa-calendar" },

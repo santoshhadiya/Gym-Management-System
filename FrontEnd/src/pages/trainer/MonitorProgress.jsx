@@ -27,7 +27,20 @@ ChartJS.register(
   Filler
 );
 
+// Use backend URL from env or default to localhost
+const BACKEND_URL = "http://localhost:5000";
+
 const MonitorProgress = () => {
+  // --- STATE ---
+  const [assignedMembers, setAssignedMembers] = useState([]);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [memberData, setMemberData] = useState(null); // Stores detailed progress
+  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const user = JSON.parse(localStorage.getItem("userInfo"));
+
   // --- STYLE INJECTION ---
   useEffect(() => {
     const linkToast = document.createElement("link");
@@ -46,312 +59,264 @@ const MonitorProgress = () => {
     };
   }, []);
 
-  // --- MOCK DATA ---
-  const assignedMembers = [
-    { 
-      id: 1, 
-      name: "Ravi Patel", 
-      plan: "Yearly Elite", 
-      goal: "Weight Loss", 
-      image: "https://i.pravatar.cc/150?u=1",
-      data: {
-        currentWeight: 82,
-        startWeight: 90,
-        height: 175,
-        bmi: 26.8,
-        goalStatus: "On Track",
-        attendance: 85, // %
-        sessions: { total: 24, attended: 20, missed: 4 },
-        history: {
-            dates: ["Week 1", "Week 2", "Week 3", "Week 4"],
-            weight: [90, 88, 85, 82],
-            compliance: [70, 80, 85, 90]
-        },
-        remarks: "Doing great! Needs to improve water intake."
+  // --- FETCH MEMBERS LIST ---
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${BACKEND_URL}/api/trainers/${user._id}/members/all`, {
+             headers: { Authorization: `Bearer ${user.token}` }
+        });
+        
+        if (!res.ok) throw new Error("Failed to load members");
+        
+        const data = await res.json();
+        setAssignedMembers(data);
+      } catch (err) {
+        console.error(err);
+        toast.error("Could not load assigned members");
+      } finally {
+        setLoading(false);
       }
-    },
-    { 
-      id: 2, 
-      name: "Priya Shah", 
-      plan: "Quarterly Pro", 
-      goal: "Muscle Gain",
-      image: "https://i.pravatar.cc/150?u=2",
-      data: {
-        currentWeight: 55,
-        startWeight: 52,
-        height: 162,
-        bmi: 21.0,
-        goalStatus: "Needs Attention",
-        attendance: 60, // %
-        sessions: { total: 24, attended: 14, missed: 10 },
-        history: {
-            dates: ["Week 1", "Week 2", "Week 3", "Week 4"],
-            weight: [52, 53, 54, 55],
-            compliance: [90, 85, 60, 50]
-        },
-        remarks: "Missed several sessions this week."
-      }
-    }
-  ];
-
-  // --- STATE ---
-  const [selectedMemberId, setSelectedMemberId] = useState("");
-  const [updateForm, setUpdateForm] = useState({
-    weight: "",
-    bodyFat: "",
-    workoutCompliance: 50,
-    dietCompliance: 50,
-    remarks: ""
-  });
-
-  const selectedMember = assignedMembers.find(m => m.id === parseInt(selectedMemberId));
-
-  // --- ACTIONS ---
-  const handleUpdate = (e) => {
-    e.preventDefault();
-    if (!selectedMemberId) return;
+    };
     
-    // In real app, send update to backend
-    toast.success(`Progress updated for ${selectedMember.name}`);
-    setUpdateForm({ ...updateForm, weight: "", bodyFat: "", remarks: "" });
+    if (user) fetchMembers();
+  }, []);
+
+  // --- FETCH MEMBER PROGRESS DETAILS ---
+  useEffect(() => {
+      if (selectedMember) {
+          const fetchProgress = async () => {
+              try {
+                  setDataLoading(true);
+                  const res = await fetch(`${BACKEND_URL}/api/workout-diet/${selectedMember._id}`, {
+                      headers: { Authorization: `Bearer ${user.token}` }
+                  });
+                  
+                  if (!res.ok) throw new Error("Failed to load progress");
+                  
+                  const data = await res.json();
+                  setMemberData(data); // { workout, diet, progress, weightHistory }
+              } catch (err) {
+                  console.error(err);
+                  toast.error("Failed to load member progress");
+              } finally {
+                  setDataLoading(false);
+              }
+          };
+          fetchProgress();
+      }
+  }, [selectedMember]);
+
+  // --- DERIVED DATA FOR CHARTS ---
+  const getWeightChartData = () => {
+      if (!memberData?.weightHistory) return { labels: [], data: [] };
+      
+      const history = [...memberData.weightHistory].sort((a, b) => new Date(a.date) - new Date(b.date));
+      const labels = history.map(h => new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      const data = history.map(h => h.weight);
+      
+      return { labels, data };
   };
 
-  const handleAlert = () => {
-    toast.warn("Low attendance alert sent to Admin.");
+  const getAdherenceData = () => {
+      if (!memberData?.progress) return { workout: 0, diet: 0 };
+      
+      const total = memberData.progress.length || 1;
+      const workoutCount = memberData.progress.filter(p => p.workoutCompleted).length;
+      const dietCount = memberData.progress.filter(p => p.dietCompleted).length;
+      
+      return {
+          workout: Math.round((workoutCount / total) * 100),
+          diet: Math.round((dietCount / total) * 100)
+      };
   };
 
-  // --- CHART CONFIG ---
-  const lineChartData = selectedMember ? {
-    labels: selectedMember.data.history.dates,
-    datasets: [{
-      label: 'Weight (kg)',
-      data: selectedMember.data.history.weight,
-      borderColor: '#D9F17F',
-      backgroundColor: 'rgba(217, 241, 127, 0.2)',
-      tension: 0.4,
-      fill: true,
-      pointBackgroundColor: '#fff',
-      pointBorderColor: '#D9F17F',
-    }]
-  } : null;
+  const weightInfo = getWeightChartData();
+  const adherence = getAdherenceData();
 
-  const barChartData = selectedMember ? {
-    labels: selectedMember.data.history.dates,
-    datasets: [{
-      label: 'Adherence (%)',
-      data: selectedMember.data.history.compliance,
-      backgroundColor: '#CDE7FE',
-      borderRadius: 6,
-    }]
-  } : null;
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [4, 4] } } }
+  const weightChartData = {
+    labels: weightInfo.labels.length > 0 ? weightInfo.labels : ["Start", "Current"],
+    datasets: [
+      {
+        label: "Weight (kg)",
+        data: weightInfo.data.length > 0 ? weightInfo.data : [0, 0],
+        borderColor: "#D9F17F",
+        backgroundColor: (context) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+          gradient.addColorStop(0, "rgba(217, 241, 127, 0.6)");
+          gradient.addColorStop(1, "rgba(217, 241, 127, 0)");
+          return gradient;
+        },
+        tension: 0.3,
+        fill: true,
+        pointBackgroundColor: "#fff",
+        pointBorderColor: "#D9F17F",
+        pointBorderWidth: 2,
+        pointRadius: 5,
+      },
+    ],
   };
+
+  const adherenceChartData = {
+    labels: ["Workout", "Diet"],
+    datasets: [
+      {
+        label: "Adherence %",
+        data: [adherence.workout, adherence.diet],
+        backgroundColor: ["#1f2937", "#4ade80"], // Dark Gray, Green
+        borderRadius: 8,
+        barThickness: 40,
+      },
+    ],
+  };
+
+  // Filter members
+  const filteredMembers = assignedMembers.filter(m => 
+      m.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 pb-10 font-sans">
+    <div className="w-full max-w-7xl mx-auto space-y-6 pb-10 font-sans">
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* --- HEADER --- */}
-      <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
-         <div>
-            <h1 className="text-3xl font-black text-gray-900">Monitor Progress</h1>
-            <p className="text-gray-500 mt-1">Track and evaluate member performance.</p>
-         </div>
+      <div className="flex flex-col md:flex-row gap-8">
          
-         <div className="w-full md:w-72">
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Select Member</label>
-            <div className="relative">
-               <select 
-                  value={selectedMemberId}
-                  onChange={(e) => setSelectedMemberId(e.target.value)}
-                  className="w-full pl-4 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] font-bold text-gray-700 appearance-none cursor-pointer"
-               >
-                  <option value="">-- Choose Member --</option>
-                  {assignedMembers.map(m => (
-                     <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-               </select>
-               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  <i className="fa-solid fa-chevron-down"></i>
-               </div>
-            </div>
-         </div>
-      </div>
-
-      {selectedMember ? (
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+         {/* Sidebar: Member List */}
+         <div className="w-full md:w-1/4 bg-white rounded-3xl p-6 border border-gray-100 shadow-sm h-[85vh] flex flex-col">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Tracking List</h2>
             
-            {/* LEFT COLUMN: OVERVIEW & UPDATE FORM */}
-            <div className="space-y-6">
-               
-               {/* Quick Profile Card */}
-               <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm flex flex-col items-center text-center">
-                  <img src={selectedMember.image} alt={selectedMember.name} className="w-24 h-24 rounded-full border-4 border-[#CDE7FE] mb-4" />
-                  <h2 className="text-xl font-bold text-gray-900">{selectedMember.name}</h2>
-                  <p className="text-sm text-gray-500 mb-4">{selectedMember.plan} • {selectedMember.goal}</p>
-                  
-                  <div className="grid grid-cols-3 gap-2 w-full">
-                     <div className="p-2 bg-gray-50 rounded-xl">
-                        <p className="text-xs text-gray-400 font-bold uppercase">Weight</p>
-                        <p className="font-black text-gray-800">{selectedMember.data.currentWeight}kg</p>
-                     </div>
-                     <div className="p-2 bg-gray-50 rounded-xl">
-                        <p className="text-xs text-gray-400 font-bold uppercase">BMI</p>
-                        <p className="font-black text-gray-800">{selectedMember.data.bmi}</p>
-                     </div>
-                     <div className="p-2 bg-gray-50 rounded-xl">
-                        <p className="text-xs text-gray-400 font-bold uppercase">Goal</p>
-                        <p className={`font-bold text-xs ${selectedMember.data.goalStatus === 'On Track' ? 'text-green-600' : 'text-red-500'}`}>{selectedMember.data.goalStatus}</p>
-                     </div>
-                  </div>
-               </div>
-
-               {/* Update Form */}
-               <div className="bg-[#f8fbff] rounded-[2.5rem] p-6 border border-blue-100">
-                  <h3 className="text-sm font-bold text-blue-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                     <i className="fa-solid fa-pen-to-square"></i> Update Metrics
-                  </h3>
-                  
-                  <form onSubmit={handleUpdate} className="space-y-4">
-                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                           <label className="text-xs font-bold text-gray-400 block mb-1">Weight (kg)</label>
-                           <input 
-                              type="number" 
-                              className="w-full p-2 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-300"
-                              value={updateForm.weight}
-                              onChange={(e) => setUpdateForm({...updateForm, weight: e.target.value})}
-                              placeholder={selectedMember.data.currentWeight}
-                           />
-                        </div>
-                        <div>
-                           <label className="text-xs font-bold text-gray-400 block mb-1">Body Fat %</label>
-                           <input 
-                              type="number" 
-                              className="w-full p-2 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-300"
-                              value={updateForm.bodyFat}
-                              onChange={(e) => setUpdateForm({...updateForm, bodyFat: e.target.value})}
-                              placeholder="--"
-                           />
-                        </div>
-                     </div>
-
-                     <div>
-                        <label className="text-xs font-bold text-gray-400 block mb-1">Workout Adherence ({updateForm.workoutCompliance}%)</label>
-                        <input 
-                           type="range" 
-                           min="0" max="100" 
-                           value={updateForm.workoutCompliance} 
-                           onChange={(e) => setUpdateForm({...updateForm, workoutCompliance: e.target.value})}
-                           className="w-full accent-[#CDE7FE]"
-                        />
-                     </div>
-
-                     <div>
-                        <label className="text-xs font-bold text-gray-400 block mb-1">Trainer Remarks</label>
-                        <textarea 
-                           rows="2"
-                           className="w-full p-2 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-300 resize-none text-sm"
-                           placeholder="Enter observations..."
-                           value={updateForm.remarks}
-                           onChange={(e) => setUpdateForm({...updateForm, remarks: e.target.value})}
-                        ></textarea>
-                     </div>
-
-                     <button type="submit" className="w-full py-3 bg-[#D9F17F] text-green-900 rounded-xl font-bold text-sm hover:bg-green-300 transition-colors shadow-sm">
-                        Save Updates
-                     </button>
-                  </form>
-               </div>
-
+            <div className="relative mb-4">
+               <input 
+                 type="text" 
+                 placeholder="Search member..." 
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#CDE7FE] transition-all"
+               />
+               <i className="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
             </div>
 
-            {/* CENTER/RIGHT: CHARTS & STATS */}
-            <div className="lg:col-span-2 space-y-6">
-               
-               {/* Charts Grid */}
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm">
-                     <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <span className="w-2 h-5 bg-[#D9F17F] rounded-full"></span> Weight Trend
-                     </h3>
-                     <div className="h-48 relative w-full">
-                        <Line data={lineChartData} options={chartOptions} />
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+               {loading ? <p className="text-center text-gray-400 text-sm">Loading...</p> : filteredMembers.map(m => (
+                  <div 
+                     key={m._id} 
+                     onClick={() => setSelectedMember(m)}
+                     className={`p-4 rounded-2xl cursor-pointer transition-all border flex items-center justify-between ${selectedMember?._id === m._id ? 'bg-[#D9F17F] border-[#D9F17F] shadow-md transform scale-[1.02]' : 'bg-white border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
+                  >
+                     <div>
+                        <h3 className={`font-bold text-sm ${selectedMember?._id === m._id ? 'text-green-900' : 'text-gray-800'}`}>{m.name}</h3>
+                        <p className={`text-xs ${selectedMember?._id === m._id ? 'text-green-800' : 'text-gray-400'}`}>{m.plan}</p>
                      </div>
+                     <i className={`fa-solid fa-chevron-right text-xs ${selectedMember?._id === m._id ? 'text-green-800' : 'text-gray-300'}`}></i>
                   </div>
-
-                  <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm">
-                     <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <span className="w-2 h-5 bg-[#CDE7FE] rounded-full"></span> Adherence History
-                     </h3>
-                     <div className="h-48 relative w-full">
-                        <Bar data={barChartData} options={chartOptions} />
-                     </div>
-                  </div>
-               </div>
-
-               {/* Session & Attendance Summary */}
-               <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm">
-                  <div className="flex justify-between items-center mb-6">
-                     <h3 className="text-lg font-bold text-gray-900">Session Summary</h3>
-                     {selectedMember.data.attendance < 70 && (
-                        <button onClick={handleAlert} className="text-xs font-bold text-red-500 bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">
-                           <i className="fa-solid fa-bell mr-1"></i> Flag Low Attendance
-                        </button>
-                     )}
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                     <div className="p-4 bg-gray-50 rounded-2xl">
-                        <p className="text-2xl font-black text-gray-800">{selectedMember.data.sessions.total}</p>
-                        <p className="text-[10px] text-gray-400 uppercase font-bold">Assigned</p>
-                     </div>
-                     <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
-                        <p className="text-2xl font-black text-green-600">{selectedMember.data.sessions.attended}</p>
-                        <p className="text-[10px] text-green-600 uppercase font-bold">Attended</p>
-                     </div>
-                     <div className="p-4 bg-red-50 rounded-2xl border border-red-100">
-                        <p className="text-2xl font-black text-red-500">{selectedMember.data.sessions.missed}</p>
-                        <p className="text-[10px] text-red-500 uppercase font-bold">Missed</p>
-                     </div>
-                  </div>
-
-                  <div className="mt-6">
-                     <div className="flex justify-between text-xs font-bold text-gray-500 mb-1">
-                        <span>Overall Attendance</span>
-                        <span>{selectedMember.data.attendance}%</span>
-                     </div>
-                     <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                        <div 
-                           className={`h-full rounded-full ${selectedMember.data.attendance >= 80 ? 'bg-[#D9F17F]' : selectedMember.data.attendance >= 60 ? 'bg-[#FEEF75]' : 'bg-red-400'}`} 
-                           style={{ width: `${selectedMember.data.attendance}%` }}
-                        ></div>
-                     </div>
-                  </div>
-               </div>
-               
-               {/* Previous Remarks */}
-               <div className="bg-[#fffbeb] rounded-[2.5rem] p-6 border border-[#FEEF75]">
-                  <h3 className="text-sm font-bold text-yellow-900 mb-2 flex items-center gap-2">
-                     <i className="fa-regular fa-clipboard"></i> Latest Note
-                  </h3>
-                  <p className="text-sm text-yellow-800 italic">"{selectedMember.data.remarks}"</p>
-               </div>
-
+               ))}
+               {filteredMembers.length === 0 && !loading && (
+                   <p className="text-center text-gray-400 text-xs mt-4">No members found.</p>
+               )}
             </div>
          </div>
-      ) : (
-         <div className="text-center py-20 bg-gray-50 rounded-[3rem] border border-dashed border-gray-200">
-            <i className="fa-solid fa-chart-line text-4xl text-gray-300 mb-3 block"></i>
-            <p className="text-gray-400">Select a member to view their progress dashboard.</p>
-         </div>
-      )}
 
+         {/* Main Content */}
+         <div className="flex-1 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm min-h-[85vh]">
+            
+            {selectedMember ? (
+               dataLoading ? (
+                   <div className="flex h-full items-center justify-center text-gray-400">
+                       <i className="fa-solid fa-circle-notch fa-spin text-3xl mr-3"></i> Loading data...
+                   </div>
+               ) : (
+               <>
+                  <div className="flex justify-between items-start mb-8 border-b border-gray-100 pb-6">
+                     <div>
+                        <h2 className="text-3xl font-black text-gray-900 mb-1">{selectedMember.name}</h2>
+                        <div className="flex gap-3 text-sm text-gray-500">
+                           <span className="flex items-center gap-1"><i className="fa-solid fa-bullseye text-red-500"></i> {selectedMember.goal || "General Fitness"}</span>
+                           <span className="flex items-center gap-1"><i className="fa-regular fa-clock text-blue-500"></i> Joined: {selectedMember.assignedDate}</span>
+                        </div>
+                     </div>
+                     <div className="text-right">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Status</p>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${selectedMember.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                           {selectedMember.status}
+                        </span>
+                     </div>
+                  </div>
+
+                  {/* Grid Stats */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                      <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                          <p className="text-xs text-gray-400 font-bold uppercase mb-1">Current Weight</p>
+                          <p className="text-xl font-black text-gray-900">{weightInfo.data.length > 0 ? weightInfo.data[weightInfo.data.length-1] : "-"} <span className="text-sm font-bold text-gray-400">kg</span></p>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                          <p className="text-xs text-gray-400 font-bold uppercase mb-1">Sessions Done</p>
+                          <p className="text-xl font-black text-gray-900">{memberData?.progress?.filter(p => p.workoutCompleted).length || 0}</p>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                          <p className="text-xs text-gray-400 font-bold uppercase mb-1">Avg Adherence</p>
+                          <p className={`text-xl font-black ${adherence.workout >= 80 ? 'text-green-600' : 'text-yellow-600'}`}>
+                              {Math.round((adherence.workout + adherence.diet) / 2)}%
+                          </p>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                          <p className="text-xs text-gray-400 font-bold uppercase mb-1">Last Activity</p>
+                          <p className="text-sm font-bold text-gray-800 pt-1">
+                              {memberData?.progress?.[memberData.progress.length-1]?.date || "None"}
+                          </p>
+                      </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {/* Weight Chart */}
+                      <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+                          <h3 className="text-lg font-bold text-gray-900 mb-4">Weight Progression</h3>
+                          <div className="h-48 w-full">
+                              <Line 
+                                  data={weightChartData} 
+                                  options={{
+                                      responsive: true,
+                                      maintainAspectRatio: false,
+                                      plugins: { legend: { display: false } },
+                                      scales: { y: { grid: { display: false } }, x: { grid: { display: false } } }
+                                  }} 
+                              />
+                          </div>
+                      </div>
+
+                      {/* Adherence Chart */}
+                      <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+                          <h3 className="text-lg font-bold text-gray-900 mb-4">Weekly Adherence</h3>
+                          <div className="h-48 w-full">
+                              <Bar 
+                                  data={adherenceChartData} 
+                                  options={{
+                                      responsive: true,
+                                      maintainAspectRatio: false,
+                                      plugins: { legend: { display: false } },
+                                      scales: { y: { beginAtZero: true, max: 100 }, x: { grid: { display: false } } }
+                                  }} 
+                              />
+                          </div>
+                      </div>
+                  </div>
+               </>
+               )
+            ) : (
+               <div className="flex flex-col items-center justify-center h-full text-gray-300">
+                  <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+                      <i className="fa-solid fa-chart-pie text-4xl text-gray-200"></i>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-400 mb-2">Select a Member</h3>
+                  <p className="text-sm text-gray-400 max-w-xs text-center">
+                      Choose a client from the list to view their detailed progress, weight history, and adherence stats.
+                  </p>
+               </div>
+            )}
+         </div>
+
+      </div>
     </div>
   );
 };

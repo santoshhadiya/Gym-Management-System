@@ -396,28 +396,7 @@ const PaymentHistory = () => {
                   </div>
                </div>
             </div>
-            <div className="bg-[#fffbeb] border border-yellow-100 p-5 rounded-3xl">
-               <div className="flex justify-between items-start">
-                  <div>
-                     <p className="text-xs text-yellow-600 font-bold uppercase tracking-wider">Pending Txns</p>
-                     <p className="text-2xl font-bold text-gray-900 mt-1">{pendingCount}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                     <i className="fa-solid fa-clock"></i>
-                  </div>
-               </div>
-            </div>
-            <div className="bg-gray-50 border border-gray-200 p-5 rounded-3xl">
-               <div className="flex justify-between items-start">
-                  <div>
-                     <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Refunds</p>
-                     <p className="text-2xl font-bold text-gray-900 mt-1">₹{totalRefunds.toLocaleString()}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                     <i className="fa-solid fa-rotate-left"></i>
-                  </div>
-               </div>
-            </div>
+            
          </div>
 
          {/* FILTERS TOOLBAR */}

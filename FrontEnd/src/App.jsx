@@ -70,6 +70,8 @@ import { useGlobalContext } from './context/GlobalContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import ScrollToTop from './components/ScrollToTop'
 import ViewInquiry from './pages/admin/ViewInquiry'
+import AnnouncementsTrainer from './pages/trainer/AnnouncementsTrainer'
+import AnnouncementsMember from './pages/member/AnnouncementsMember'
 
 const App = () => {
   const { user } = useGlobalContext()
@@ -125,6 +127,7 @@ const App = () => {
             <Route path="payments" element={<MemberPayments />} />
             <Route path="chat/member" element={<ChatWithMember />} />
             <Route path="chat/owner" element={<ChatWithOwner />} />
+            <Route path="announcements" element={<AnnouncementsTrainer/>} />
           </Route>
         </Route>
 
@@ -143,6 +146,7 @@ const App = () => {
             <Route path="renew" element={<Renew />} />
             <Route path="workout" element={<Workout />} />
             <Route path="dietPlans" element={<DietPlans />} />
+            <Route path="announcements" element={<AnnouncementsMember/>} />
           </Route>
         </Route>
 

@@ -88,6 +88,8 @@ const Sidebar_Trainer = ({ isOpen, onClose }) => {
     { path: '/trainer/payments', label: 'Payment Status', icon: 'fa-file-invoice-dollar' },
     { path: '/trainer/chat/member', label: 'Chat with Member', icon: 'fa-comments' },
     { path: '/trainer/chat/owner', label: 'Chat with Owner', icon: 'fa-user-shield' },
+    { path: '/trainer/announcements', label: 'Announcements', icon: 'fa-comments' },
+
   ];
 
   return (

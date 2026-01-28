@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 
+// Use backend URL from env or default to localhost
+const BACKEND_URL = "http://localhost:5000";
+
 const Workout = () => {
-  // --- STYLE INJECTION ---
+  const [activeDay, setActiveDay] = useState("Monday");
+  const [activeWeek, setActiveWeek] = useState(1);
+  const [workoutWeeks, setWorkoutWeeks] = useState([]);
+  const [dietWeeks, setDietWeeks] = useState([]);
+  const [progressData, setProgressData] = useState([]);
+  const [weightData, setWeightData] = useState([]); // Weight History
+  const [currentWeight, setCurrentWeight] = useState(""); // Input for new weight
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("workout"); // 'workout', 'diet', 'weight'
+  
+  const user = JSON.parse(localStorage.getItem("userInfo"));
+
+  // Style Injection
   useEffect(() => {
     const linkToast = document.createElement("link");
     linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
@@ -20,333 +36,409 @@ const Workout = () => {
     };
   }, []);
 
-  // --- MOCK DATA ---
-  const [activeDay, setActiveDay] = useState("Monday");
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [feedbackData, setFeedbackData] = useState({ difficulty: "Moderate", pain: "No", comment: "" });
+  // Fetch Data
+  const fetchPlan = async () => {
+    try {
+      setLoading(true);
+      const token = user?.token;
 
-  const planDetails = {
-    name: "Hypertrophy Phase 1",
-    goal: "Muscle Gain",
-    duration: "8 Weeks",
-    currentWeek: 3,
-    trainer: "Raj Mehta",
-    startDate: "2024-01-15",
-    endDate: "2024-03-15",
-    lastUpdated: "2024-01-10",
-    progress: 35 // %
+      const res = await fetch(`${BACKEND_URL}/api/workout-diet/my/plan`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error("Failed to load plan");
+      
+      const data = await res.json();
+      setWorkoutWeeks(data.workout?.weeks || []);
+      setDietWeeks(data.diet?.weeks || []);
+      setProgressData(data.progress || []);
+      setWeightData(data.weightHistory || []);
+      
+      const updatedDate = data.workout?.lastUpdated || data.diet?.lastUpdated;
+      setLastUpdated(updatedDate ? new Date(updatedDate).toLocaleDateString() : "Never");
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not load your plan");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const [schedule, setSchedule] = useState([
-    {
-      day: 'Monday',
-      focus: 'Chest + Triceps',
-      status: 'Completed',
-      exercises: [
-        { name: 'Barbell Bench Press', sets: 4, reps: '8-10', rest: '90s', note: 'Focus on eccentric control.' },
-        { name: 'Incline Dumbbell Press', sets: 3, reps: '10-12', rest: '60s', note: 'Keep elbows at 45 degrees.' },
-        { name: 'Cable Flys', sets: 3, reps: '15', rest: '45s', note: 'Squeeze at the top.' },
-        { name: 'Tricep Dips', sets: 3, reps: 'Failure', rest: '60s', note: 'Bodyweight or weighted.' },
-      ],
-    },
-    {
-      day: 'Tuesday',
-      focus: 'Back + Biceps',
-      status: 'Pending',
-      exercises: [
-        { name: 'Deadlifts', sets: 3, reps: '5-8', rest: '120s', note: 'Keep back straight.' },
-        { name: 'Lat Pulldowns', sets: 4, reps: '10-12', rest: '60s', note: 'Full range of motion.' },
-        { name: 'Barbell Rows', sets: 3, reps: '10', rest: '90s', note: 'Pull to lower chest.' },
-        { name: 'Hammer Curls', sets: 3, reps: '12', rest: '45s', note: 'Control the swing.' },
-      ],
-    },
-    {
-      day: 'Wednesday',
-      focus: 'Rest & Recovery',
-      status: 'Pending',
-      exercises: [],
-      isRest: true
-    },
-    {
-      day: 'Thursday',
-      focus: 'Legs (Quad Focus)',
-      status: 'Pending',
-      exercises: [
-        { name: 'Barbell Squats', sets: 4, reps: '6-8', rest: '120s', note: 'Hit depth.' },
-        { name: 'Leg Press', sets: 3, reps: '12-15', rest: '90s', note: 'Do not lock knees.' },
-        { name: 'Walking Lunges', sets: 3, reps: '10/leg', rest: '60s', note: 'Keep torso upright.' },
-      ],
-    },
-    {
-      day: 'Friday',
-      focus: 'Shoulders + Abs',
-      status: 'Pending',
-      exercises: [
-        { name: 'Overhead Press', sets: 4, reps: '8-10', rest: '90s', note: 'Core tight.' },
-        { name: 'Lateral Raises', sets: 3, reps: '15', rest: '45s', note: 'Lead with elbows.' },
-        { name: 'Face Pulls', sets: 3, reps: '15', rest: '45s', note: 'For rear delts.' },
-        { name: 'Plank', sets: 3, reps: '60s', rest: '30s', note: 'Maintain straight line.' },
-      ],
-    },
-    {
-      day: 'Saturday',
-      focus: 'Active Recovery / Cardio',
-      status: 'Pending',
-      exercises: [
-        { name: 'Light Jog / Treadmill', sets: 1, reps: '30 mins', rest: '-', note: 'Zone 2 heart rate.' },
-        { name: 'Foam Rolling', sets: 1, reps: '15 mins', rest: '-', note: 'Full body.' },
-      ],
-    },
-    {
-      day: 'Sunday',
-      focus: 'Rest',
-      status: 'Pending',
-      exercises: [],
-      isRest: true
-    },
-  ]);
+  useEffect(() => {
+    fetchPlan();
+  }, []);
 
-  // --- HELPERS ---
-  const currentWorkout = schedule.find(d => d.day === activeDay);
+  // --- DATE & PROGRESS LOGIC ---
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const weeksList = [1, 2, 3, 4];
 
-  const handleStatusChange = (status) => {
-    setSchedule(prev => prev.map(day => 
-      day.day === activeDay ? { ...day, status: status } : day
-    ));
-    const msg = status === 'Completed' ? "Great job! Workout marked complete." : "Workout marked as skipped.";
-    toast.success(msg);
+  const getSelectedDate = () => {
+      const today = new Date();
+      const currentDayOfWeek = today.getDay(); 
+      const diffToMonday = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
+      const currentWeekMonday = new Date(today);
+      currentWeekMonday.setDate(today.getDate() + diffToMonday);
+      
+      const dayIndex = days.indexOf(activeDay); 
+      const weekOffsetDays = (activeWeek - 1) * 7;
+      
+      const targetDate = new Date(currentWeekMonday);
+      targetDate.setDate(currentWeekMonday.getDate() + dayIndex + weekOffsetDays);
+      
+      return targetDate.toISOString().split('T')[0];
   };
 
-  const submitFeedback = () => {
-    toast.info("Feedback sent to your trainer.");
-    setShowFeedback(false);
-    setFeedbackData({ difficulty: "Moderate", pain: "No", comment: "" });
+  const getDisplayDate = () => {
+      const dateStr = getSelectedDate();
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
+
+  // Actions
+  const handleMarkProgress = async (status) => { 
+      try {
+          const selectedDate = getSelectedDate();
+          
+          const payload = {
+              date: selectedDate, 
+              weekNumber: activeWeek,
+              day: activeDay,
+              type: activeTab,
+              status: status
+          };
+
+          // Optimistic Update
+          const updatedProgress = [...progressData];
+          const existingIndex = updatedProgress.findIndex(p => p.date === selectedDate);
+          
+          if (existingIndex > -1) {
+              if (activeTab === 'workout') updatedProgress[existingIndex].workoutCompleted = status;
+              if (activeTab === 'diet') updatedProgress[existingIndex].dietCompleted = status;
+          } else {
+              updatedProgress.push({
+                  date: selectedDate,
+                  weekNumber: activeWeek,
+                  day: activeDay,
+                  workoutCompleted: activeTab === 'workout' ? status : false,
+                  dietCompleted: activeTab === 'diet' ? status : false
+              });
+          }
+          setProgressData(updatedProgress);
+
+          const res = await fetch(`${BACKEND_URL}/api/workout-diet/progress`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${user.token}` },
+              body: JSON.stringify(payload)
+          });
+          
+          if (!res.ok) throw new Error("Update failed");
+          
+          toast.success(`${activeTab === 'workout' ? 'Workout' : 'Diet'} marked for ${getDisplayDate()}`);
+
+      } catch (err) {
+          toast.error("Failed to update progress");
+          fetchPlan(); 
+      }
+  };
+
+  const handleWeightSubmit = async () => {
+      if (!currentWeight || isNaN(currentWeight)) {
+          toast.warn("Please enter a valid weight");
+          return;
+      }
+
+      try {
+          const selectedDate = getSelectedDate();
+          const payload = {
+              date: selectedDate,
+              weekNumber: activeWeek,
+              weight: Number(currentWeight)
+          };
+
+          const res = await fetch(`${BACKEND_URL}/api/workout-diet/weight`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${user.token}` },
+              body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) throw new Error("Weight update failed");
+
+          toast.success("Weight recorded successfully!");
+          setCurrentWeight("");
+          fetchPlan(); // Refresh weight history
+
+      } catch (err) {
+          toast.error("Failed to save weight");
+      }
+  };
+
+  const isCompleted = () => {
+      const selectedDate = getSelectedDate();
+      const entry = progressData.find(p => p.date === selectedDate);
+      
+      if (!entry) return null; 
+      
+      if (activeTab === 'workout') return entry.workoutCompleted;
+      if (activeTab === 'diet') return entry.dietCompleted;
+      return null;
+  };
+
+  // Helpers
+  const getCurrentWorkout = () => {
+      const week = workoutWeeks.find(w => w.weekNumber === activeWeek);
+      const day = week?.days.find(d => d.day === activeDay);
+      return { 
+          plan: day?.plan || "Rest Day / No Workout Assigned",
+          calorieTarget: day?.calorieTarget || 0
+      };
+  };
+
+  const getCurrentDiet = () => {
+      const week = dietWeeks.find(w => w.weekNumber === activeWeek);
+      const day = week?.days.find(d => d.day === activeDay);
+      return day || null;
+  };
+
+  const dietDay = getCurrentDiet();
+  const workoutDay = getCurrentWorkout();
+
+  if (loading) return <div className="p-10 text-center text-gray-500">Loading Plan...</div>;
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6 pb-10 font-sans">
+    <div className="w-full max-w-5xl mx-auto space-y-8 pb-10 font-sans">
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* --- PLAN OVERVIEW --- */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#CDE7FE] rounded-full filter blur-[80px] opacity-20"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row justify-between gap-6">
-          <div className="flex-1">
-             <div className="flex items-center gap-3 mb-2">
-                <span className="px-3 py-1 bg-gray-900 text-white rounded-full text-xs font-bold uppercase tracking-wider">
-                   {planDetails.goal}
-                </span>
-                <span className="text-gray-500 text-sm"><i className="fa-regular fa-calendar mr-1"></i> Week {planDetails.currentWeek} / {planDetails.duration.split(' ')[0]}</span>
-             </div>
-             <h1 className="text-3xl font-black text-gray-900 mb-2">{planDetails.name}</h1>
-             <div className="flex items-center gap-4 text-sm text-gray-600">
-                <span><i className="fa-solid fa-user-ninja text-blue-500 mr-1"></i> Trainer: <strong>{planDetails.trainer}</strong></span>
-                <span className="hidden md:inline text-gray-300">|</span>
-                <span><i className="fa-solid fa-flag-checkered text-green-500 mr-1"></i> Ends: {planDetails.endDate}</span>
-             </div>
-          </div>
-
-          <div className="w-full md:w-1/3 flex flex-col justify-center">
-             <div className="flex justify-between items-end mb-2">
-                <span className="text-sm font-bold text-gray-500">Plan Progress</span>
-                <span className="text-xl font-black text-blue-600">{planDetails.progress}%</span>
-             </div>
-             <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                <div 
-                   className="h-full bg-[#CDE7FE] rounded-full transition-all duration-1000 relative" 
-                   style={{ width: `${planDetails.progress}%` }}
-                >
-                   <div className="absolute top-0 right-0 h-full w-full bg-gradient-to-r from-transparent to-[#2563eb]/20"></div>
-                </div>
-             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* --- WEEKLY SCHEDULE TABS --- */}
-      <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-         {schedule.map((day) => (
-            <button
-               key={day.day}
-               onClick={() => setActiveDay(day.day)}
-               className={`flex-shrink-0 px-5 py-3 rounded-2xl border transition-all duration-200 flex flex-col items-center min-w-[100px] ${
-                  activeDay === day.day 
-                  ? 'bg-[#D9F17F] border-[#D9F17F] text-green-900 shadow-md transform scale-105' 
-                  : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:border-gray-200'
-               }`}
-            >
-               <span className="text-xs font-bold uppercase mb-1">{day.day.substring(0,3)}</span>
-               <span className={`text-[10px] px-2 py-0.5 rounded-full ${day.status === 'Completed' ? 'bg-white/50 text-green-800' : 'bg-gray-100 text-gray-400'}`}>
-                  {day.status === 'Completed' ? <i className="fa-solid fa-check"></i> : day.isRest ? 'Rest' : 'Run'}
-               </span>
-            </button>
-         ))}
-      </div>
-
-      {/* --- ACTIVE DAY VIEW --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+         <div>
+            <h1 className="text-3xl font-black text-gray-900">My Fitness Plan</h1>
+            <p className="text-gray-500 mt-1">Last Updated: <span className="font-bold">{lastUpdated}</span></p>
+         </div>
          
-         {/* LEFT: Exercises List */}
-         <div className="lg:col-span-2 space-y-4">
-            
-            {/* Day Header */}
-            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex justify-between items-center">
-               <div>
-                  <h2 className="text-xl font-black text-gray-900">{activeDay} Workout</h2>
-                  <p className="text-sm text-blue-600 font-bold mt-1">{currentWorkout.focus}</p>
-               </div>
-               {currentWorkout.status === 'Completed' ? (
-                  <span className="px-4 py-2 bg-green-100 text-green-700 rounded-xl text-sm font-bold flex items-center gap-2">
-                     <i className="fa-solid fa-circle-check"></i> Completed
-                  </span>
+         <div className="flex bg-gray-100 p-1 rounded-xl">
+            <button 
+               onClick={() => setActiveTab('workout')}
+               className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'workout' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
+            >
+               Workout
+            </button>
+            <button 
+               onClick={() => setActiveTab('diet')}
+               className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'diet' ? 'bg-white shadow text-green-600' : 'text-gray-500'}`}
+            >
+               Diet
+            </button>
+            {activeWeek === 4 && (
+                <button 
+                onClick={() => setActiveTab('weight')}
+                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'weight' ? 'bg-white shadow text-purple-600' : 'text-gray-500'}`}
+                >
+                Tracker
+                </button>
+            )}
+         </div>
+      </div>
+
+      {/* Week & Day Selector */}
+      <div className="bg-white p-4 rounded-[2rem] border border-gray-100 shadow-sm">
+          <div className="flex gap-4 items-center mb-4 border-b border-gray-50 pb-4">
+              <span className="text-xs font-bold text-gray-400 uppercase">Week</span>
+              {weeksList.map(wk => (
+                  <button
+                    key={wk}
+                    onClick={() => { setActiveWeek(wk); if(wk!==4 && activeTab==='weight') setActiveTab('workout'); }}
+                    className={`w-10 h-10 rounded-full text-sm font-bold transition-all ${activeWeek === wk ? 'bg-black text-white shadow-lg' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+                  >
+                      {wk}
+                  </button>
+              ))}
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+             {days.map(day => {
+                const today = new Date();
+                const currentDayOfWeek = today.getDay(); 
+                const diffToMonday = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
+                const currentWeekMonday = new Date(today);
+                currentWeekMonday.setDate(today.getDate() + diffToMonday);
+                
+                const dayIndex = days.indexOf(day);
+                const weekOffsetDays = (activeWeek - 1) * 7;
+                const targetDate = new Date(currentWeekMonday);
+                targetDate.setDate(currentWeekMonday.getDate() + dayIndex + weekOffsetDays);
+                const dateStr = targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const dateKey = targetDate.toISOString().split('T')[0];
+
+                const entry = progressData.find(p => p.date === dateKey);
+                let dayStatus = null;
+                if (entry) {
+                    if (activeTab === 'workout') dayStatus = entry.workoutCompleted;
+                    if (activeTab === 'diet') dayStatus = entry.dietCompleted;
+                }
+
+                return (
+                    <button
+                    key={day}
+                    onClick={() => setActiveDay(day)}
+                    className={`px-3 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex flex-col items-center min-w-[80px] relative ${activeDay === day ? 'bg-gray-900 text-white shadow-lg' : 'bg-white border border-gray-100 text-gray-500 hover:bg-gray-50'}`}
+                    >
+                        <span>{day.slice(0,3)}</span>
+                        <span className={`text-[10px] font-normal ${activeDay === day ? 'text-gray-400' : 'text-gray-400'}`}>{dateStr}</span>
+                        
+                        {(activeTab === 'workout' || activeTab === 'diet') && (
+                            <>
+                                {dayStatus === true && <div className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full"></div>}
+                                {dayStatus === false && <div className="absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full"></div>}
+                            </>
+                        )}
+                    </button>
+                );
+             })}
+          </div>
+      </div>
+
+      {/* Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+         
+         {/* Main Panel */}
+         <div className="lg:col-span-2 space-y-6">
+            <div className={`rounded-[2.5rem] p-8 border shadow-sm min-h-[400px] transition-colors ${isCompleted() === true ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100'}`}>
+               
+               {activeTab === 'weight' ? (
+                   <div>
+                       <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                                <span className="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-purple-50 text-purple-600">
+                                    <i className="fa-solid fa-weight-scale"></i>
+                                </span>
+                                Weight Tracker
+                            </h2>
+                       </div>
+                       
+                       <div className="bg-purple-50 p-6 rounded-2xl mb-8 text-center border border-purple-100">
+                           <p className="text-sm text-purple-800 font-bold mb-3 uppercase tracking-wider">Log Weight for {getDisplayDate()}</p>
+                           <div className="flex items-center justify-center gap-2">
+                               <input 
+                                   type="number" 
+                                   placeholder="0.0" 
+                                   className="text-4xl font-black text-center bg-white w-32 py-2 rounded-xl border border-purple-200 focus:outline-none focus:ring-4 focus:ring-purple-200 text-purple-900 placeholder-purple-200"
+                                   value={currentWeight}
+                                   onChange={(e) => setCurrentWeight(e.target.value)}
+                               />
+                               <span className="text-xl font-bold text-purple-400">kg</span>
+                           </div>
+                           <button onClick={handleWeightSubmit} className="mt-4 px-8 py-3 bg-purple-600 text-white rounded-xl font-bold shadow-lg shadow-purple-200 hover:bg-purple-700 transition-all">
+                               Save Entry
+                           </button>
+                       </div>
+
+                       <div className="space-y-3">
+                           <h3 className="font-bold text-gray-900 text-sm mb-2">History</h3>
+                           {weightData.map(log => (
+                               <div key={log._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                   <span className="text-sm font-medium text-gray-600">{new Date(log.date).toLocaleDateString()} (Week {log.weekNumber})</span>
+                                   <span className="text-sm font-bold text-gray-900">{log.weight} kg</span>
+                               </div>
+                           ))}
+                           {weightData.length === 0 && <p className="text-gray-400 text-sm text-center">No weight logs yet.</p>}
+                       </div>
+                   </div>
                ) : (
-                  <span className="px-4 py-2 bg-gray-100 text-gray-500 rounded-xl text-sm font-bold">
-                     {currentWorkout.status}
-                  </span>
+                   <>
+                       <div className="flex justify-between items-start mb-6">
+                           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                              <span className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${activeTab === 'workout' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'}`}>
+                                 <i className={`fa-solid ${activeTab === 'workout' ? 'fa-dumbbell' : 'fa-carrot'}`}></i>
+                              </span>
+                              {activeDay}'s Plan
+                           </h2>
+                           {isCompleted() !== null && (
+                               <span className={`px-3 py-1 rounded-full text-xs font-bold ${isCompleted() ? 'bg-green-200 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                   {isCompleted() ? "Completed" : "Missed"}
+                               </span>
+                           )}
+                       </div>
+
+                       {activeTab === 'workout' ? (
+                          <>
+                              {/* Calorie Target Display */}
+                              {workoutDay.calorieTarget > 0 && (
+                                  <div className="mb-4 inline-flex items-center gap-2 px-3 py-1 bg-orange-50 text-orange-700 rounded-lg text-xs font-bold border border-orange-100">
+                                      <i className="fa-solid fa-fire"></i> Target: {workoutDay.calorieTarget} kcal
+                                  </div>
+                              )}
+                              
+                              <div className="prose max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap text-lg">
+                                 {workoutDay.plan}
+                              </div>
+                          </>
+                       ) : (
+                          <div className="space-y-6">
+                             {/* Nutrition Stats */}
+                             <div className="grid grid-cols-4 gap-4 mb-6">
+                                <div className="text-center p-3 bg-orange-50 rounded-2xl">
+                                    <p className="text-xs font-bold text-orange-400 uppercase">Cals</p>
+                                    <p className="font-black text-orange-900">{dietDay?.nutrition?.calories || 0}</p>
+                                </div>
+                                <div className="text-center p-3 bg-blue-50 rounded-2xl">
+                                    <p className="text-xs font-bold text-blue-400 uppercase">Prot</p>
+                                    <p className="font-black text-blue-900">{dietDay?.nutrition?.protein || 0}g</p>
+                                </div>
+                                <div className="text-center p-3 bg-green-50 rounded-2xl">
+                                    <p className="text-xs font-bold text-green-400 uppercase">Carb</p>
+                                    <p className="font-black text-green-900">{dietDay?.nutrition?.carbs || 0}g</p>
+                                </div>
+                                <div className="text-center p-3 bg-yellow-50 rounded-2xl">
+                                    <p className="text-xs font-bold text-yellow-400 uppercase">Fat</p>
+                                    <p className="font-black text-yellow-900">{dietDay?.nutrition?.fat || 0}g</p>
+                                </div>
+                             </div>
+
+                             {['Breakfast', 'Lunch', 'Snacks', 'Dinner'].map(meal => (
+                                <div key={meal} className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                                   <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{meal}</h4>
+                                   <p className="text-sm text-gray-800 font-medium">{dietDay?.meals?.[meal] || "-"}</p>
+                                </div>
+                             ))}
+                          </div>
+                       )}
+
+                       {/* Progress Actions */}
+                       <div className="mt-10 pt-6 border-t border-gray-200/50 flex gap-4">
+                          <button 
+                            onClick={() => handleMarkProgress(true)}
+                            className={`flex-1 py-3 text-white rounded-xl font-bold transition-all shadow-lg ${isCompleted() === true ? 'bg-green-600 shadow-green-200' : 'bg-green-500 hover:bg-green-600 shadow-green-200'}`}
+                          >
+                             <i className="fa-solid fa-check mr-2"></i> {isCompleted() === true ? "Done" : "Mark as Done"}
+                          </button>
+                          <button 
+                            onClick={() => handleMarkProgress(false)}
+                            className={`flex-1 py-3 border rounded-xl font-bold transition-all ${isCompleted() === false ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white border-red-200 text-red-500 hover:bg-red-50'}`}
+                          >
+                             <i className="fa-solid fa-xmark mr-2"></i> {isCompleted() === false ? "Missed" : "Not Done"}
+                          </button>
+                       </div>
+                   </>
                )}
             </div>
-
-            {/* Exercises */}
-            {currentWorkout.isRest ? (
-               <div className="bg-[#f8fbff] rounded-3xl p-10 border border-dashed border-[#CDE7FE] text-center">
-                  <div className="w-16 h-16 bg-[#CDE7FE] rounded-full flex items-center justify-center text-blue-600 text-2xl mx-auto mb-4">
-                     <i className="fa-solid fa-bed"></i>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Rest Day</h3>
-                  <p className="text-gray-500">Take it easy today. Focus on hydration, stretching, and good sleep.</p>
-               </div>
-            ) : (
-               currentWorkout.exercises.map((ex, idx) => (
-                  <div key={idx} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
-                     <div className="flex justify-between items-start mb-3">
-                        <h3 className="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">{ex.name}</h3>
-                        <button className="text-gray-400 hover:text-blue-600 transition-colors" title="View Demo">
-                           <i className="fa-regular fa-circle-play text-xl"></i>
-                        </button>
-                     </div>
-                     <div className="grid grid-cols-3 gap-4 text-center bg-gray-50 rounded-xl p-3 mb-3">
-                        <div>
-                           <p className="text-[10px] text-gray-400 uppercase font-bold">Sets</p>
-                           <p className="font-black text-gray-800">{ex.sets}</p>
-                        </div>
-                        <div className="border-l border-gray-200">
-                           <p className="text-[10px] text-gray-400 uppercase font-bold">Reps</p>
-                           <p className="font-black text-gray-800">{ex.reps}</p>
-                        </div>
-                        <div className="border-l border-gray-200">
-                           <p className="text-[10px] text-gray-400 uppercase font-bold">Rest</p>
-                           <p className="font-black text-gray-800">{ex.rest}</p>
-                        </div>
-                     </div>
-                     <div className="flex items-start gap-2 text-xs text-gray-500 bg-[#FEEF75]/20 p-2 rounded-lg border border-[#FEEF75]/50">
-                        <i className="fa-solid fa-circle-info text-yellow-600 mt-0.5"></i>
-                        <span>{ex.note}</span>
-                     </div>
-                  </div>
-               ))
-            )}
-
          </div>
 
-         {/* RIGHT: Actions & Info */}
+         {/* Sidebar: Tips */}
          <div className="space-y-6">
-            
-            {/* Status Actions */}
-            {!currentWorkout.isRest && (
-               <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
-                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Track Progress</h3>
-                  <div className="space-y-3">
-                     <button 
-                        onClick={() => handleStatusChange('Completed')}
-                        className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-                           currentWorkout.status === 'Completed' 
-                           ? 'bg-green-100 text-green-800 cursor-default' 
-                           : 'bg-[#D9F17F] text-green-900 hover:bg-green-400 shadow-sm active:scale-95'
-                        }`}
-                        disabled={currentWorkout.status === 'Completed'}
-                     >
-                        {currentWorkout.status === 'Completed' ? <i className="fa-solid fa-check"></i> : <i className="fa-regular fa-square-check"></i>}
-                        Mark as Completed
-                     </button>
-                     
-                     <button 
-                        onClick={() => setShowFeedback(!showFeedback)}
-                        className="w-full py-3 bg-[#CDE7FE] text-blue-900 rounded-xl font-bold text-sm hover:bg-blue-200 transition-colors flex items-center justify-center gap-2"
-                     >
-                        <i className="fa-regular fa-comment-dots"></i> Feedback to Trainer
-                     </button>
-
-                     <button 
-                        onClick={() => handleStatusChange('Skipped')}
-                        className="w-full py-3 border border-gray-200 text-gray-500 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors"
-                     >
-                        Skip Workout
-                     </button>
-                  </div>
-
-                  {/* Feedback Form (Collapsible) */}
-                  {showFeedback && (
-                     <div className="mt-4 pt-4 border-t border-gray-100 animate-fade-in">
-                        <div className="mb-3">
-                           <label className="text-xs font-bold text-gray-500 block mb-1">Difficulty</label>
-                           <select 
-                              className="w-full p-2 bg-gray-50 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-200"
-                              value={feedbackData.difficulty}
-                              onChange={(e) => setFeedbackData({...feedbackData, difficulty: e.target.value})}
-                           >
-                              <option>Easy</option>
-                              <option>Moderate</option>
-                              <option>Hard</option>
-                              <option>Extreme</option>
-                           </select>
-                        </div>
-                        <div className="mb-3">
-                           <label className="text-xs font-bold text-gray-500 block mb-1">Pain / Discomfort?</label>
-                           <div className="flex gap-4">
-                              <label className="flex items-center gap-2 text-sm text-gray-600"><input type="radio" name="pain" value="No" onChange={() => setFeedbackData({...feedbackData, pain: "No"})} defaultChecked /> No</label>
-                              <label className="flex items-center gap-2 text-sm text-gray-600"><input type="radio" name="pain" value="Yes" onChange={() => setFeedbackData({...feedbackData, pain: "Yes"})} /> Yes</label>
-                           </div>
-                        </div>
-                        <textarea 
-                           rows="2"
-                           placeholder="Any comments?"
-                           className="w-full p-2 bg-gray-50 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-200 resize-none mb-3"
-                           value={feedbackData.comment}
-                           onChange={(e) => setFeedbackData({...feedbackData, comment: e.target.value})}
-                        ></textarea>
-                        <button onClick={submitFeedback} className="w-full py-2 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-gray-700">Submit</button>
-                     </div>
-                  )}
-               </div>
-            )}
-
-            {/* Safety Guidelines */}
-            <div className="bg-[#FEEF75]/20 rounded-3xl p-6 border border-[#FEEF75]">
-               <h3 className="text-sm font-bold text-yellow-900 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <i className="fa-solid fa-shield-halved"></i> Safety First
+            <div className="bg-[#fffbeb] rounded-[2rem] p-6 border border-yellow-100 shadow-sm">
+               <h3 className="font-bold text-yellow-900 mb-4 flex items-center gap-2">
+                  <i className="fa-regular fa-lightbulb"></i> Daily Tips
                </h3>
-               <ul className="space-y-2 text-sm text-gray-700">
-                  <li className="flex items-start gap-2">
-                     <i className="fa-solid fa-angle-right mt-1 text-yellow-600"></i> Warm up for 5-10 mins before lifting.
-                  </li>
-                  <li className="flex items-start gap-2">
-                     <i className="fa-solid fa-angle-right mt-1 text-yellow-600"></i> Keep hydrated throughout the session.
-                  </li>
-                  <li className="flex items-start gap-2">
-                     <i className="fa-solid fa-angle-right mt-1 text-yellow-600"></i> Stop immediately if you feel sharp pain.
-                  </li>
+               <ul className="space-y-3 text-sm text-yellow-800">
+                  <li className="flex gap-2 items-start"><i className="fa-solid fa-check mt-1 opacity-50"></i> Consistency {'>'} Intensity.</li>
+                  <li className="flex gap-2 items-start"><i className="fa-solid fa-check mt-1 opacity-50"></i> Track your macros.</li>
+                  <li className="flex gap-2 items-start"><i className="fa-solid fa-check mt-1 opacity-50"></i> Sleep is when muscles grow.</li>
                </ul>
             </div>
-
-            {/* Plan Info Footer */}
-            <div className="text-center text-xs text-gray-400">
-               <p>Plan updated on: {planDetails.lastUpdated}</p>
-               <p>By {planDetails.trainer}</p>
-            </div>
-
          </div>
+
       </div>
+
     </div>
   );
 };
