@@ -27,6 +27,7 @@ const workoutDietRoutes=require("./routes/workoutDietRoutes");
 const announcementRoutes=require("./routes/announcementRoutes");
 const equipmentRoutes = require("./routes/equipmentRoutes");
 const mediaRoutes=require("./routes/mediaRoutes");
+const attendanceRoutes=require("./routes/attendanceRoutes")
 
 dotenv.config();
 connectDB();
@@ -66,7 +67,8 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/workout-diet", workoutDietRoutes)
 app.use("/api/announcements",announcementRoutes)
 app.use("/api/equipment", equipmentRoutes);
-app.use("/api/media", mediaRoutes)
+app.use("/api/media", mediaRoutes);
+app.use("/api/attendance", attendanceRoutes)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- Base Route ---

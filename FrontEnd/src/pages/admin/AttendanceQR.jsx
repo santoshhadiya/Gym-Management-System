@@ -7,6 +7,7 @@ const AttendanceQR = () => {
   const [token, setToken] = useState("");
   const [status, setStatus] = useState("Initializing...");
 
+  
   const refreshQR = async () => {
     try {
       const res = await api.get('/attendance/generate-token');
