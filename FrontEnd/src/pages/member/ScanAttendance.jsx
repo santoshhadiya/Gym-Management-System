@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Html5QrcodeScanner } from 'html5-qr-scanner';
+import { Html5QrcodeScanner } from "html5-qrcode";
 import { toast } from 'react-toastify';
 import { useGlobalContext } from '../../context/GlobalContext';
 
