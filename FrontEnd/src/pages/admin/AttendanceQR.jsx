@@ -5,57 +5,50 @@ import { useGlobalContext } from '../../context/GlobalContext';
 const AttendanceQR = () => {
   const { api } = useGlobalContext();
   const [token, setToken] = useState("");
-  const [error, setError] = useState(null);
+  const [status, setStatus] = useState("Initializing...");
 
   const refreshQR = async () => {
     try {
       const res = await api.get('/attendance/generate-token');
       if (res.data?.qrToken) {
         setToken(res.data.qrToken);
-        setError(null);
+        setStatus("Active");
       } else {
-        setError("Backend did not return a qrToken");
+        setStatus("Invalid Response from Server");
       }
     } catch (err) {
-      setError("Failed to connect to backend");
-      console.error("QR Error", err);
+      console.error("API Error:", err.response || err);
+      setStatus(`Error: ${err.response?.status || "Connection Failed"}`);
     }
   };
 
   useEffect(() => {
     refreshQR();
-    const interval = setInterval(refreshQR, 20000);
+    const interval = setInterval(refreshQR, 5000); // 5-second refresh
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="flex flex-col items-center p-10 bg-white rounded-3xl shadow-xl max-w-md mx-auto mt-10 border border-gray-100">
-      <h2 className="text-2xl font-black mb-4 text-gray-900">Daily Check-in QR</h2>
+    <div className="flex flex-col items-center p-10 bg-white rounded-[2.5rem] shadow-xl max-w-md mx-auto mt-10 border border-gray-100">
+      <h2 className="text-2xl font-black mb-4 text-gray-900 text-center">Gym Check-in</h2>
       
-      <div className="p-4 bg-white border-8 border-gray-900 rounded-2xl shadow-inner min-h-[280px] flex items-center justify-center w-full">
+      <div className="p-4 bg-white border-[10px] border-gray-900 rounded-3xl shadow-2xl flex items-center justify-center min-h-[280px] w-full">
         {token ? (
-          <QRCodeCanvas 
-            value={token} 
-            size={250} 
-            level="H" 
-            includeMargin={true}
-          />
+          <QRCodeCanvas value={token} size={250} level="H" includeMargin={true} />
         ) : (
-          <div className="text-center text-gray-400">
-            {error ? (
-              <p className="text-red-500 font-bold">{error}</p>
-            ) : (
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-            )}
-            <p className="text-xs mt-2">Generating Secure Token...</p>
+          <div className="text-center">
+             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mx-auto mb-4"></div>
+             <p className="text-red-500 font-bold text-sm">{status}</p>
           </div>
         )}
       </div>
 
-      <p className="mt-6 text-gray-500 text-sm animate-pulse flex items-center gap-2">
-        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-        Code refreshes every 20 seconds
-      </p>
+      <div className="mt-6 flex items-center gap-2">
+        <span className={`w-2 h-2 rounded-full ${token ? 'bg-green-500 animate-pulse' : 'bg-red-50'}`}></span>
+        <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
+          {token ? "Refreshes every 5 seconds" : "Checking Backend Connection..."}
+        </p>
+      </div>
     </div>
   );
 };
