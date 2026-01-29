@@ -14,7 +14,7 @@ exports.getMemberProfile = async (req, res) => {
     const member = await Member.findOne({ user: req.user.id })
       .populate("user", "-password")
       .populate("plan")
-      .populate("assignedTrainer", "name email profileImage"); // ✅ Populated fully
+      .populate("assignedTrainer", "name email profileImage");
 
     if (!member) {
       return res.status(404).json({ message: "Member profile not found" });
@@ -26,7 +26,6 @@ exports.getMemberProfile = async (req, res) => {
   }
 };
 
-// ... (rest of the file remains unchanged)
 /**
  * @desc   Update logged-in member profile
  * @route  PUT /api/members/profile
@@ -64,22 +63,31 @@ exports.getAllMembers = async (req, res) => {
       .populate("assignedTrainer", "name")
       .populate("plan", "name");
 
-    const formatted = members.map((m) => ({
-      _id: m._id,
-      name: m.user.name,
-      email: m.user.email,
-      phone: m.user.phone,
-      status: m.user.status,
-      plan: m.plan ? { _id: m.plan._id, name: m.plan.name } : null,
-      trainer: m.assignedTrainer ? { _id: m.assignedTrainer._id, name: m.assignedTrainer.name } : null,
-      joinDate: m.user.createdAt,
-      height: m.height,
-      currentWeight: m.currentWeight,
-      fitnessGoal: m.fitnessGoal,
-    }));
+    const formatted = members.map((m) => {
+      //  SAFETY CHECK: Skip if user is deleted/null (Prevents 500 Error)
+      if (!m.user) return null;
+
+      return {
+        _id: m._id,
+        name: m.user.name,
+        email: m.user.email,
+        phone: m.user.phone,
+        status: m.user.status,
+        // Safe navigation for plan
+        plan: m.plan ? { _id: m.plan._id, name: m.plan.name } : null,
+        // Safe navigation for trainer (matches AssignTrainers.jsx expectation)
+        trainer: m.assignedTrainer ? { _id: m.assignedTrainer._id, name: m.assignedTrainer.name } : null,
+        joinDate: m.user.createdAt,
+        height: m.height,
+        currentWeight: m.currentWeight,
+        fitnessGoal: m.fitnessGoal,
+        assignedDate: m.assignedDate // Passed for UI sort/display if needed
+      };
+    }).filter(m => m !== null); // Remove nulls from result
 
     res.json(formatted);
   } catch (error) {
+    console.error("Error in getAllMembers:", error); // Log actual error to console
     res.status(500).json({ message: error.message });
   }
 };
@@ -93,18 +101,17 @@ exports.getAllMembersAll = async (req, res) => {
     const members = await Member.find()
       .populate("user", "name email phone status createdAt")
       .populate("assignedTrainer", "name")
-      .populate("plan", "name price"); //  Ensure price is populated
+      .populate("plan", "name price"); 
 
-    //  Process members in parallel to get payment stats
     const formatted = await Promise.all(members.map(async (m) => {
-      // Fetch all payments for this member
+      if (!m.user) return null; // Safety Check
+
       const payments = await Payment.find({ member: m._id }).sort({ paidAt: -1 });
       
       const totalPaid = payments.reduce((acc, curr) => acc + curr.amount, 0);
       const planPrice = m.plan ? m.plan.price : 0;
       const pending = Math.max(0, planPrice - totalPaid);
       
-      // Determine Status
       let paymentStatus = "Pending";
       if (totalPaid >= planPrice && planPrice > 0) paymentStatus = "Paid";
       else if (totalPaid > 0) paymentStatus = "Partial";
@@ -119,13 +126,10 @@ exports.getAllMembersAll = async (req, res) => {
         planPrice: planPrice,
         trainer: m.assignedTrainer?.name || "Unassigned",
         joinDate: m.user.createdAt,
-        
-        // Dynamic Payment Data
         paid: totalPaid,
         pending: pending,
         dueDate: m.expiryDate ? m.expiryDate.toISOString().split('T')[0] : "-",
         paymentStatus: paymentStatus,
-        
         history: payments.map(p => ({
            id: p._id,
            date: p.paidAt.toISOString().split('T')[0],
@@ -136,7 +140,7 @@ exports.getAllMembersAll = async (req, res) => {
       };
     }));
 
-    res.json(formatted);
+    res.json(formatted.filter(m => m !== null));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -154,6 +158,8 @@ exports.getAllMembersAllForManageMember = async (req, res) => {
 
     const formatted = await Promise.all(
       members.map(async (m) => {
+        if (!m.user) return null; // Safety Check
+
         const payments = await Payment.find({ member: m._id }).sort({ paidAt: -1 });
         const totalPaid = payments.reduce((sum, pay) => sum + (pay.amount || 0), 0);
         const planPrice = m.plan?.price || 0;
@@ -165,13 +171,13 @@ exports.getAllMembersAllForManageMember = async (req, res) => {
 
         return {
           _id: m._id,
-          name: m.user?.name || "",
-          email: m.user?.email || "",
-          phone: m.user?.phone || "",
-          status: m.user?.status || "Inactive",
+          name: m.user.name,
+          email: m.user.email,
+          phone: m.user.phone,
+          status: m.user.status,
           plan: m.plan ? { _id: m.plan._id, name: m.plan.name, price: m.plan.price } : null,
           trainer: m.assignedTrainer ? { _id: m.assignedTrainer._id, name: m.assignedTrainer.name } : null,
-          joinDate: m.user?.createdAt,
+          joinDate: m.user.createdAt,
           age: m.age || "",
           gender: m.gender || "Male",
           height: m.height || "",
@@ -190,7 +196,7 @@ exports.getAllMembersAllForManageMember = async (req, res) => {
         };
       })
     );
-    res.status(200).json(formatted);
+    res.status(200).json(formatted.filter(m => m !== null));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -271,10 +277,13 @@ exports.updateMemberByAdmin = async (req, res) => {
     if (!member) {
       return res.status(404).json({ message: "Member not found" });
     }
-
-    member.user.name = req.body.name || member.user.name;
-    member.user.phone = req.body.phone || member.user.phone;
-    await member.user.save();
+    
+    // Safety check just in case
+    if (member.user) {
+        member.user.name = req.body.name || member.user.name;
+        member.user.phone = req.body.phone || member.user.phone;
+        await member.user.save();
+    }
 
     member.plan = req.body.plan || member.plan;
     member.height = req.body.height || member.height;
@@ -294,8 +303,8 @@ exports.updateMemberByAdmin = async (req, res) => {
 exports.deactivateMember = async (req, res) => {
   try {
     const member = await Member.findById(req.params.id).populate("user");
-    if (!member) {
-      return res.status(404).json({ message: "Member not found" });
+    if (!member || !member.user) {
+      return res.status(404).json({ message: "Member/User not found" });
     }
     member.user.status = member.user.status === "Active" ? "Inactive" : "Active";
     await member.user.save();

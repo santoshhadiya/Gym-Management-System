@@ -172,8 +172,9 @@ const UpdateSessions = () => {
    };
 
    const confirmCancel = async () => {
-      if (!cancelReason) {
-         toast.warn("Please enter a reason.");
+      // [UPDATED] Robust validation for reason (no empty spaces)
+      if (!cancelReason || !cancelReason.trim()) {
+         toast.warn("Please enter a valid reason.");
          return;
       }
 
@@ -223,7 +224,11 @@ const UpdateSessions = () => {
       const matchesFilter = filterStatus === "All" || s.status === filterStatus;
 
       // View logic
-      if (viewState === 'list') return matchesSearch && matchesFilter && s.status !== 'Cancelled';
+      // [UPDATED] Active list ('list') now hides Cancelled AND Completed sessions
+      if (viewState === 'list') {
+         return matchesSearch && matchesFilter && s.status !== 'Cancelled' && s.status !== 'Completed';
+      }
+      
       return matchesSearch && matchesFilter; // History shows all
    });
 
@@ -367,18 +372,21 @@ const UpdateSessions = () => {
                               </td>
 
                               <td className="px-6 py-4 text-right">
-                                 <div className="flex justify-end gap-2">
-
-
-                                    <button onClick={() => handleOpenModal(s)} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer" title="Edit / Note">
-                                       <i className="fa-solid fa-pen text-xs"></i>
-                                    </button>
-                                    {s.status === 'Upcoming' && (
-                                       <button onClick={() => initiateCancel(s._id)} className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors cursor-pointer" title="Cancel">
-                                          <i className="fa-solid fa-ban text-xs"></i>
+                                 {/* [UPDATED] Actions only in Active/List view. History is View Only */}
+                                 {viewState === 'list' ? (
+                                    <div className="flex justify-end gap-2">
+                                       <button onClick={() => handleOpenModal(s)} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer" title="Edit / Note">
+                                          <i className="fa-solid fa-pen text-xs"></i>
                                        </button>
-                                    )}
-                                 </div>
+                                       {s.status === 'Upcoming' && (
+                                          <button onClick={() => initiateCancel(s._id)} className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors cursor-pointer" title="Cancel">
+                                             <i className="fa-solid fa-ban text-xs"></i>
+                                          </button>
+                                       )}
+                                    </div>
+                                 ) : (
+                                    <span className="text-gray-400 text-xs italic">View Only</span>
+                                 )}
                               </td>
                            </tr>
                         )) : (

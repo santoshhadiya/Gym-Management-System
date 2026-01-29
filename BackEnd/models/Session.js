@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose")
 
 const sessionSchema = new mongoose.Schema({
@@ -29,6 +28,11 @@ const sessionSchema = new mongoose.Schema({
     default: "Upcoming",
   },
   notes: String,
+  //cancelReason to store why the session was cancelled (Global)
+  cancelReason: {
+    type: String, 
+    default: ""
+  },
   capacity: {
     type: Number,
     default: 10, // 1 = personal, >1 = group

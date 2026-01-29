@@ -170,12 +170,12 @@ const AssignTrainers = () => {
           >
             Active Assignments
           </button>
-          <button
+          {/* <button
             onClick={() => setViewState("history")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewState === 'history' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             History Log
-          </button>
+          </button> */}
         </div>
       </div>
 

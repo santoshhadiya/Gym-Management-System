@@ -7,6 +7,9 @@ const ManageBookings = () => {
    // --- STATE ---
    const [bookings, setBookings] = useState([]);
    const [isLoading, setIsLoading] = useState(true);
+   
+   // [NEW] View State for Tabs
+   const [viewState, setViewState] = useState("active"); // 'active' | 'history'
 
    // Cancellation Modal State
    const [showCancelModal, setShowCancelModal] = useState(false);
@@ -63,15 +66,32 @@ const ManageBookings = () => {
          return acc;
       }, {});
 
-      // 2. Convert to Array and Sort by Session Date (Upcoming First)
-      return Object.values(grouped).sort((a, b) => {
-         const dateA = new Date(`${a.session.date} ${a.session.time}`);
-         const dateB = new Date(`${b.session.date} ${b.session.time}`);
-         return dateA - dateB; // Ascending: Nearest date first
-      });
+      // 2. Convert to Array
+      let groups = Object.values(grouped);
+
+      // 3. Filter and Sort based on View State
+      if (viewState === 'active') {
+         // ACTIVE: Only "Upcoming", Sort by Date ASC (Nearest first)
+         return groups
+            .filter(g => g.session.status === 'Upcoming')
+            .sort((a, b) => {
+               const dateA = new Date(`${a.session.date} ${a.session.time}`);
+               const dateB = new Date(`${b.session.date} ${b.session.time}`);
+               return dateA - dateB; 
+            });
+      } else {
+         // HISTORY: "Completed" or "Cancelled", Sort by Date DESC (Newest first)
+         return groups
+            .filter(g => g.session.status !== 'Upcoming')
+            .sort((a, b) => {
+               const dateA = new Date(`${a.session.date} ${a.session.time}`);
+               const dateB = new Date(`${b.session.date} ${b.session.time}`);
+               return dateB - dateA; 
+            });
+      }
    };
 
-   const sortedGroups = processBookings();
+   const visibleGroups = processBookings();
 
    // --- ACTIONS ---
    const openCancelModal = (bookingId) => {
@@ -105,14 +125,38 @@ const ManageBookings = () => {
       }
    };
 
+   const getSessionStatusBadge = (status) => {
+      if (status === 'Completed') return <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200">Completed</span>;
+      if (status === 'Cancelled') return <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold border border-red-200">Cancelled</span>;
+      return null;
+   };
+
    return (
       <div className="w-full bg-white rounded-3xl p-8 shadow-sm border border-gray-100 font-sans min-h-screen relative">
          <ToastContainer position="top-right" autoClose={3000} />
 
          {/* HEADER */}
-         <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Manage Bookings</h1>
-            <p className="text-sm text-gray-500 mt-1">View and manage member bookings grouped by session.</p>
+         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+               <h1 className="text-2xl font-bold text-gray-900">Manage Bookings</h1>
+               <p className="text-sm text-gray-500 mt-1">View and manage member bookings grouped by session.</p>
+            </div>
+
+            {/* View Switcher */}
+            <div className="flex bg-gray-50 p-1 rounded-2xl border border-gray-100">
+               <button
+                  onClick={() => setViewState("active")}
+                  className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${viewState === 'active' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+               >
+                  Upcoming
+               </button>
+               <button
+                  onClick={() => setViewState("history")}
+                  className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${viewState === 'history' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+               >
+                  History
+               </button>
+            </div>
          </div>
 
          {isLoading ? (
@@ -121,17 +165,23 @@ const ManageBookings = () => {
             </div>
          ) : (
             <div className="space-y-8">
-               {sortedGroups.length > 0 ? (
-                  sortedGroups.map((group) => (
-                     <div key={group.session._id} className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2">
+               {visibleGroups.length > 0 ? (
+                  visibleGroups.map((group) => (
+                     <div key={group.session._id} className={`border rounded-2xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2 ${group.session.status === 'Cancelled' ? 'bg-red-50/10 border-red-100' : 'bg-white border-gray-200'}`}>
 
-                        {/* Session Header (Distinct Visual Separator) */}
-                        <div className="bg-[#f8f9fa] px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                        {/* Session Header */}
+                        <div className={`px-6 py-4 border-b flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 ${group.session.status === 'Cancelled' ? 'bg-red-50 border-red-100' : 'bg-[#f8f9fa] border-gray-100'}`}>
                            <div>
-                              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                 <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                 {group.session.type}
-                              </h3>
+                              <div className="flex items-center gap-3">
+                                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                    <span className={`w-2 h-2 rounded-full ${group.session.status === 'Upcoming' ? 'bg-blue-500 animate-pulse' : 'bg-gray-400'}`}></span>
+                                    {group.session.type}
+                                 </h3>
+                                 
+                                 {/* History Status Badge */}
+                                 {viewState === 'history' && getSessionStatusBadge(group.session.status)}
+                              </div>
+
                               <div className="flex items-center gap-4 text-xs text-gray-500 mt-1 font-medium">
                                  <span className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-gray-200">
                                     <i className="fa-regular fa-calendar text-blue-400"></i> {group.session.date}
@@ -149,7 +199,7 @@ const ManageBookings = () => {
                            </div>
                         </div>
 
-                        {/* Bookings Table (Single table per session) */}
+                        {/* Bookings Table */}
                         <div className="overflow-x-auto">
                            <table className="w-full text-left text-sm text-gray-500">
                               <thead className="bg-white border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
@@ -175,13 +225,16 @@ const ManageBookings = () => {
                                           </span>
                                        </td>
                                        <td className="px-6 py-3 text-right">
-                                          {booking.bookingStatus !== "Cancelled" && (
+                                          {/* Action only available for ACTIVE sessions */}
+                                          {viewState === 'active' && booking.bookingStatus !== "Cancelled" ? (
                                              <button
                                                 onClick={() => openCancelModal(booking._id)}
                                                 className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-lg text-xs font-bold transition-colors border border-transparent hover:border-red-100"
                                              >
                                                 Cancel Booking
                                              </button>
+                                          ) : (
+                                             <span className="text-gray-300 text-xs italic">--</span>
                                           )}
                                        </td>
                                     </tr>
@@ -193,8 +246,8 @@ const ManageBookings = () => {
                   ))
                ) : (
                   <div className="text-center py-16 bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-200">
-                     <i className="fa-solid fa-clipboard-list text-4xl text-gray-300 mb-3"></i>
-                     <p className="text-gray-500">No active bookings found.</p>
+                     <i className={`fa-solid ${viewState === 'active' ? 'fa-clipboard-list' : 'fa-box-archive'} text-4xl text-gray-300 mb-3`}></i>
+                     <p className="text-gray-500">No {viewState} bookings found.</p>
                   </div>
                )}
             </div>
