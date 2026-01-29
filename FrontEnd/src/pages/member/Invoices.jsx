@@ -251,14 +251,15 @@ const Invoices = () => {
    if (loading) return <div className="p-10 text-center text-gray-500 font-sans">Loading Invoices...</div>;
 
    return (
-      <div className="w-full max-w-5xl mx-auto space-y-8 pb-10 font-sans">
+      // Changed: Added px-4 sm:px-6 for mobile padding
+      <div className="w-full max-w-5xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-6">
          <ToastContainer position="top-right" autoClose={3000} />
 
          {/* HEADER */}
          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-               <h1 className="text-3xl font-black text-gray-900">My Invoices</h1>
-               <p className="text-gray-500 mt-1">View and download your payment history.</p>
+            <div className="text-center md:text-left">
+               <h1 className="text-2xl md:text-3xl font-black text-gray-900">My Invoices</h1>
+               <p className="text-sm md:text-base text-gray-500 mt-1">View and download your payment history.</p>
             </div>
          </div>
 
@@ -269,31 +270,38 @@ const Invoices = () => {
                   <table className="w-full text-left text-sm text-gray-500">
                      <thead className="bg-[#f8f9fa] border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
                         <tr>
-                           <th className="px-6 py-4 font-bold">Invoice #</th>
-                           <th className="px-6 py-4 font-bold">Date</th>
-                           <th className="px-6 py-4 font-bold">Plan</th>
-                           <th className="px-6 py-4 font-bold text-right">Amount</th>
-                           <th className="px-6 py-4 font-bold text-center">Status</th>
-                           <th className="px-6 py-4 font-bold text-right">Action</th>
+                           <th className="px-6 py-4 font-bold whitespace-nowrap">Invoice #</th>
+                           <th className="px-6 py-4 font-bold whitespace-nowrap">Date</th>
+                           <th className="px-6 py-4 font-bold whitespace-nowrap">Plan</th>
+                           <th className="px-6 py-4 font-bold text-right whitespace-nowrap">Amount</th>
+                           <th className="px-6 py-4 font-bold text-center whitespace-nowrap">Status</th>
+                           <th className="px-6 py-4 font-bold text-right whitespace-nowrap">Action</th>
                         </tr>
                      </thead>
                      <tbody className="divide-y divide-gray-100">
                         {invoices.map((inv) => (
                            <tr key={inv._id} className="hover:bg-gray-50 transition-colors">
-                              <td className="px-6 py-4 font-mono font-medium text-gray-900">{inv.id}</td>
-                              <td className="px-6 py-4">{inv.date}</td>
-                              <td className="px-6 py-4 text-gray-800">{inv.plan}</td>
-                              <td className="px-6 py-4 text-right font-bold text-gray-900">₹{inv.total.toLocaleString()}</td>
-                              <td className="px-6 py-4 text-center">
+                              <td className="px-6 py-4 font-mono font-medium text-gray-900 whitespace-nowrap">{inv.id}</td>
+                              <td className="px-6 py-4 whitespace-nowrap">{inv.date}</td>
+                              <td className="px-6 py-4 text-gray-800 whitespace-nowrap">{inv.plan}</td>
+                              <td className="px-6 py-4 text-right font-bold text-gray-900 whitespace-nowrap">₹{inv.total.toLocaleString()}</td>
+                              <td className="px-6 py-4 text-center whitespace-nowrap">
                                  <span className={`px-2 py-1 rounded text-[10px] font-bold border ${inv.status === 'Paid' ? 'bg-[#D9F17F] text-green-900 border-green-200' : 'bg-red-50 text-red-600 border-red-200'
                                     }`}>
                                     {inv.status}
                                  </span>
                               </td>
-                              <td className="px-6 py-4 text-right">
+                              <td className="px-6 py-4 text-right whitespace-nowrap">
                                  <div className="flex items-center justify-end gap-3">
+                                    {/* Action button triggers the modal */}
+                                    <button 
+                                       onClick={() => handleView(inv)}
+                                       className="text-gray-400 hover:text-blue-600 font-bold text-xs flex items-center gap-1"
+                                    >
+                                       <i className="fa-regular fa-eye"></i> View
+                                    </button>
 
-
+                                    {/* Direct Download Link */}
                                     <PDFDownloadLink
                                        document={<GymInvoicePDF inv={inv} />}
                                        fileName={`Invoice_${inv.id}.pdf`}
@@ -302,7 +310,7 @@ const Invoices = () => {
                                        {({ loading }) => (
                                           <span className="flex items-center gap-1">
                                              <i className={loading ? "fa-solid fa-spinner fa-spin" : "fa-solid fa-download"}></i>
-                                             {loading ? '...' : 'Download'}
+                                             {loading ? '...' : 'PDF'}
                                           </span>
                                        )}
                                     </PDFDownloadLink>
@@ -324,10 +332,10 @@ const Invoices = () => {
          {/* --- INVOICE DETAILS MODAL --- */}
          {showModal && selectedInvoice && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 print:p-0 print:absolute print:inset-0 print:bg-white print:z-[1000]">
-               <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 print:shadow-none print:rounded-none print:w-full print:max-w-none">
+               <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 print:shadow-none print:rounded-none print:w-full print:max-w-none max-h-[90vh] overflow-y-auto">
 
                   {/* Modal Header */}
-                  <div className="bg-[#f8f9fa] px-8 py-6 border-b border-gray-100 flex justify-between items-center print:hidden">
+                  <div className="bg-[#f8f9fa] px-6 py-4 sm:px-8 sm:py-6 border-b border-gray-100 flex justify-between items-center print:hidden sticky top-0 z-10">
                      <h3 className="font-bold text-gray-900 text-lg">Invoice Details</h3>
                      <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
                         <i className="fa-solid fa-xmark text-xl"></i>
@@ -335,26 +343,28 @@ const Invoices = () => {
                   </div>
 
                   {/* Invoice Content */}
-                  <div className="p-8 print:p-10">
-                     <div className="flex justify-between items-start mb-8 border-b border-gray-100 pb-6">
+                  <div className="p-6 sm:p-8 print:p-10">
+                     {/* Changed: flex-col sm:flex-row to stack header info on mobile */}
+                     <div className="flex flex-col sm:flex-row justify-between items-start mb-8 border-b border-gray-100 pb-6 gap-4 sm:gap-0">
                         <div>
                            <h2 className="text-3xl font-black text-gray-900 tracking-tight">INVOICE</h2>
                            <p className="text-sm text-gray-400 font-mono mt-1">#{selectedInvoice.id}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-left sm:text-right">
                            <h3 className="font-bold text-xl text-gray-800">Songar's GYM</h3>
                            <p className="text-xs text-gray-400 mt-1">Shastrinagar, Ahmedabad</p>
                            <p className="text-xs text-gray-400">Gujarat, India</p>
                         </div>
                      </div>
 
-                     <div className="grid grid-cols-2 gap-8 mb-8 text-sm">
+                     {/* Changed: grid-cols-1 sm:grid-cols-2 to stack billing info */}
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-8 text-sm">
                         <div>
                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Billed To</p>
                            <p className="font-bold text-gray-900 text-lg">{selectedInvoice.member.name}</p>
                            <p className="text-gray-500">ID: {selectedInvoice._id?.slice(-6).toUpperCase() || 'N/A'}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-left sm:text-right">
                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Payment Info</p>
                            <p className="font-medium text-gray-800">Date: {selectedInvoice.date}</p>
                            <p className="font-medium text-gray-800">Method: {selectedInvoice.method}</p>
@@ -381,8 +391,9 @@ const Invoices = () => {
                      </div>
 
                      {/* Footer Actions */}
+                     {/* Changed: flex-col sm:flex-row to stack buttons on mobile */}
                      {selectedInvoice.status === 'Paid' ? (
-                        <div className="flex gap-3 print:hidden">
+                        <div className="flex flex-col sm:flex-row gap-3 print:hidden">
                            <button
                               onClick={handlePrint}
                               className="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"

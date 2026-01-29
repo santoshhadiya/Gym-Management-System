@@ -175,24 +175,27 @@ const Feedback = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-8 pb-10 font-sans">
+    // Changed: Added px-4 sm:px-6 for mobile padding
+    <div className="w-full max-w-4xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-6">
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+      {/* Changed: Adjusted alignment for mobile */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900">Member Feedback</h1>
-          <p className="text-gray-500 mt-1">Share your experience with us. Your voice matters!</p>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900">Member Feedback</h1>
+          <p className="text-sm md:text-base text-gray-500 mt-1">Share your experience with us. Your voice matters!</p>
         </div>
       </div>
 
       {/* CATEGORY TABS */}
-      <div className="bg-white p-1 rounded-xl border border-gray-200 inline-flex shadow-sm">
+      {/* Changed: flex-wrap + justify-center for mobile layout */}
+      <div className="bg-white p-1 rounded-xl border border-gray-200 flex flex-wrap justify-center sm:inline-flex shadow-sm w-full sm:w-auto">
         {["General", "Trainer", "Facility"].map(type => (
           <button
             key={type}
             onClick={() => setActiveTab(type)}
-            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
+            className={`flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === type 
                 ? "bg-gray-900 text-white shadow-md" 
                 : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
@@ -209,8 +212,9 @@ const Feedback = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
          
          {/* LEFT: FORM (Create or Edit) */}
-         <div className="lg:col-span-1">
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm sticky top-6">
+         <div className="lg:col-span-1 order-1 lg:order-1">
+            {/* Changed: Removed sticky on mobile, kept on desktop */}
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm static lg:sticky lg:top-6">
                <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-gray-900">
                      {currentFeedback ? `Edit ${activeTab} Feedback` : `New ${activeTab} Feedback`}
@@ -272,7 +276,7 @@ const Feedback = () => {
          </div>
 
          {/* RIGHT: CURRENT FEEDBACK DISPLAY */}
-         <div className="lg:col-span-2">
+         <div className="lg:col-span-2 order-2 lg:order-2">
             <h3 className="font-bold text-gray-900 mb-4 ml-1">
                {currentFeedback ? "Submitted Feedback" : "No feedback yet"}
             </h3>
@@ -281,7 +285,8 @@ const Feedback = () => {
                <div className="text-center py-10 text-gray-400">Loading...</div>
             ) : currentFeedback ? (
                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                  <div className="flex justify-between items-start mb-4">
+                  {/* Changed: flex-col sm:flex-row to handle layout on narrow screens */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4 sm:gap-0">
                      <div>
                         <span className={`inline-block px-3 py-1 rounded-lg text-xs font-bold uppercase mb-2 ${
                            currentFeedback.type === 'Trainer' ? 'bg-blue-50 text-blue-600' : 
@@ -296,7 +301,7 @@ const Feedback = () => {
                            ))}
                         </div>
                      </div>
-                     <div className="text-right">
+                     <div className="text-left sm:text-right w-full sm:w-auto">
                         <span className={`inline-block px-2 py-1 rounded text-[10px] font-bold border ${currentFeedback.status === 'Reviewed' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-yellow-50 text-yellow-700 border-yellow-100'}`}>
                            {currentFeedback.status}
                         </span>

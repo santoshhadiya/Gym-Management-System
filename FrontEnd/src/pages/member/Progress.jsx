@@ -243,24 +243,27 @@ const Progress = () => {
   if (loading) return <div className="p-10 text-center text-gray-500">Loading Progress...</div>;
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-8 pb-10 font-sans">
+    // Changed: Added padding (px-4 sm:px-0) for mobile spacing
+    <div className="w-full max-w-6xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-0">
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+      {/* Changed: flex-col md:flex-row and items-start md:items-end for mobile title alignment */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900">Your Progress</h1>
-          <p className="text-gray-500 mt-1">Track your fitness journey and milestones.</p>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900">Your Progress</h1>
+          <p className="text-sm md:text-base text-gray-500 mt-1">Track your fitness journey and milestones.</p>
         </div>
-        <div className="flex gap-3">
-            <div className="text-right">
+        {/* Changed: Added flex-wrap and w-full for mobile stats */}
+        <div className="flex flex-wrap gap-4 md:gap-3 w-full md:w-auto">
+            <div className="flex-1 md:flex-none text-left md:text-right bg-gray-50 md:bg-transparent p-3 md:p-0 rounded-xl md:rounded-none">
                 <p className="text-xs text-gray-400 font-bold uppercase">Current Weight</p>
-                <p className="text-2xl font-black text-gray-900">{memberStats.currentWeight} <span className="text-sm font-bold text-gray-400">kg</span></p>
+                <p className="text-xl md:text-2xl font-black text-gray-900">{memberStats.currentWeight} <span className="text-sm font-bold text-gray-400">kg</span></p>
             </div>
-            <div className="h-10 w-px bg-gray-200"></div>
-            <div className="text-right">
+            <div className="hidden md:block h-10 w-px bg-gray-200"></div>
+            <div className="flex-1 md:flex-none text-left md:text-right bg-gray-50 md:bg-transparent p-3 md:p-0 rounded-xl md:rounded-none">
                 <p className="text-xs text-gray-400 font-bold uppercase">Start Weight</p>
-                <p className="text-2xl font-black text-gray-900">{memberStats.startWeight} <span className="text-sm font-bold text-gray-400">kg</span></p>
+                <p className="text-xl md:text-2xl font-black text-gray-900">{memberStats.startWeight} <span className="text-sm font-bold text-gray-400">kg</span></p>
             </div>
         </div>
       </div>
@@ -269,10 +272,10 @@ const Progress = () => {
          
          {/* LEFT COL: Weight Trend */}
          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
+            <div className="bg-white rounded-[2.5rem] p-6 md:p-8 border border-gray-100 shadow-sm relative overflow-hidden">
                <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-bold text-gray-900">Weight Trend</h3>
-                  <select className="bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold px-3 py-1.5 focus:outline-none">
+                  <select className="bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold px-3 py-1.5 focus:outline-none cursor-pointer">
                      <option>All Time</option>
                      <option>Last 6 Months</option>
                   </select>
@@ -294,8 +297,8 @@ const Progress = () => {
             </div>
 
             {/* Consistency Bar Chart (Monthly) */}
-            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
-                <div className="flex justify-between items-center mb-6">
+            <div className="bg-white rounded-[2.5rem] p-6 md:p-8 border border-gray-100 shadow-sm">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3 sm:gap-0">
                     <h3 className="text-lg font-bold text-gray-900">Workout Consistency</h3>
                     
                     {/* Month Selector */}
@@ -340,7 +343,7 @@ const Progress = () => {
          <div className="space-y-6">
             
             {/* Diet Adherence */}
-            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm text-center relative">
+            <div className="bg-white rounded-[2.5rem] p-6 md:p-8 border border-gray-100 shadow-sm text-center relative">
                <h3 className="text-lg font-bold text-gray-900 mb-6">Diet Adherence</h3>
                <div className="w-40 h-40 mx-auto relative">
                   <Doughnut 
@@ -358,7 +361,7 @@ const Progress = () => {
             </div>
 
             {/* Trainer Note */}
-            <div className="bg-[#f0fdf4] rounded-[2.5rem] p-8 border border-green-100 shadow-sm relative overflow-hidden">
+            <div className="bg-[#f0fdf4] rounded-[2.5rem] p-6 md:p-8 border border-green-100 shadow-sm relative overflow-hidden">
                <div className="absolute -top-10 -right-10 w-32 h-32 bg-green-200/50 rounded-full blur-3xl"></div>
                <h3 className="text-lg font-bold text-green-900 mb-3 flex items-center gap-2 relative z-10">
                   <i className="fa-solid fa-user-pen"></i> Trainer's Note
@@ -373,20 +376,21 @@ const Progress = () => {
       </div>
 
       {/* --- ACTIONS FOOTER --- */}
-      <div className="bg-gray-50 rounded-[2rem] p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      {/* Changed: flex-col md:flex-row and gap adjustment for mobile */}
+      <div className="bg-gray-50 rounded-[2rem] p-6 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
          <div className="text-sm text-gray-500">
             Need detailed insights or advice?
          </div>
-         <div className="flex gap-4">
+         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
             <button 
                onClick={handleRequestReview}
-               className="px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-white hover:border-gray-300 transition-colors shadow-sm flex items-center gap-2"
+               className="flex-1 px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-white hover:border-gray-300 transition-colors shadow-sm flex items-center justify-center gap-2"
             >
                <i className="fa-regular fa-paper-plane"></i> Ask Trainer
             </button>
             <button 
                onClick={handleDownloadReport}
-               className="px-6 py-3 bg-[#D9F17F] text-green-900 rounded-xl text-sm font-bold hover:bg-green-300 transition-colors shadow-lg hover:shadow-xl"
+               className="flex-1 px-6 py-3 bg-[#D9F17F] text-green-900 rounded-xl text-sm font-bold hover:bg-green-300 transition-colors shadow-lg hover:shadow-xl"
             >
                Download Report
             </button>

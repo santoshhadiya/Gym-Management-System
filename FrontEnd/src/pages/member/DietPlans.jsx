@@ -89,13 +89,15 @@ const DietPlans = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6 pb-10 font-sans">
+    // Changed: Added padding (px-4 sm:px-6) for mobile
+    <div className="w-full max-w-6xl mx-auto space-y-6 pb-10 font-sans px-4 sm:px-6">
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* --- PLAN OVERVIEW --- */}
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#D9F17F] rounded-full filter blur-[80px] opacity-20"></div>
         
+        {/* Changed: Added flex-col md:flex-row to stack on mobile */}
         <div className="relative z-10 flex flex-col md:flex-row justify-between gap-6">
           <div className="flex-1">
              <div className="flex items-center gap-3 mb-2">
@@ -104,14 +106,16 @@ const DietPlans = () => {
                 </span>
                 <span className="text-gray-500 text-sm"><i className="fa-regular fa-calendar mr-1"></i> Week {planDetails.currentWeek} / {planDetails.duration.split(' ')[0]}</span>
              </div>
-             <h1 className="text-3xl font-black text-gray-900 mb-2">{planDetails.name}</h1>
-             <div className="flex items-center gap-4 text-sm text-gray-600">
+             <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-2">{planDetails.name}</h1>
+             {/* Changed: Adjusted text size and wrapping for mobile */}
+             <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm text-gray-600">
                 <span><i className="fa-solid fa-user-doctor text-blue-500 mr-1"></i> Nutritionist: <strong>{planDetails.trainer}</strong></span>
                 <span className="hidden md:inline text-gray-300">|</span>
                 <span><i className="fa-solid fa-rotate text-green-500 mr-1"></i> Updated: {planDetails.lastUpdated}</span>
              </div>
           </div>
 
+          {/* Changed: Adjusted width to full on mobile */}
           <div className="w-full md:w-1/3 flex flex-col justify-center">
              <div className="flex justify-between items-end mb-2">
                 <span className="text-sm font-bold text-gray-500">Plan Adherence</span>
@@ -130,7 +134,8 @@ const DietPlans = () => {
       </div>
 
       {/* --- WEEKLY SCHEDULE TABS --- */}
-      <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+      {/* Changed: Ensuring proper overflow behavior on mobile */}
+      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
          {dietSchedule.map((day) => (
             <button
                key={day.day}
@@ -169,6 +174,7 @@ const DietPlans = () => {
                      {/* Status Strip */}
                      <div className={`absolute left-0 top-0 bottom-0 w-1 ${meal.status === 'Followed' ? 'bg-green-500' : meal.status === 'Skipped' ? 'bg-red-400' : 'bg-gray-200'}`}></div>
                      
+                     {/* Changed: flex-col md:flex-row for better mobile stacking */}
                      <div className="flex flex-col md:flex-row justify-between gap-4 pl-3">
                         <div className="flex-1">
                            <div className="flex items-center gap-2 mb-2">
@@ -178,13 +184,15 @@ const DietPlans = () => {
                            <ul className="space-y-1 mb-3">
                               {meal.items.map((item, i) => (
                                  <li key={i} className="text-sm text-gray-800 font-medium flex items-start gap-2">
-                                    <i className="fa-solid fa-angle-right text-[#D9F17F] mt-1"></i> {item}
+                                    <i className="fa-solid fa-angle-right text-[#D9F17F] mt-1 shrink-0"></i> 
+                                    <span>{item}</span>
                                  </li>
                               ))}
                            </ul>
                            
                            {/* Macros Mini */}
-                           <div className="flex gap-3 text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                           {/* Changed: flex-wrap so macros don't overflow */}
+                           <div className="flex flex-wrap gap-3 text-[10px] text-gray-500 font-bold uppercase tracking-wider">
                               <span className="bg-gray-50 px-2 py-1 rounded">Cal: {meal.macros.cal}</span>
                               <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded">P: {meal.macros.p}g</span>
                               <span className="bg-green-50 text-green-700 px-2 py-1 rounded">C: {meal.macros.c}g</span>
@@ -193,7 +201,8 @@ const DietPlans = () => {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex md:flex-col justify-end gap-2 shrink-0">
+                        {/* Changed: row on mobile, col on desktop, or just keep it simple */}
+                        <div className="flex md:flex-col justify-end gap-2 shrink-0 mt-2 md:mt-0">
                            <button 
                               onClick={() => handleStatusChange(meal.id, 'Followed')}
                               className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${meal.status === 'Followed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400 hover:bg-green-50 hover:text-green-600'}`}
@@ -231,7 +240,7 @@ const DietPlans = () => {
                         <span className="text-gray-500">{dailyTotals.cal} / {planDetails.dailyTargets.calories} kcal</span>
                      </div>
                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div className="bg-gray-800 h-2 rounded-full" style={{ width: `${(dailyTotals.cal / planDetails.dailyTargets.calories)*100}%` }}></div>
+                        <div className="bg-gray-800 h-2 rounded-full" style={{ width: `${Math.min((dailyTotals.cal / planDetails.dailyTargets.calories)*100, 100)}%` }}></div>
                      </div>
                   </div>
 
@@ -242,7 +251,7 @@ const DietPlans = () => {
                         <span className="text-gray-500">{dailyTotals.p} / {planDetails.dailyTargets.protein} g</span>
                      </div>
                      <div className="w-full bg-blue-50 rounded-full h-2">
-                        <div className="bg-[#CDE7FE] h-2 rounded-full" style={{ width: `${(dailyTotals.p / planDetails.dailyTargets.protein)*100}%` }}></div>
+                        <div className="bg-[#CDE7FE] h-2 rounded-full" style={{ width: `${Math.min((dailyTotals.p / planDetails.dailyTargets.protein)*100, 100)}%` }}></div>
                      </div>
                   </div>
 
@@ -253,7 +262,7 @@ const DietPlans = () => {
                         <span className="text-gray-500">{dailyTotals.c} / {planDetails.dailyTargets.carbs} g</span>
                      </div>
                      <div className="w-full bg-green-50 rounded-full h-2">
-                        <div className="bg-[#D9F17F] h-2 rounded-full" style={{ width: `${(dailyTotals.c / planDetails.dailyTargets.carbs)*100}%` }}></div>
+                        <div className="bg-[#D9F17F] h-2 rounded-full" style={{ width: `${Math.min((dailyTotals.c / planDetails.dailyTargets.carbs)*100, 100)}%` }}></div>
                      </div>
                   </div>
 
@@ -264,7 +273,7 @@ const DietPlans = () => {
                         <span className="text-gray-500">{dailyTotals.f} / {planDetails.dailyTargets.fats} g</span>
                      </div>
                      <div className="w-full bg-yellow-50 rounded-full h-2">
-                        <div className="bg-[#FEEF75] h-2 rounded-full" style={{ width: `${(dailyTotals.f / planDetails.dailyTargets.fats)*100}%` }}></div>
+                        <div className="bg-[#FEEF75] h-2 rounded-full" style={{ width: `${Math.min((dailyTotals.f / planDetails.dailyTargets.fats)*100, 100)}%` }}></div>
                      </div>
                   </div>
                </div>

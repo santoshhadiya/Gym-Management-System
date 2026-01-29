@@ -80,9 +80,9 @@ const GalleryMember = () => {
 
   // Check if current user liked the media
   const checkIsLiked = (mediaItem) => {
-     if (!user || !mediaItem.likes) return false;
-     // Media.likes is an array of populated objects, so we check _id
-     return mediaItem.likes.some(like => like._id === user._id);
+      if (!user || !mediaItem.likes) return false;
+      // Media.likes is an array of populated objects, so we check _id
+      return mediaItem.likes.some(like => like._id === user._id);
   };
 
   const uniqueCategories = ["All", ...new Set(media.map(m => m.category))];
@@ -93,20 +93,22 @@ const GalleryMember = () => {
       <ToastContainer position="top-right" autoClose={2000} />
 
       {/* HEADER */}
-      <div className="container mx-auto px-6 mb-10">
-        <h1 className="text-3xl font-black text-gray-900 mb-2">Member Gallery</h1>
-        <p className="text-gray-500">Exclusive access to gym events, transformation stories, and workout clips.</p>
+      {/* Changed: Adjusted padding and margin for mobile */}
+      <div className="container mx-auto px-4 sm:px-6 mb-6 md:mb-10">
+        <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-2">Member Gallery</h1>
+        <p className="text-sm md:text-base text-gray-500">Exclusive access to gym events, transformation stories, and workout clips.</p>
       </div>
 
       {/* FILTERS */}
-      <div className="container mx-auto px-6 mb-8">
+      {/* Changed: Adjusted padding */}
+      <div className="container mx-auto px-4 sm:px-6 mb-6 md:mb-8">
         {media.length > 0 && (
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 md:gap-3">
             {uniqueCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
-                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all border ${
+                className={`px-4 md:px-5 py-2 rounded-xl text-xs font-bold transition-all border ${
                   filter === cat 
                   ? "bg-[#CDE7FE] text-blue-900 border-blue-200 shadow-sm" 
                   : "bg-white text-gray-500 border-gray-200 hover:border-blue-200"
@@ -120,14 +122,15 @@ const GalleryMember = () => {
       </div>
 
       {/* GRID */}
-      <div className="container mx-auto px-6">
+      {/* Changed: Adjusted padding and grid gap */}
+      <div className="container mx-auto px-4 sm:px-6">
         {isLoading ? (
            <div className="flex justify-center py-20">
               <i className="fa-solid fa-circle-notch fa-spin text-3xl text-gray-300"></i>
            </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {filteredMedia.map((item) => {
                 const isLiked = checkIsLiked(item);
                 return (
@@ -200,9 +203,10 @@ const GalleryMember = () => {
              </div>
              
              {/* Footer */}
-             <div className="w-full p-6 bg-[#1a1a1a] text-white border-t border-gray-800 flex justify-between items-center">
-                <div>
-                   <h3 className="text-lg font-bold">{selectedMedia.caption}</h3>
+             {/* Changed: Adjusted padding and added gap for mobile layout */}
+             <div className="w-full p-4 md:p-6 bg-[#1a1a1a] text-white border-t border-gray-800 flex justify-between items-center gap-4">
+                <div className="min-w-0">
+                   <h3 className="text-base md:text-lg font-bold truncate">{selectedMedia.caption}</h3>
                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
                       <span className="text-[#CDE7FE] font-bold uppercase tracking-wider">{selectedMedia.category}</span>
                    </div>
@@ -210,7 +214,7 @@ const GalleryMember = () => {
                 
                 <button 
                    onClick={(e) => handleLike(e, selectedMedia._id)}
-                   className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${checkIsLiked(selectedMedia) ? 'bg-red-500 text-white' : 'bg-white/10 hover:bg-white/20'}`}
+                   className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${checkIsLiked(selectedMedia) ? 'bg-red-500 text-white' : 'bg-white/10 hover:bg-white/20'}`}
                 >
                    <i className="fa-solid fa-heart"></i>
                    <span className="font-bold">{selectedMedia.likes?.length || 0}</span>

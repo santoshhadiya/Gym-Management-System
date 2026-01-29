@@ -7,28 +7,33 @@ import logo from "../../assets/logo.png";
 // --- INTERNAL COMPONENT: TRAINER NAVIGATION (Top Bar) ---
 const Nav_Trainer = ({ onMenuClick }) => {
   return (
-    <section className="w-full bg-white rounded-[2rem] px-8 py-5 mb-8 shadow-sm border border-gray-100 transition-all duration-300">
+    // Changed: Added responsive padding (px-4 for mobile)
+    <section className="w-full bg-white rounded-[2rem] px-4 py-4 md:px-8 md:py-5 mb-6 md:mb-8 shadow-sm border border-gray-100 transition-all duration-300">
       <div className="flex items-center justify-between">
 
         {/* Left: Greeting & Mobile Toggle */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 md:gap-6">
           <button
             onClick={onMenuClick}
-            className="lg:hidden w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-[#121212] hover:bg-[#FEEF75] transition-all cursor-pointer"
+            // Changed: Smaller button on mobile
+            className="lg:hidden w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-[#121212] hover:bg-[#FEEF75] transition-all cursor-pointer shrink-0"
           >
-            <i className="fa-solid fa-bars-staggered"></i>
+            <i className="fa-solid fa-bars-staggered text-sm md:text-base"></i>
           </button>
 
           <div>
-            <h1 className="text-2xl font-black text-[#121212] flex items-center gap-3 tracking-tight">
-              Hello, Coach! <span className="text-2xl animate-bounce">🔥</span>
+            {/* Changed: Responsive text size */}
+            <h1 className="text-lg md:text-2xl font-black text-[#121212] flex items-center gap-2 md:gap-3 tracking-tight">
+              Hello, Coach! <span className="text-xl md:text-2xl animate-bounce">🔥</span>
             </h1>
-            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.15em]">Ready to transform lives today?</p>
+            <p className="text-[9px] md:text-[11px] text-gray-400 font-bold uppercase tracking-[0.15em] truncate max-w-[150px] md:max-w-none">
+              Ready to transform lives today?
+            </p>
           </div>
         </div>
 
         {/* Right: Search & Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
 
           {/* Search Box (Hidden on mobile) */}
           <div className="relative hidden md:block group">
@@ -43,15 +48,16 @@ const Nav_Trainer = ({ onMenuClick }) => {
           </div>
 
           {/* Notifications */}
-          <button className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#121212] hover:bg-gray-50 transition-all relative cursor-pointer shadow-sm group">
-            <i className="fa-regular fa-bell text-lg group-hover:rotate-12 transition-transform"></i>
-            <span className="absolute top-3.5 right-3.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+          {/* Changed: Smaller size on mobile */}
+          <button className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#121212] hover:bg-gray-50 transition-all relative cursor-pointer shadow-sm group shrink-0">
+            <i className="fa-regular fa-bell text-base md:text-lg group-hover:rotate-12 transition-transform"></i>
+            <span className="absolute top-3 right-3 md:top-3.5 md:right-3.5 w-2 h-2 md:w-2.5 md:h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
           </button>
 
           {/* Profile */}
-          <div className="flex items-center gap-4 cursor-pointer group pl-4 border-l border-gray-100 ml-2">
-            
-            <div className="w-12 h-12 rounded-2xl bg-[#CDE7FE] flex items-center justify-center text-blue-900 font-black border-2 border-white shadow-lg group-hover:rotate-3 transition-all">
+          <div className="flex items-center gap-4 cursor-pointer group pl-2 md:pl-4 border-l border-gray-100 ml-1 md:ml-2">
+            {/* Changed: Smaller avatar on mobile */}
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-[#CDE7FE] flex items-center justify-center text-blue-900 font-black text-sm md:text-base border-2 border-white shadow-lg group-hover:rotate-3 transition-all shrink-0">
               RM
             </div>
           </div>
@@ -89,7 +95,6 @@ const Sidebar_Trainer = ({ isOpen, onClose }) => {
     { path: '/trainer/chat/member', label: 'Chat with Member', icon: 'fa-comments' },
     { path: '/trainer/chat/owner', label: 'Chat with Owner', icon: 'fa-user-shield' },
     { path: '/trainer/announcements', label: 'Announcements', icon: 'fa-comments' },
-
   ];
 
   return (
@@ -105,6 +110,7 @@ const Sidebar_Trainer = ({ isOpen, onClose }) => {
         fixed lg:sticky top-0 left-0  lg:min-h-screen bg-white border-r border-gray-100 z-[70] flex flex-col transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-2xl lg:shadow-none
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${collapsed ? "lg:w-24 px-3" : "lg:w-72 px-6"}
+        w-72  /* Changed: Added default width for mobile */
       `}>
         
         {/* Toggle Button for Desktop */}
@@ -128,12 +134,12 @@ const Sidebar_Trainer = ({ isOpen, onClose }) => {
           </div>
 
           <button onClick={onClose} className="lg:hidden ml-auto text-gray-400 hover:text-[#121212] p-2 transition-colors">
-            
+            <i className="fa-solid fa-xmark text-xl"></i>
           </button>
         </div>
 
         {/* Navigation - Grows naturally, no internal scrollbar as per request */}
-        <div className="flex-1 px-2 space-y-1.5 pt-4">
+        <div className="flex-1 px-2 space-y-1.5 pt-4 overflow-y-auto">
           {navItems.map((item, idx) => {
             const isActive = pathname === item.path;
             return (
@@ -238,7 +244,8 @@ const TrainerLayout = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 bg-[#fafafa] relative min-w-0 transition-all duration-500">
-        <div className="p-6 md:p-10 max-w-[1600px] mx-auto">
+        {/* Changed: Adjusted padding for mobile */}
+        <div className="p-4 md:p-10 max-w-[1600px] mx-auto">
 
           {/* Top Navigation Bar */}
           <Nav_Trainer onMenuClick={() => setIsMobileMenuOpen(true)} />

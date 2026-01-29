@@ -206,33 +206,36 @@ const Workout = () => {
   if (loading) return <div className="p-10 text-center text-gray-500">Loading Plan...</div>;
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-8 pb-10 font-sans">
+    // Changed: Added padding (px-4 sm:px-6) for mobile spacing
+    <div className="w-full max-w-5xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-6">
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-         <div>
-            <h1 className="text-3xl font-black text-gray-900">My Fitness Plan</h1>
+         <div className="text-center md:text-left">
+            {/* Changed: Responsive text size */}
+            <h1 className="text-2xl md:text-3xl font-black text-gray-900">My Fitness Plan</h1>
             <p className="text-gray-500 mt-1">Last Updated: <span className="font-bold">{lastUpdated}</span></p>
          </div>
          
-         <div className="flex bg-gray-100 p-1 rounded-xl">
+         {/* Changed: Added flex-wrap for small screens */}
+         <div className="flex flex-wrap justify-center bg-gray-100 p-1 rounded-xl">
             <button 
                onClick={() => setActiveTab('workout')}
-               className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'workout' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
+               className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'workout' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
             >
                Workout
             </button>
             <button 
                onClick={() => setActiveTab('diet')}
-               className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'diet' ? 'bg-white shadow text-green-600' : 'text-gray-500'}`}
+               className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'diet' ? 'bg-white shadow text-green-600' : 'text-gray-500'}`}
             >
                Diet
             </button>
             {activeWeek === 4 && (
                 <button 
                 onClick={() => setActiveTab('weight')}
-                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'weight' ? 'bg-white shadow text-purple-600' : 'text-gray-500'}`}
+                className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'weight' ? 'bg-white shadow text-purple-600' : 'text-gray-500'}`}
                 >
                 Tracker
                 </button>
@@ -242,19 +245,19 @@ const Workout = () => {
 
       {/* Week & Day Selector */}
       <div className="bg-white p-4 rounded-[2rem] border border-gray-100 shadow-sm">
-          <div className="flex gap-4 items-center mb-4 border-b border-gray-50 pb-4">
-              <span className="text-xs font-bold text-gray-400 uppercase">Week</span>
+          <div className="flex gap-4 items-center mb-4 border-b border-gray-50 pb-4 overflow-x-auto">
+              <span className="text-xs font-bold text-gray-400 uppercase whitespace-nowrap">Week</span>
               {weeksList.map(wk => (
                   <button
                     key={wk}
                     onClick={() => { setActiveWeek(wk); if(wk!==4 && activeTab==='weight') setActiveTab('workout'); }}
-                    className={`w-10 h-10 rounded-full text-sm font-bold transition-all ${activeWeek === wk ? 'bg-black text-white shadow-lg' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+                    className={`w-10 h-10 shrink-0 rounded-full text-sm font-bold transition-all ${activeWeek === wk ? 'bg-black text-white shadow-lg' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
                   >
                       {wk}
                   </button>
               ))}
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
              {days.map(day => {
                 const today = new Date();
                 const currentDayOfWeek = today.getDay(); 
@@ -302,7 +305,7 @@ const Workout = () => {
          
          {/* Main Panel */}
          <div className="lg:col-span-2 space-y-6">
-            <div className={`rounded-[2.5rem] p-8 border shadow-sm min-h-[400px] transition-colors ${isCompleted() === true ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100'}`}>
+            <div className={`rounded-[2.5rem] p-6 md:p-8 border shadow-sm min-h-[400px] transition-colors ${isCompleted() === true ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100'}`}>
                
                {activeTab === 'weight' ? (
                    <div>
@@ -327,7 +330,7 @@ const Workout = () => {
                                />
                                <span className="text-xl font-bold text-purple-400">kg</span>
                            </div>
-                           <button onClick={handleWeightSubmit} className="mt-4 px-8 py-3 bg-purple-600 text-white rounded-xl font-bold shadow-lg shadow-purple-200 hover:bg-purple-700 transition-all">
+                           <button onClick={handleWeightSubmit} className="mt-4 px-8 py-3 bg-purple-600 text-white rounded-xl font-bold shadow-lg shadow-purple-200 hover:bg-purple-700 transition-all w-full sm:w-auto">
                                Save Entry
                            </button>
                        </div>
@@ -345,7 +348,7 @@ const Workout = () => {
                    </div>
                ) : (
                    <>
-                       <div className="flex justify-between items-start mb-6">
+                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2 sm:gap-0">
                            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
                               <span className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${activeTab === 'workout' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'}`}>
                                  <i className={`fa-solid ${activeTab === 'workout' ? 'fa-dumbbell' : 'fa-carrot'}`}></i>
@@ -354,7 +357,7 @@ const Workout = () => {
                            </h2>
                            {isCompleted() !== null && (
                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${isCompleted() ? 'bg-green-200 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                   {isCompleted() ? "Completed" : "Missed"}
+                                    {isCompleted() ? "Completed" : "Missed"}
                                </span>
                            )}
                        </div>
@@ -368,14 +371,15 @@ const Workout = () => {
                                   </div>
                               )}
                               
-                              <div className="prose max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap text-lg">
-                                 {workoutDay.plan}
+                              <div className="prose max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap text-base md:text-lg">
+                                  {workoutDay.plan}
                               </div>
                           </>
                        ) : (
                           <div className="space-y-6">
                              {/* Nutrition Stats */}
-                             <div className="grid grid-cols-4 gap-4 mb-6">
+                             {/* Changed: grid-cols-4 -> grid-cols-2 sm:grid-cols-4 for readability on mobile */}
+                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                                 <div className="text-center p-3 bg-orange-50 rounded-2xl">
                                     <p className="text-xs font-bold text-orange-400 uppercase">Cals</p>
                                     <p className="font-black text-orange-900">{dietDay?.nutrition?.calories || 0}</p>
@@ -404,7 +408,8 @@ const Workout = () => {
                        )}
 
                        {/* Progress Actions */}
-                       <div className="mt-10 pt-6 border-t border-gray-200/50 flex gap-4">
+                       {/* Changed: Added flex-col sm:flex-row to stack buttons on mobile */}
+                       <div className="mt-10 pt-6 border-t border-gray-200/50 flex flex-col sm:flex-row gap-4">
                           <button 
                             onClick={() => handleMarkProgress(true)}
                             className={`flex-1 py-3 text-white rounded-xl font-bold transition-all shadow-lg ${isCompleted() === true ? 'bg-green-600 shadow-green-200' : 'bg-green-500 hover:bg-green-600 shadow-green-200'}`}

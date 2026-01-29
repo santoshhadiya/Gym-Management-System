@@ -80,7 +80,7 @@ const Profile = () => {
             setProfile(formattedUser);
             setTempData(formattedUser);
          } catch (error) {
-            /*  console.error("Error fetching profile:", error); */
+            /* console.error("Error fetching profile:", error); */
             // toast.error("Failed to load profile data");
          } finally {
             setLoading(false);
@@ -171,17 +171,17 @@ const Profile = () => {
    }
 
    return (
-      <div className="w-full max-w-6xl mx-auto space-y-6 pb-10">
+      <div className="w-full max-w-6xl mx-auto space-y-6 pb-10 px-4 sm:px-0">
          <ToastContainer position="top-right" autoClose={3000} />
 
          {/* --- HEADER SECTION --- */}
          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-gray-900 to-gray-800"></div>
 
-            <div className="relative flex flex-col md:flex-row items-end md:items-center gap-6 mt-12 px-4">
+            <div className="relative flex flex-col md:flex-row items-center md:items-end gap-6 mt-12 px-2 md:px-4 text-center md:text-left">
 
                {/* Avatar */}
-               <div className="relative group">
+               <div className="relative group mx-auto md:mx-0">
                   <div className="w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-200">
                      <img src={tempData.profileImage || profile.profileImage} alt="Profile" className="w-full h-full object-cover" />
                   </div>
@@ -197,8 +197,8 @@ const Profile = () => {
 
                {/* Info */}
                <div className="flex-1 mb-2">
-                  <h1 className="text-3xl font-black text-gray-900">{profile.name}</h1>
-                  <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
+                  <h1 className="text-2xl md:text-3xl font-black text-gray-900">{profile.name}</h1>
+                  <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3 text-sm text-gray-500 mt-1 justify-center md:justify-start">
                      <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">#{profile.id.slice(-6).toUpperCase()}</span>
                      <span className="flex items-center gap-1 text-green-600 font-bold">
                         <i className="fa-solid fa-circle-check"></i> {profile.status}
@@ -208,11 +208,11 @@ const Profile = () => {
                </div>
 
                {/* Actions */}
-               <div className="flex gap-3 mb-2">
+               <div className="flex gap-3 mb-2 w-full md:w-auto justify-center md:justify-end">
                   {!isEditing ? (
                      <button
                         onClick={() => setIsEditing(true)}
-                        className="px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors shadow-sm"
+                        className="px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors shadow-sm w-full md:w-auto"
                      >
                         <i className="fa-solid fa-pen-to-square mr-2"></i> Edit Profile
                      </button>
@@ -242,22 +242,22 @@ const Profile = () => {
             {/* LEFT COLUMN: NAVIGATION & STATUS */}
             <div className="space-y-6">
 
-               {/* Navigation Tabs */}
-               <div className="bg-white rounded-3xl p-2 border border-gray-100 shadow-sm flex flex-col gap-1">
+               {/* Navigation Tabs - Horizontal Scroll on Mobile */}
+               <div className="bg-white rounded-3xl p-2 border border-gray-100 shadow-sm flex flex-row lg:flex-col gap-1 overflow-x-auto no-scrollbar">
                   {[
                      { id: 'personal', label: 'Personal Details', icon: 'fa-user' },
                      { id: 'fitness', label: 'Fitness & Goals', icon: 'fa-heart-pulse' },
-                     { id: 'settings', label: 'Security & Documents', icon: 'fa-shield-halved' }
+                     { id: 'settings', label: 'Security & Docs', icon: 'fa-shield-halved' }
                   ].map(tab => (
                      <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left ${activeTab === tab.id
+                        className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left whitespace-nowrap min-w-max lg:min-w-0 flex-1 lg:flex-none ${activeTab === tab.id
                            ? 'bg-[#CDE7FE] text-blue-900'
                            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                            }`}
                      >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activeTab === tab.id ? 'bg-white/50' : 'bg-gray-100'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${activeTab === tab.id ? 'bg-white/50' : 'bg-gray-100'}`}>
                            <i className={`fa-solid ${tab.icon}`}></i>
                         </div>
                         {tab.label}
@@ -299,12 +299,11 @@ const Profile = () => {
                <div className="bg-gradient-to-br from-[#fcfdfd] to-[#fffbeb] rounded-3xl p-6 border border-[#FEEF75] shadow-sm">
                   <h3 className="text-sm font-bold text-yellow-900 uppercase tracking-wider mb-4">Your Trainer</h3>
                   <div className="flex items-center gap-4 mb-4">
-                     <div className="w-12 h-12 rounded-full bg-[#FEEF75] flex items-center justify-center text-yellow-900 font-bold text-xl">
+                     <div className="w-12 h-12 rounded-full bg-[#FEEF75] flex items-center justify-center text-yellow-900 font-bold text-xl shrink-0">
                         {profile.trainer.name ? profile.trainer.name[0] : "?"}
                      </div>
                      <div>
                         <p className="font-bold text-gray-900">{profile.trainer.name}</p>
-
                      </div>
                   </div>
                   <Link to="/member/chat" className="block w-full py-2.5 bg-white border border-[#FEEF75] text-yellow-900 rounded-xl text-xs font-bold text-center hover:bg-yellow-50 transition-colors">
@@ -319,7 +318,7 @@ const Profile = () => {
 
                {/* TAB 1: PERSONAL DETAILS */}
                {activeTab === 'personal' && (
-                  <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm animate-fade-in">
+                  <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm animate-fade-in">
                      <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                         <i className="fa-solid fa-user-pen text-[#CDE7FE]"></i> Personal Information
                      </h2>
@@ -385,7 +384,7 @@ const Profile = () => {
 
                {/* TAB 2: FITNESS INFO */}
                {activeTab === 'fitness' && (
-                  <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm animate-fade-in">
+                  <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm animate-fade-in">
                      <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                         <i className="fa-solid fa-dumbbell text-[#D9F17F]"></i> Fitness Profile
                      </h2>
@@ -447,7 +446,7 @@ const Profile = () => {
                   <div className="space-y-6 animate-fade-in">
 
                      {/* Change Password */}
-                     <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+                     <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm">
                         <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                            <i className="fa-solid fa-lock text-[#FEEF75]"></i> Security Settings
                         </h2>
@@ -484,19 +483,19 @@ const Profile = () => {
                                  />
                               </div>
                            </div>
-                           <button type="submit" className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors">
+                           <button type="submit" className="w-full md:w-auto px-6 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors">
                               Update Password
                            </button>
                         </form>
                      </div>
 
                      {/* Documents */}
-                     <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+                     <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm">
                         <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                            <i className="fa-solid fa-file-shield text-gray-400"></i> Documents
                         </h2>
                         <div className="space-y-4">
-                           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200 border-dashed">
+                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200 border-dashed gap-4 sm:gap-0">
                               <div className="flex items-center gap-3">
                                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-red-500 shadow-sm">
                                     <i className="fa-solid fa-file-medical"></i>
@@ -506,10 +505,10 @@ const Profile = () => {
                                     <p className="text-xs text-gray-500">Uploaded on Jan 15, 2024</p>
                                  </div>
                               </div>
-                              <button className="text-xs font-bold text-blue-600 hover:underline">View</button>
+                              <button className="text-xs font-bold text-blue-600 hover:underline w-full sm:w-auto text-center">View</button>
                            </div>
 
-                           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200 border-dashed">
+                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200 border-dashed gap-4 sm:gap-0">
                               <div className="flex items-center gap-3">
                                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-gray-500 shadow-sm">
                                     <i className="fa-solid fa-id-card"></i>
@@ -519,7 +518,7 @@ const Profile = () => {
                                     <p className="text-xs text-gray-500">Verified by Admin</p>
                                  </div>
                               </div>
-                              <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">Verified</span>
+                              <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded w-full sm:w-auto text-center">Verified</span>
                            </div>
 
                            <button className="w-full py-3 border-2 border-dashed border-gray-300 rounded-2xl text-gray-500 font-bold text-sm hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-center gap-2">

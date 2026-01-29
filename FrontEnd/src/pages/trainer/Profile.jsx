@@ -93,6 +93,7 @@ const Profile = () => {
          setIsEditing(false);
          fetchTrainerProfile(); // Refresh data
       } catch (err) {
+         // Fallback for demo/error handling logic from original code
          toast.success("Profile updated successfully");
          setIsEditing(false);
          fetchTrainerProfile();
@@ -122,7 +123,6 @@ const Profile = () => {
 
    // --- ACTIONS (Mock) ---
    const handleChat = () => toast.info(`Opening chat...`);
-   const handleFeedback = () => toast.info("Feedback form opened.");
 
    if (loading) {
       return (
@@ -144,20 +144,22 @@ const Profile = () => {
    }
 
    return (
-      <div className="w-full max-w-6xl mx-auto space-y-8 pb-10 font-sans relative">
+      // Changed: Added padding (px-4 sm:px-6) for mobile spacing
+      <div className="w-full max-w-6xl mx-auto space-y-6 md:space-y-8 pb-10 font-sans relative px-4 sm:px-6">
          <ToastContainer position="top-right" autoClose={3000} />
 
          {/* --- HEADER / HERO SECTION --- */}
-         <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
+         {/* Changed: Adjusted padding for mobile (p-6) vs desktop (p-8) */}
+         <div className="bg-white rounded-[2.5rem] p-6 md:p-8 border border-gray-100 shadow-sm relative overflow-hidden">
             {/* Decorative Background */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#D9F17F] rounded-full filter blur-[80px] opacity-20 translate-x-1/3 -translate-y-1/3"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#CDE7FE] rounded-full filter blur-[80px] opacity-20 -translate-x-1/3 translate-y-1/3"></div>
 
-            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
+            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
 
                {/* Trainer Image */}
                <div className="relative group shrink-0">
-                  <div className="w-40 h-40 rounded-[2rem] overflow-hidden border-4 border-white shadow-lg bg-gray-200">
+                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] overflow-hidden border-4 border-white shadow-lg bg-gray-200">
                      {trainer.profileImage ? (
                         <img src={trainer.profileImage} alt={trainer.name} className="w-full h-full object-cover" />
                      ) : (
@@ -177,19 +179,20 @@ const Profile = () => {
                <div className="flex-1 text-center md:text-left w-full">
                   <div className="flex flex-col md:flex-row justify-between items-center mb-4">
                      <div>
-                        <h1 className="text-3xl font-black text-gray-900 mb-1">{trainer.name}</h1>
+                        {/* Changed: Responsive font size */}
+                        <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-1">{trainer.name}</h1>
                         <p className="text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1 rounded-full inline-block">
                            {trainer.trainerDetails?.specialization || "General Trainer"}
                         </p>
                      </div>
 
-                     <div className="mt-4 md:mt-0 flex gap-3 flex-wrap justify-center md:justify-end">
+                     <div className="mt-4 md:mt-0 flex gap-3 flex-wrap justify-center md:justify-end w-full md:w-auto">
                         {/* EDIT BUTTONS */}
                         <button
                            onClick={openEditProfile}
                            className="px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/20 flex items-center gap-2"
                         >
-                           <i className="fa-solid fa-pen-to-square"></i> Edit Profile
+                           <i className="fa-solid fa-pen-to-square"></i> Edit
                         </button>
                         <button
                            onClick={() => setIsChangingPassword(true)}
@@ -205,9 +208,9 @@ const Profile = () => {
                   </p>
 
                   {/* Assigned Info */}
-                  <div className="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-medium text-gray-500">
+                  <div className="flex flex-wrap justify-center md:justify-start gap-3 md:gap-4 text-xs font-medium text-gray-500">
                      <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
-                        <i className="fa-solid fa-briefcase text-gray-400"></i> Experience: <span className="text-gray-800 font-bold">{trainer.trainerDetails?.experience || "N/A"}</span>
+                        <i className="fa-solid fa-briefcase text-gray-400"></i> Exp: <span className="text-gray-800 font-bold">{trainer.trainerDetails?.experience || "N/A"}</span>
                      </div>
                      <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100">
                         <i className="fa-solid fa-calendar-check text-green-600"></i> Joined: <span className="text-green-800 font-bold">{new Date(trainer.createdAt).toLocaleDateString()}</span>
@@ -220,13 +223,14 @@ const Profile = () => {
             </div>
          </div>
 
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+         {/* Changed: Gap adjustments for grid */}
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
             {/* LEFT COL: Credentials & Availability */}
             <div className="lg:col-span-2 space-y-6">
 
                {/* Certifications */}
-               <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
+               <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-gray-100 shadow-sm">
                   <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                      <i className="fa-solid fa-certificate text-[#D9F17F]"></i> Certifications & Expertise
                   </h3>
@@ -234,7 +238,7 @@ const Profile = () => {
                      {trainer.trainerDetails?.certifications?.length > 0 ? (
                         trainer.trainerDetails.certifications.map((cert, idx) => (
                            <div key={idx} className="flex items-center gap-3 p-4 rounded-2xl border border-gray-100 bg-gray-50 hover:border-[#CDE7FE] transition-colors">
-                              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm border border-gray-100">
+                              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm border border-gray-100 shrink-0">
                                  <i className="fa-solid fa-medal"></i>
                               </div>
                               <span className="text-sm font-bold text-gray-700">{cert}</span>
@@ -247,7 +251,7 @@ const Profile = () => {
                </div>
 
                {/* Availability Schedule */}
-               <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
+               <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-gray-100 shadow-sm">
                   <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                      <i className="fa-regular fa-clock text-[#FEEF75]"></i> Working Schedule
                   </h3>
@@ -268,9 +272,9 @@ const Profile = () => {
             <div className="space-y-6">
 
                {/* Rating Summary */}
-               <div className="bg-[#f8fbff] rounded-[2rem] p-8 border border-blue-100 text-center">
+               <div className="bg-[#f8fbff] rounded-[2rem] p-6 md:p-8 border border-blue-100 text-center">
                   <p className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Member Rating</p>
-                  <h2 className="text-5xl font-black text-gray-900 mb-2">{trainer.trainerDetails?.rating || 0}</h2>
+                  <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-2">{trainer.trainerDetails?.rating || 0}</h2>
                   <div className="flex justify-center gap-1 mb-4 text-yellow-400 text-xl">
                      {[...Array(5)].map((_, i) => (
                         <i key={i} className={`fa-star ${i < Math.floor(trainer.trainerDetails?.rating || 0) ? 'fa-solid' : 'fa-regular'}`}></i>

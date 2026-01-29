@@ -115,36 +115,38 @@ const Membership = () => {
   };
 
   if (loading) {
-     return (
-        <div className="w-full h-screen flex items-center justify-center bg-gray-50">
-           <div className="text-center">
-              <i className="fa-solid fa-circle-notch fa-spin text-4xl text-[#CDE7FE] mb-4"></i>
-              <p className="text-gray-500 font-bold">Loading Membership...</p>
-           </div>
-        </div>
-     );
+      return (
+         <div className="w-full h-screen flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+               <i className="fa-solid fa-circle-notch fa-spin text-4xl text-[#CDE7FE] mb-4"></i>
+               <p className="text-gray-500 font-bold">Loading Membership...</p>
+            </div>
+         </div>
+      );
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-8 pb-10 font-sans">
+    // Changed: Added px-4 for mobile spacing
+    <div className="w-full max-w-6xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-6 lg:px-8">
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* --- HEADER --- */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+      {/* Changed: items-end -> items-start md:items-end to prevent right-aligning title on mobile */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900">My Membership</h1>
-          <p className="text-gray-500 mt-1">Manage your plan, payments, and renewals.</p>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900">My Membership</h1>
+          <p className="text-sm md:text-base text-gray-500 mt-1">Manage your plan, payments, and renewals.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 w-full md:w-auto">
            <button 
              onClick={handleDownloadReceipt}
-             className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm flex items-center gap-2"
+             className="flex-1 md:flex-none justify-center px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm flex items-center gap-2"
            >
              <i className="fa-solid fa-file-invoice"></i> Receipt
            </button>
            <button 
              onClick={handleRenewalRequest}
-             className="px-5 py-2.5 bg-[#CDE7FE] text-blue-900 rounded-xl text-sm font-bold hover:bg-blue-200 transition-colors shadow-sm flex items-center gap-2"
+             className="flex-1 md:flex-none justify-center px-5 py-2.5 bg-[#CDE7FE] text-blue-900 rounded-xl text-sm font-bold hover:bg-blue-200 transition-colors shadow-sm flex items-center gap-2"
            >
              <i className="fa-solid fa-rotate"></i> Request Renewal
            </button>
@@ -152,7 +154,8 @@ const Membership = () => {
       </div>
 
       {/* --- MAIN MEMBERSHIP CARD --- */}
-      <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-[2.5rem] p-8 md:p-10 text-white relative overflow-hidden shadow-2xl">
+      {/* Changed: p-8 md:p-10 -> p-6 md:p-10 to save space on mobile */}
+      <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-[2.5rem] p-6 md:p-10 text-white relative overflow-hidden shadow-2xl">
         {/* Decorative Elements */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#D9F17F] rounded-full filter blur-[120px] opacity-10 translate-x-1/3 -translate-y-1/3"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#CDE7FE] rounded-full filter blur-[100px] opacity-10 -translate-x-1/3 translate-y-1/3"></div>
@@ -167,10 +170,10 @@ const Membership = () => {
                </span>
                <span className="text-gray-400 text-sm font-mono">#{member?._id || "NA"}</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-black mb-2">{currentPlan?.name || "No Active Plan"}</h2>
-            <p className="text-gray-300 text-lg">{currentPlan ? `${totalDays} Days Plan` : "Please select a plan"}</p>
+            <h2 className="text-3xl md:text-5xl font-black mb-2">{currentPlan?.name || "No Active Plan"}</h2>
+            <p className="text-gray-300 text-base md:text-lg">{currentPlan ? `${totalDays} Days Plan` : "Please select a plan"}</p>
             
-            <div className="mt-8 flex gap-8">
+            <div className="mt-8 flex flex-wrap gap-8">
                <div>
                   <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Start Date</p>
                   <p className="font-bold text-lg">{startDate?.toLocaleDateString() || "-"}</p>
@@ -184,7 +187,7 @@ const Membership = () => {
 
           {/* Validity Tracker */}
           {currentPlan && (
-            <div className="md:w-1/3 bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/10 flex flex-col justify-center">
+            <div className="w-full md:w-1/3 bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/10 flex flex-col justify-center">
                <div className="flex justify-between items-end mb-2">
                   <span className="text-sm font-bold text-gray-200">Validity</span>
                   <span className="text-2xl font-black text-[#D9F17F]">{daysRemaining} <span className="text-sm text-white font-normal">Days Left</span></span>
@@ -208,7 +211,7 @@ const Membership = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
          
          {/* Payment Summary */}
-         <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+         <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm">
             <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                <i className="fa-solid fa-file-invoice-dollar text-[#CDE7FE] text-xl"></i> Payment Summary
             </h3>
@@ -230,7 +233,7 @@ const Membership = () => {
          </div>
 
          {/* Plan Benefits */}
-         <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+         <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm">
             <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                <i className="fa-solid fa-star text-[#FEEF75] text-xl"></i> Plan Benefits
             </h3>
@@ -238,7 +241,7 @@ const Membership = () => {
                {currentPlan?.benefits ? (
                   currentPlan.benefits.map((benefit, idx) => (
                     <li key={idx} className="flex items-start gap-3 text-sm text-gray-600">
-                        <i className="fa-solid fa-check text-green-500 mt-0.5"></i>
+                        <i className="fa-solid fa-check text-green-500 mt-0.5 shrink-0"></i>
                         <span>{benefit}</span>
                     </li>
                   ))
@@ -251,17 +254,18 @@ const Membership = () => {
       </div>
 
       {/* --- UPGRADE OPTIONS (Dynamic from API) --- */}
-      <div className="bg-[#f8fbff] rounded-[2.5rem] p-8 border border-[#CDE7FE]/30">
+      <div className="bg-[#f8fbff] rounded-[2.5rem] p-6 md:p-8 border border-[#CDE7FE]/30">
          <div className="text-center mb-8">
-            <h3 className="text-2xl font-black text-gray-900">Upgrade Your Experience</h3>
-            <p className="text-gray-500">Switch to a premium plan for exclusive features.</p>
+            <h3 className="text-xl md:text-2xl font-black text-gray-900">Upgrade Your Experience</h3>
+            <p className="text-sm md:text-base text-gray-500">Switch to a premium plan for exclusive features.</p>
          </div>
          
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {plans
               .filter(p => !currentPlan || p._id !== currentPlan._id)
               .map((p) => (
-               <div key={p._id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex justify-between items-center">
+               // Changed: Added flex-col sm:flex-row to handle narrow screens gracefully
+               <div key={p._id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4">
                   <div>
                      <h4 className="font-bold text-gray-900 text-lg">{p.name}</h4>
                      <p className="text-sm text-gray-500 mb-2">{p.description || `${p.durationInDays} days validity`}</p>
@@ -269,7 +273,7 @@ const Membership = () => {
                   </div>
                   <button 
                      onClick={() => handleUpgrade(p)}
-                     className="px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-blue-600 transition-colors"
+                     className="px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-blue-600 transition-colors shrink-0"
                   >
                      Upgrade
                   </button>
@@ -287,7 +291,7 @@ const Membership = () => {
             <span className="font-bold">Terms & Conditions:</span> Membership is non-transferable and non-refundable. 
             Renewal must be completed before the expiry date to avoid re-joining fees.
          </p>
-         <div className="flex justify-center gap-4 underline">
+         <div className="flex flex-wrap justify-center gap-4 underline">
             <a href="#" className="hover:text-gray-600">Refund Policy</a>
             <a href="#" className="hover:text-gray-600">Gym Rules</a>
             <a href="#" className="hover:text-gray-600">Privacy Policy</a>

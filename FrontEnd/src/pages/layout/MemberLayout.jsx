@@ -4,7 +4,6 @@ import logo from "../../assets/logo.png"
 import { useGlobalContext } from '../../context/GlobalContext';
 
 // --- INTERNAL COMPONENT: MEMBER NAVIGATION (Top Bar) ---
-// --- INTERNAL COMPONENT: MEMBER NAVIGATION (Top Bar) ---
 const Nav_Member = ({ onMenuClick }) => {
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,41 +51,49 @@ const Nav_Member = ({ onMenuClick }) => {
     .slice(0, 2);
 
   return (
-    <section className="w-full bg-gray-100 rounded-3xl px-6 py-4 mb-6 transition-all duration-300">
+    // Changed: Added responsive padding (px-4 for mobile, px-6 for desktop)
+    <section className="w-full bg-gray-100 rounded-3xl px-4 py-3 md:px-6 md:py-4 mb-6 transition-all duration-300">
       <div className="flex items-center justify-between">
 
         {/* Left: Greeting & Mobile Toggle */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 md:gap-4">
           <button
             onClick={onMenuClick}
-            className="lg:hidden w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-600 shadow-sm hover:text-blue-600 transition-colors cursor-pointer"
+            className="lg:hidden w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-600 shadow-sm hover:text-blue-600 transition-colors cursor-pointer shrink-0"
           >
             <i className="fa-solid fa-bars"></i>
           </button>
 
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              Hello, {loading ? "..." : displayName}!{" "}
+          <div className="flex flex-col">
+            {/* Changed: Text size is smaller on mobile (text-lg) and larger on desktop (md:text-2xl) */}
+            <h1 className="text-lg md:text-2xl font-bold text-gray-900 flex items-center gap-1 md:gap-2">
+              <span>
+                Hello
+                {/* Changed: Name is hidden on small screens (mobile), shown on sm+ screens */}
+                <span className="hidden sm:inline">, {loading ? "..." : displayName}</span>!
+              </span>
               <span className="inline-block hover:animate-wave cursor-default">👋</span>
             </h1>
-            <p className="text-xs text-gray-500 font-medium">
+            
+            {/* Changed: Subtext is hidden on mobile to save space, visible on medium screens+ */}
+            <p className="text-xs text-gray-500 font-medium hidden md:block">
               Let's crush your goals today!
             </p>
           </div>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-3 md:gap-5">
+        <div className="flex items-center gap-2 md:gap-5">
 
           {/* Notifications */}
-          <button className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#FEEF75] hover:text-yellow-800 hover:border-yellow-200 transition-all relative cursor-pointer group shadow-sm">
+          <button className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#FEEF75] hover:text-yellow-800 hover:border-yellow-200 transition-all relative cursor-pointer group shadow-sm shrink-0">
             <i className="fa-regular fa-bell group-hover:animate-swing"></i>
             <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
           </button>
 
           {/* Profile */}
           <div className="flex items-center gap-3 cursor-pointer group">
-            <div className="w-10 h-10 rounded-full bg-[#D9F17F] flex items-center justify-center text-green-900 font-bold border-2 border-white shadow-sm group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-[#D9F17F] flex items-center justify-center text-green-900 font-bold border-2 border-white shadow-sm group-hover:scale-105 transition-transform shrink-0">
               {loading ? "..." : initials}
             </div>
 

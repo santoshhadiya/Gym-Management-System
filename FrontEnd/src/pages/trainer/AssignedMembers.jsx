@@ -4,7 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { useGlobalContext } from '../../context/GlobalContext';
 
 const AssignedMembers = () => {
-  const { BACKEND_URL, user,api } = useGlobalContext();
+  const { BACKEND_URL, user, api } = useGlobalContext();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,7 +25,7 @@ const AssignedMembers = () => {
     linkFA.rel = "stylesheet";
     document.head.appendChild(linkFA);
 
-    // Fetch Clients from Backennd
+    // Fetch Clients from Backend
     const fetchClients = async () => {
       if (!user?._id) return;
       try {
@@ -96,20 +96,22 @@ const AssignedMembers = () => {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 pb-10 font-sans">
+    // Changed: Added px-4 sm:px-6 for mobile padding
+    <div className="w-full max-w-7xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-6">
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+      {/* Changed: items-start md:items-end to prevent text misalignment on mobile */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-black text-[#121212]">Client Management</h1>
-          <p className="text-gray-500 mt-1 font-medium">Tracking {members.length} athletes assigned to you.</p>
+          <h1 className="text-2xl md:text-3xl font-black text-[#121212]">Client Management</h1>
+          <p className="text-sm md:text-base text-gray-500 mt-1 font-medium">Tracking {members.length} athletes assigned to you.</p>
         </div>
       </div>
 
       {/* CONTROLS */}
       <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-200/40">
-         <div className="relative flex-grow md:max-w-xs">
+         <div className="relative flex-grow w-full md:w-auto md:max-w-xs">
             <input
                type="text"
                placeholder="Search clients..."
@@ -120,12 +122,13 @@ const AssignedMembers = () => {
             <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
          </div>
          
-         <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0">
+         {/* Changed: Added w-full for mobile horizontal scrolling container */}
+         <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto no-scrollbar">
             {['All', 'Weight Loss', 'Muscle Gain', 'Stamina Boost'].map(goal => (
                <button
                   key={goal}
                   onClick={() => setFilterGoal(goal)}
-                  className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+                  className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex-shrink-0 ${
                      filterGoal === goal 
                      ? 'bg-[#121212] text-white shadow-lg' 
                      : 'bg-white border border-gray-100 text-gray-500 hover:bg-gray-50'
@@ -139,27 +142,29 @@ const AssignedMembers = () => {
 
       {/* MEMBERS GRID */}
       {filteredMembers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {filteredMembers.map((member) => (
             <div key={member._id} className="bg-white rounded-[3rem] border border-gray-50 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group">
               
               {/* Card Header */}
-              <div className="p-8 pb-0 flex items-start gap-5">
-                 <img src={member.image} alt={member.name} className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-lg" />
+              {/* Changed: Adjusted padding for mobile p-6 vs md:p-8 */}
+              <div className="p-6 md:p-8 pb-0 flex items-start gap-4 md:gap-5">
+                 <img src={member.image} alt={member.name} className="w-14 h-14 md:w-16 md:h-16 rounded-2xl object-cover border-2 border-white shadow-lg shrink-0" />
                  <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-black text-[#121212] truncate">{member.name}</h3>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{member.plan}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 truncate">{member.plan}</p>
                     <span className={`inline-block px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border ${getStatusColor(member.status)}`}>
                        {member.status}
                     </span>
                  </div>
-                 <button onClick={() => handleViewProfile(member)} className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 hover:bg-[#D9F17F] hover:text-[#121212] transition-all">
+                 <button onClick={() => handleViewProfile(member)} className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 hover:bg-[#D9F17F] hover:text-[#121212] transition-all shrink-0">
                     <i className="fa-solid fa-arrow-right -rotate-45"></i>
                  </button>
               </div>
 
               {/* Stats Strip */}
-              <div className="px-8 py-6 mt-2">
+              {/* Changed: Adjusted padding */}
+              <div className="px-6 md:px-8 py-4 md:py-6 mt-2">
                  <div className="flex justify-between items-center text-[10px] text-gray-400 uppercase tracking-widest bg-gray-50/50 rounded-3xl p-4 border border-gray-50">
                     <div className="text-center">
                        <p className="font-black text-[#121212] text-sm mb-0.5">{member.details.weight}kg</p>
@@ -181,7 +186,8 @@ const AssignedMembers = () => {
               </div>
 
               {/* Footer Actions */}
-              <div className="px-8 pb-8 pt-2 flex gap-3">
+              {/* Changed: Adjusted padding */}
+              <div className="px-6 md:px-8 pb-6 md:pb-8 pt-2 flex gap-3">
                  <Link to={`/trainer/chat/member`} className="flex-1 py-4 bg-white border-2 border-gray-50 rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-400 flex items-center justify-center gap-2 hover:bg-[#CDE7FE] hover:text-blue-900 hover:border-transparent transition-all">
                     <i className="fa-regular fa-comment-dots"></i> Chat
                  </Link>
@@ -190,7 +196,7 @@ const AssignedMembers = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-gray-100">
+        <div className="bg-white rounded-[3rem] p-10 md:p-20 text-center border-2 border-dashed border-gray-100">
            <i className="fa-solid fa-user-slash text-6xl text-gray-100 mb-6"></i>
            <h3 className="text-xl font-black text-gray-900">No Clients Found</h3>
            <p className="text-gray-400 mt-2">Try adjusting your filters or search terms.</p>
@@ -199,24 +205,25 @@ const AssignedMembers = () => {
 
       {/* --- MEMBER PROFILE MODAL --- */}
       {showProfileModal && selectedMember && (
-         <div className="fixed inset-0 bg-[#121212]/40 backdrop-blur-md flex items-center justify-center z-[100] p-6 overflow-y-auto">
-            <div className="bg-white rounded-[3rem] w-full max-w-2xl animate-fade-in relative shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] my-auto">
+         <div className="fixed inset-0 bg-[#121212]/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 md:p-6 overflow-y-auto">
+            <div className="bg-white rounded-[2.5rem] md:rounded-[3rem] w-full max-w-2xl animate-fade-in relative shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] my-auto">
                
                {/* Modal Header */}
-               <div className="px-10 py-6 border-b border-gray-50 flex justify-between items-center sticky top-0 bg-white/80 backdrop-blur-sm rounded-t-[3rem] z-10">
-                  <h3 className="font-black text-[#121212] text-lg uppercase tracking-widest">Client Intelligence</h3>
-                  <button onClick={() => setShowProfileModal(false)} className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#121212] transition-all">
+               <div className="px-6 md:px-10 py-4 md:py-6 border-b border-gray-50 flex justify-between items-center sticky top-0 bg-white/80 backdrop-blur-sm rounded-t-[2.5rem] md:rounded-t-[3rem] z-10">
+                  <h3 className="font-black text-[#121212] text-sm md:text-lg uppercase tracking-widest">Client Intelligence</h3>
+                  <button onClick={() => setShowProfileModal(false)} className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#121212] transition-all">
                      <i className="fa-solid fa-xmark"></i>
                   </button>
                </div>
 
-               <div className="p-10">
+               {/* Changed: Adjusted modal body padding p-6 vs p-10 */}
+               <div className="p-6 md:p-10">
                   {/* Profile Summary */}
-                  <div className="flex flex-col md:flex-row items-center md:items-start gap-8 mb-10 text-center md:text-left">
-                     <img src={selectedMember.image} alt={selectedMember.name} className="w-28 h-28 rounded-[2rem] object-cover shadow-2xl border-4 border-white" />
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 mb-8 md:mb-10 text-center md:text-left">
+                     <img src={selectedMember.image} alt={selectedMember.name} className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] object-cover shadow-2xl border-4 border-white" />
                      <div className="flex-1">
-                        <h2 className="text-3xl font-black text-[#121212] mb-2">{selectedMember.name}</h2>
-                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-5">
+                        <h2 className="text-2xl md:text-3xl font-black text-[#121212] mb-2">{selectedMember.name}</h2>
+                        <p className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 md:mb-5">
                           {selectedMember.plan} • Assigned {selectedMember.assignedDate}
                         </p>
                         <div className="flex flex-wrap justify-center md:justify-start gap-3">
@@ -229,7 +236,7 @@ const AssignedMembers = () => {
                   </div>
 
                   {/* Quick Stats Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 md:mb-10">
                      {[
                         { label: "Weight", value: `${selectedMember.details.weight} kg` },
                         { label: "Height", value: `${selectedMember.details.height} cm` },
@@ -244,26 +251,30 @@ const AssignedMembers = () => {
                   </div>
 
                   {/* Actions Grid */}
-                  <div className="grid grid-cols-2 gap-4 mb-10">
-                     <button onClick={() => handleAction("Create Workout", selectedMember.name)} className="p-6 bg-white border-2 border-gray-50 rounded-[2rem] shadow-sm hover:border-[#CDE7FE] hover:shadow-xl transition-all text-left group">
-                        <div className="w-12 h-12 bg-[#CDE7FE] rounded-2xl flex items-center justify-center text-blue-900 mb-4 group-hover:scale-110 transition-transform">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 md:mb-10">
+                     <button onClick={() => handleAction("Create Workout", selectedMember.name)} className="p-6 bg-white border-2 border-gray-50 rounded-[2rem] shadow-sm hover:border-[#CDE7FE] hover:shadow-xl transition-all text-left group flex items-center md:block gap-4 md:gap-0">
+                        <div className="w-12 h-12 bg-[#CDE7FE] rounded-2xl flex items-center justify-center text-blue-900 mb-0 md:mb-4 group-hover:scale-110 transition-transform shrink-0">
                            <i className="fa-solid fa-dumbbell text-xl"></i>
                         </div>
-                        <p className="font-black text-[#121212] text-sm uppercase tracking-wider">Workout</p>
-                        <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Update Plan</p>
+                        <div>
+                           <p className="font-black text-[#121212] text-sm uppercase tracking-wider">Workout</p>
+                           <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Update Plan</p>
+                        </div>
                      </button>
-                     <button onClick={() => handleAction("Update Diet", selectedMember.name)} className="p-6 bg-white border-2 border-gray-100 rounded-[2rem] shadow-sm hover:border-[#D9F17F] hover:shadow-xl transition-all text-left group">
-                        <div className="w-12 h-12 bg-[#D9F17F] rounded-2xl flex items-center justify-center text-green-900 mb-4 group-hover:scale-110 transition-transform">
+                     <button onClick={() => handleAction("Update Diet", selectedMember.name)} className="p-6 bg-white border-2 border-gray-100 rounded-[2rem] shadow-sm hover:border-[#D9F17F] hover:shadow-xl transition-all text-left group flex items-center md:block gap-4 md:gap-0">
+                        <div className="w-12 h-12 bg-[#D9F17F] rounded-2xl flex items-center justify-center text-green-900 mb-0 md:mb-4 group-hover:scale-110 transition-transform shrink-0">
                            <i className="fa-solid fa-carrot text-xl"></i>
                         </div>
-                        <p className="font-black text-[#121212] text-sm uppercase tracking-wider">Nutrition</p>
-                        <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Dietary Map</p>
+                        <div>
+                           <p className="font-black text-[#121212] text-sm uppercase tracking-wider">Nutrition</p>
+                           <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Dietary Map</p>
+                        </div>
                      </button>
                   </div>
 
                   {/* Footer */}
                   <Link to="/trainer/chat/member" className="w-full py-5 bg-[#121212] text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] hover:bg-[#D9F17F] hover:text-[#121212] transition-all text-center block shadow-2xl shadow-[#121212]/20">
-                    Initiate Communication
+                     Initiate Communication
                   </Link>
                </div>
             </div>

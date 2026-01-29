@@ -122,14 +122,11 @@ const Dashboard = () => {
             // Last Payment
             const lastPaymentData = payments.length > 0 ? {
                amount: payments[0].amount,
-               pending: 0, // Simplified logic: if fetched, assumes paid? Or check profile pending logic if available. 
-               // Better: use profile.planPrice vs total paid from memberController logic if available, 
-               // but memberController 'getAllMembersAll' logic isn't exposed to 'getMemberProfile' directly in same format.
-               // We'll stick to displaying the last transaction amount.
+               pending: 0, 
                date: new Date(payments[0].paidAt).toLocaleDateString()
             } : { amount: 0, pending: 0, date: "N/A" };
 
-            // Notifications (Mock for now, or derive from status)
+            // Notifications
             const notifications = [];
             if (daysLeft < 7 && daysLeft > 0) notifications.push({ id: 1, text: "Your membership expires soon! Renew now." });
             if (profile.status === 'Inactive') notifications.push({ id: 2, text: "Your account is currently inactive." });
@@ -160,7 +157,6 @@ const Dashboard = () => {
 
          } catch (err) {
             console.error(err);
-            // toast.error("Failed to load dashboard");
          } finally {
             setLoading(false);
          }
@@ -203,13 +199,13 @@ const Dashboard = () => {
    };
 
    return (
-      <div className="w-full max-w-7xl mx-auto space-y-6 pb-10 font-sans">
+      <div className="w-full max-w-7xl mx-auto space-y-6 pb-10 font-sans px-4 sm:px-0">
          <ToastContainer position="top-right" autoClose={3000} />
 
          {/* 1. WELCOME HEADER */}
-         <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden w-fit">
+         <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden w-full md:w-fit mx-auto md:mx-0">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#D9F17F] rounded-full filter blur-[80px] opacity-20 translate-x-1/2 -translate-y-1/2"></div>
-            <div className="relative z-10 flex gap-6 mt-4 md:mt-0 text-center">
+            <div className="relative z-10 flex gap-6 mt-4 md:mt-0 text-center w-full justify-center md:justify-start md:w-auto">
                <div>
                   <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Plan</p>
                   <p className="text-xl font-bold text-[#D9F17F]">{memberData.plan}</p>
@@ -292,7 +288,7 @@ const Dashboard = () => {
                </div>
 
                {/* Next Session Card */}
-               <div className="bg-[#f8f9fa] p-6 rounded-[2.5rem] border border-gray-100 flex justify-between items-center">
+               <div className="bg-[#f8f9fa] p-6 rounded-[2.5rem] border border-gray-100 flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4 sm:gap-0">
                   <div>
                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Up Next</p>
                      {memberData.nextSession ? (

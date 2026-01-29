@@ -206,14 +206,15 @@ const ChatWithMember = () => {
     });
 
     return (
-        <div className="flex h-[88vh] bg-slate-100 rounded-3xl overflow-hidden shadow-2xl border border-white font-sans mx-auto max-w-7xl mt-4 relative">
+        // Changed: Removed margins/radius on mobile for full-screen feel
+        <div className="flex flex-col md:flex-row h-[85vh] md:h-[88vh] bg-slate-100 md:rounded-3xl overflow-hidden shadow-2xl border-0 md:border border-white font-sans mx-auto max-w-7xl mt-0 md:mt-4 relative">
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar theme="colored" />
 
-            {/* Sidebar List - Theme Integrated */}
-            <div className="w-80 md:w-96 border-r border-slate-200 bg-[#CDE7FE]/30 backdrop-blur-md flex flex-col shrink-0">
-                <div className="p-8 border-b border-slate-200 bg-white/80">
+            {/* Sidebar List - Hidden on mobile if chat is active */}
+            <div className={`w-full md:w-96 border-r border-slate-200 bg-[#CDE7FE]/30 backdrop-blur-md flex-col shrink-0 ${currentChat ? 'hidden md:flex' : 'flex'}`}>
+                <div className="p-4 md:p-8 border-b border-slate-200 bg-white/80">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">Members</h2>
+                        <h2 className="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight">Members</h2>
                         <div className="bg-[#D9F17F] text-slate-800 p-2 rounded-full h-8 w-8 flex items-center justify-center text-xs font-bold">
                             {displayList.length}
                         </div>
@@ -221,7 +222,7 @@ const ChatWithMember = () => {
                     <p className="text-sm text-slate-500 font-medium">Manage your assigned trainees</p>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
+                <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-2 no-scrollbar">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center h-full gap-3">
                             <div className="w-8 h-8 border-4 border-[#D9F17F] border-t-transparent rounded-full animate-spin"></div>
@@ -241,12 +242,12 @@ const ChatWithMember = () => {
                                 <div
                                     key={participant._id || item._id}
                                     onClick={() => handleMemberSelect(participant)}
-                                    className={`group relative p-4 rounded-2xl cursor-pointer flex items-center gap-4 transition-all duration-300 ${isActive
+                                    className={`group relative p-3 md:p-4 rounded-2xl cursor-pointer flex items-center gap-4 transition-all duration-300 ${isActive
                                         ? "bg-white shadow-xl ring-2 ring-[#FEEF75] translate-x-1"
                                         : "hover:bg-white hover:shadow-lg"
-                                        }`}
+                                    }`}
                                 >
-                                    <div className={`relative w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-slate-800 font-bold text-lg shadow-sm transition-transform group-hover:scale-105 ${
+                                    <div className={`relative w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-2xl flex items-center justify-center text-slate-800 font-bold text-base md:text-lg shadow-sm transition-transform group-hover:scale-105 ${
                                         isActive ? "bg-[#D9F17F]" : "bg-white border border-slate-200"
                                     }`}>
                                         {participant.name?.[0]?.toUpperCase()}
@@ -254,7 +255,7 @@ const ChatWithMember = () => {
 
                                     <div className="min-w-0 flex-1">
                                         <div className="flex justify-between items-baseline mb-1">
-                                            <p className="font-bold text-slate-900 text-[15px] truncate">
+                                            <p className="font-bold text-slate-900 text-sm md:text-[15px] truncate">
                                                 {participant.name}
                                             </p>
                                             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter">
@@ -275,8 +276,8 @@ const ChatWithMember = () => {
                 </div>
             </div>
 
-            {/* Chat Area - WhatsApp Pattern + Soft Overlay */}
-            <div className="flex-1 flex flex-col bg-slate-50 relative overflow-hidden">
+            {/* Chat Area - Hidden on mobile if no chat selected */}
+            <div className={`flex-1 flex-col bg-slate-50 relative overflow-hidden ${currentChat ? 'flex' : 'hidden md:flex'}`}>
                 {currentChat ? (
                     <>
                         {/* Fixed Background Layer */}
@@ -291,28 +292,37 @@ const ChatWithMember = () => {
                             <div className="absolute inset-0 bg-slate-50/60"></div>
                         </div>
 
-                        <div className="px-8 py-5 border-b border-slate-200 bg-white/95 backdrop-blur-md flex justify-between items-center sticky top-0 z-20 shadow-sm">
-                            <div className="flex items-center gap-4">
-                                <div className="w-11 h-11 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg rotate-3">
+                        {/* Chat Header */}
+                        <div className="px-4 md:px-8 py-3 md:py-5 border-b border-slate-200 bg-white/95 backdrop-blur-md flex justify-between items-center sticky top-0 z-20 shadow-sm">
+                            <div className="flex items-center gap-3 md:gap-4">
+                                {/* Back Button for Mobile */}
+                                <button 
+                                    onClick={() => setCurrentChat(null)} 
+                                    className="md:hidden w-8 h-8 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
+                                >
+                                    <i className="fa-solid fa-arrow-left"></i>
+                                </button>
+
+                                <div className="w-9 h-9 md:w-11 md:h-11 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-bold text-base md:text-lg shadow-lg rotate-3">
                                     {currentChat.participant?.name?.[0]?.toUpperCase()}
                                 </div>
                                 <div>
-                                    <h3 className="font-extrabold text-slate-900 text-lg leading-tight">{currentChat.participant?.name}</h3>
+                                    <h3 className="font-extrabold text-slate-900 text-base md:text-lg leading-tight">{currentChat.participant?.name}</h3>
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Member</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Messages container */}
-                        <div className="flex-1 overflow-y-auto p-8 space-y-6 scroll-smooth relative z-10 no-scrollbar">
-                            <div className="flex flex-col space-y-6">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth relative z-10 no-scrollbar">
+                            <div className="flex flex-col space-y-4 md:space-y-6">
                                 {messages.map((msg, i) => {
                                     const senderId = msg.sender?._id || msg.sender;
                                     const isMe = senderId === user._id;
 
                                     return (
                                         <div key={i} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                            <div className={`group relative px-5 py-3.5 max-w-[75%] text-[14.5px] leading-relaxed shadow-sm transition-all hover:shadow-md ${
+                                            <div className={`group relative px-4 md:px-5 py-3 md:py-3.5 max-w-[85%] md:max-w-[75%] text-sm md:text-[14.5px] leading-relaxed shadow-sm transition-all hover:shadow-md ${
                                                 isMe 
                                                 ? 'bg-[#D9F17F] text-slate-900 rounded-3xl rounded-tr-none font-medium' 
                                                 : 'bg-[#CDE7FE] text-slate-900 rounded-3xl rounded-tl-none font-medium'
@@ -331,14 +341,15 @@ const ChatWithMember = () => {
                             </div>
                         </div>
 
-                        <div className="p-6 bg-white border-t border-slate-200 relative z-20">
+                        {/* Input Area */}
+                        <div className="p-3 md:p-6 bg-white border-t border-slate-200 relative z-20">
                             <form 
                                 onSubmit={e => { e.preventDefault(); handleSend(); }}
-                                className="relative flex items-center gap-4"
+                                className="relative flex items-center gap-2 md:gap-4"
                             >
                                 <div className="relative flex-1 group">
                                     <input
-                                        className="w-full bg-slate-100 border-none rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-[#FEEF75] focus:bg-white transition-all text-[15px] placeholder:text-slate-400 font-medium"
+                                        className="w-full bg-slate-100 border-none rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-[#FEEF75] focus:bg-white transition-all text-sm md:text-[15px] placeholder:text-slate-400 font-medium"
                                         value={input}
                                         onChange={e => setInput(e.target.value)}
                                         placeholder="Type a message..."
@@ -346,21 +357,21 @@ const ChatWithMember = () => {
                                 </div>
                                 <button
                                     type="submit"
-                                    className="bg-[#D9F17F] text-slate-900 w-14 h-14 rounded-2xl flex items-center justify-center font-bold hover:shadow-lg hover:shadow-[#D9F17F]/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
+                                    className="bg-[#D9F17F] text-slate-900 w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center font-bold hover:shadow-lg hover:shadow-[#D9F17F]/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none shrink-0"
                                     disabled={!input.trim()}
                                 >
-                                    <i className="fa-solid fa-paper-plane text-xl"></i>
+                                    <i className="fa-solid fa-paper-plane text-lg md:text-xl"></i>
                                 </button>
                             </form>
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-slate-300 p-12 bg-white/40">
-                        <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mb-6 shadow-xl ring-8 ring-[#CDE7FE]/20">
-                            <i className="fa-regular fa-comment-dots text-5xl text-[#D9F17F]"></i>
+                    <div className="flex-1 flex flex-col items-center justify-center text-slate-300 p-8 md:p-12 bg-white/40">
+                        <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center mb-6 shadow-xl ring-8 ring-[#CDE7FE]/20">
+                            <i className="fa-regular fa-comment-dots text-4xl md:text-5xl text-[#D9F17F]"></i>
                         </div>
-                        <h3 className="text-xl font-extrabold text-slate-900 mb-2">No conversation selected</h3>
-                        <p className="text-slate-500 font-medium max-w-xs text-center leading-relaxed">
+                        <h3 className="text-lg md:text-xl font-extrabold text-slate-900 mb-2">No conversation selected</h3>
+                        <p className="text-sm md:text-base text-slate-500 font-medium max-w-xs text-center leading-relaxed">
                             Select a member from your assigned list to begin messaging.
                         </p>
                     </div>

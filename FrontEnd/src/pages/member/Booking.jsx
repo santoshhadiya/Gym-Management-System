@@ -99,26 +99,28 @@ const Booking = () => {
    };
 
    return (
-      <div className="w-full max-w-6xl mx-auto space-y-6 pb-10 font-sans">
+      // Changed: Added px-4 sm:px-6 for mobile padding
+      <div className="w-full max-w-6xl mx-auto space-y-6 pb-10 font-sans px-4 sm:px-6">
          <ToastContainer position="top-right" autoClose={3000} />
 
          {/* --- HEADER --- */}
-         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+         {/* Changed: items-center to items-start md:items-center for better text wrapping on mobile */}
+         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
-               <h1 className="text-3xl font-black text-gray-900">Training Sessions</h1>
-               <p className="text-gray-500 mt-1">Browse upcoming sessions and manage your bookings.</p>
+               <h1 className="text-2xl md:text-3xl font-black text-gray-900">Training Sessions</h1>
+               <p className="text-sm md:text-base text-gray-500 mt-1">Browse upcoming sessions and manage your bookings.</p>
             </div>
 
-            <div className="flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
+            <div className="flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm w-full md:w-auto">
                <button
                   onClick={() => setViewState("upcoming")}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${viewState === 'upcoming' ? 'bg-[#CDE7FE] text-blue-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                  className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-bold transition-all text-center ${viewState === 'upcoming' ? 'bg-[#CDE7FE] text-blue-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
                >
-                  Upcoming Sessions
+                  Upcoming
                </button>
                <button
                   onClick={() => setViewState("history")}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${viewState === 'history' ? 'bg-[#CDE7FE] text-blue-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                  className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-bold transition-all text-center ${viewState === 'history' ? 'bg-[#CDE7FE] text-blue-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
                >
                   My Bookings
                </button>
@@ -152,9 +154,9 @@ const Booking = () => {
                            const cancelReason = existingBooking?.cancelReason;
 
                            return (
-                              <div key={session._id} className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 transition-all hover:shadow-md ${isFull && !isActive ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-100'}`}>
+                              <div key={session._id} className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:shadow-md ${isFull && !isActive ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-100'}`}>
 
-                                 <div className="flex-1">
+                                 <div className="flex-1 w-full">
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                                        <h3 className="text-xl font-bold text-gray-900">{session.type}</h3>
                                        <div className="flex flex-wrap gap-2">
@@ -185,13 +187,14 @@ const Booking = () => {
                                     </p>
                                  </div>
 
+                                 {/* Changed: Added w-full md:w-auto to button */}
                                  <button
                                     onClick={() => {
                                        if (isActive) handleCancelSession(session._id);
                                        else if (!isFull && !isCancelled) handleBookSession(session);
                                     }}
                                     disabled={(!isActive && isFull) || isCancelled}
-                                    className={`px-8 py-3 rounded-xl font-bold shadow-sm transition-colors flex items-center gap-2 min-w-[160px] justify-center ${
+                                    className={`px-8 py-3 rounded-xl font-bold shadow-sm transition-colors flex items-center gap-2 min-w-[160px] justify-center w-full md:w-auto ${
                                        isCancelled
                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200" 
                                        : isActive 
@@ -243,8 +246,8 @@ const Booking = () => {
                         const isUserCancelled = b.bookingStatus === 'Cancelled';
 
                         return (
-                        <div key={b._id} className={`p-6 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 ${isUserCancelled || isSessionCancelled ? 'bg-gray-50 opacity-75' : 'bg-white'}`}>
-                           <div className="flex-1">
+                        <div key={b._id} className={`p-6 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isUserCancelled || isSessionCancelled ? 'bg-gray-50 opacity-75' : 'bg-white'}`}>
+                           <div className="flex-1 w-full">
                               <h3 className="text-lg font-bold text-gray-900 mb-1">{b.session?.type || "Session"}</h3>
                               <p className="text-sm text-gray-500">
                                  {b.session?.date} • {b.session?.time}
@@ -281,7 +284,8 @@ const Booking = () => {
                               )}
                            </div>
 
-                           <div className="flex items-center gap-3">
+                           {/* Changed: Added justify-between for mobile layout */}
+                           <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
                               {/* Badge Logic */}
                               <div className={`px-4 py-2 rounded-xl text-sm font-bold border ${
                                  isUserCancelled 
