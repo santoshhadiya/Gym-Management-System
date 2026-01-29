@@ -134,6 +134,7 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
     { name: 'Feedback', path: '/member/feedback', icon: 'fa-star' },
     { name: 'Payments', path: '/member/payment', icon: 'fa-credit-card' },
     { name: 'Invoices', path: '/member/invoices', icon: 'fa-file-invoice-dollar' },
+    { name: 'Gallery', path: '/member/gallery', icon: 'fa-arrows-rotate' },
     { name: 'Renew', path: '/member/renew', icon: 'fa-arrows-rotate' },
   ];
 

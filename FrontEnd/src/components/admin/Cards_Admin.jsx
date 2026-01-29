@@ -2,63 +2,60 @@ import React, { useEffect, useState } from 'react';
 import { useGlobalContext } from '../../context/GlobalContext';
 
 const Cards_Admin = () => {
-  const [trainerCount, setTrainerCount] = useState(); 
-  const {BACKEND_URL}=useGlobalContext()
+  const { api } = useGlobalContext();
+  
+  const [stats, setStats] = useState({
+    trainers: 0,
+    upcomingSessions: 0,
+    members: 0
+  });
+
   useEffect(() => {
-    const fetchTrainerCount = async () => {
+    const fetchStats = async () => {
       try {
-        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-        const token = userInfo?.token;
+        const [trainersRes, sessionsRes, membersRes] = await Promise.all([
+          api.get("/trainers"),
+          api.get("/sessions"), // Fetches all sessions
+          api.get("/members")
+        ]);
 
-        if (!token) return; 
+        // Filter for Upcoming sessions only
+        const upcomingCount = sessionsRes.data.filter(s => s.status === 'Upcoming').length;
 
-        const res = await fetch(
-          `${BACKEND_URL}/api/admin/users?role=trainer` ,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error("Unauthorized or Failed to fetch");
-        }
-
-        const data = await res.json();
-        
-        if (Array.isArray(data)) {
-            setTrainerCount(data.length);
-        }
+        setStats({
+          trainers: trainersRes.data.length,
+          upcomingSessions: upcomingCount,
+          members: membersRes.data.length
+        });
 
       } catch (error) {
-        console.error("Trainer fetch error:", error);
+        console.error("Dashboard Stats Error:", error);
       }
     };
 
-    fetchTrainerCount();
-  }, []);
+    fetchStats();
+  }, [api]);
 
   const statsData = [
     {
       title: "Total Trainers",
-      value: trainerCount, // 3. Use the state variable here
+      value: stats.trainers,
       suffix: "Trainers",
       subtitle: "Active trainers",
       icon: "fa-solid fa-user-tie",
     },
     {
-      title: "Pending verifications",
-      value: 5,
-      suffix: "Requests",
-      subtitle: "Waiting for review",
-      icon: "fa-solid fa-file-contract",
+      title: "Total Members",
+      value: stats.members,
+      suffix: "Members",
+      subtitle: "Registered users",
+      icon: "fa-solid fa-users",
     },
     {
-      title: "Total Sessions",
-      value: 20,
+      title: "Upcoming Sessions", // Updated Label
+      value: stats.upcomingSessions, // Updated Value
       suffix: "Sessions",
-      subtitle: "This month activity",
+      subtitle: "Scheduled classes",
       icon: "fa-solid fa-stopwatch",
     },
   ];
