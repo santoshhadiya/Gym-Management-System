@@ -72,6 +72,7 @@ import ScrollToTop from './components/ScrollToTop'
 import ViewInquiry from './pages/admin/ViewInquiry'
 import AnnouncementsTrainer from './pages/trainer/AnnouncementsTrainer'
 import AnnouncementsMember from './pages/member/AnnouncementsMember'
+import GalleryMember from './pages/member/GalleryMember'
 
 const App = () => {
   const { user } = useGlobalContext()
@@ -147,6 +148,7 @@ const App = () => {
             <Route path="workout" element={<Workout />} />
             <Route path="dietPlans" element={<DietPlans />} />
             <Route path="announcements" element={<AnnouncementsMember/>} />
+            <Route path="gallery" element={<GalleryMember/>} />
           </Route>
         </Route>
 
