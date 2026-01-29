@@ -52,19 +52,49 @@ exports.updateMemberProfile = async (req, res) => {
 };
 
 /**
+ * @desc   Upload Profile Image
+ * @route  POST /api/members/profile/image
+ * @access Private (Member)
+ */
+exports.uploadProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const url = `uploads/${req.file.filename}`;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { profileImage: url },
+      { new: true }
+    ).select("-password");
+
+    res.json({ 
+      message: "Profile image updated", 
+      profileImage: updatedUser.profileImage 
+    });
+
+  } catch (error) {
+    console.error("Profile Image Upload Error:", error);
+    res.status(500).json({ message: "Image upload failed" });
+  }
+};
+
+/**
  * @desc   Get all members (Admin/Trainer)
  * @route  GET /api/members
  * @access Private (Admin/Trainer)
  */
 exports.getAllMembers = async (req, res) => {
   try {
+    // [UPDATED] Added profileImage to population
     const members = await Member.find()
-      .populate("user", "name email phone status createdAt")
+      .populate("user", "name email phone status createdAt profileImage") 
       .populate("assignedTrainer", "name")
       .populate("plan", "name");
 
     const formatted = members.map((m) => {
-      //  SAFETY CHECK: Skip if user is deleted/null (Prevents 500 Error)
       if (!m.user) return null;
 
       return {
@@ -73,21 +103,20 @@ exports.getAllMembers = async (req, res) => {
         email: m.user.email,
         phone: m.user.phone,
         status: m.user.status,
-        // Safe navigation for plan
+        image: m.user.profileImage, // [UPDATED] Include image in response
         plan: m.plan ? { _id: m.plan._id, name: m.plan.name } : null,
-        // Safe navigation for trainer (matches AssignTrainers.jsx expectation)
         trainer: m.assignedTrainer ? { _id: m.assignedTrainer._id, name: m.assignedTrainer.name } : null,
         joinDate: m.user.createdAt,
         height: m.height,
         currentWeight: m.currentWeight,
         fitnessGoal: m.fitnessGoal,
-        assignedDate: m.assignedDate // Passed for UI sort/display if needed
+        assignedDate: m.assignedDate
       };
-    }).filter(m => m !== null); // Remove nulls from result
+    }).filter(m => m !== null);
 
     res.json(formatted);
   } catch (error) {
-    console.error("Error in getAllMembers:", error); // Log actual error to console
+    console.error("Error in getAllMembers:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -104,7 +133,7 @@ exports.getAllMembersAll = async (req, res) => {
       .populate("plan", "name price"); 
 
     const formatted = await Promise.all(members.map(async (m) => {
-      if (!m.user) return null; // Safety Check
+      if (!m.user) return null; 
 
       const payments = await Payment.find({ member: m._id }).sort({ paidAt: -1 });
       
@@ -158,7 +187,7 @@ exports.getAllMembersAllForManageMember = async (req, res) => {
 
     const formatted = await Promise.all(
       members.map(async (m) => {
-        if (!m.user) return null; // Safety Check
+        if (!m.user) return null; 
 
         const payments = await Payment.find({ member: m._id }).sort({ paidAt: -1 });
         const totalPaid = payments.reduce((sum, pay) => sum + (pay.amount || 0), 0);
@@ -207,16 +236,7 @@ exports.getAllMembersAllForManageMember = async (req, res) => {
 // @access Admin
 exports.createMember = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      phone,
-      password,
-      plan,
-      height,
-      currentWeight,
-      fitnessGoal,
-    } = req.body;
+    const { name, email, phone, password, plan, height, currentWeight, fitnessGoal } = req.body;
 
     const exists = await User.findOne({ email });
     if (exists) {
@@ -278,7 +298,6 @@ exports.updateMemberByAdmin = async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
     
-    // Safety check just in case
     if (member.user) {
         member.user.name = req.body.name || member.user.name;
         member.user.phone = req.body.phone || member.user.phone;

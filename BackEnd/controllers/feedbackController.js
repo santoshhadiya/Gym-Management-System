@@ -39,9 +39,8 @@ exports.updateMyFeedback = async (req, res) => {
 
     feedback.rating = req.body.rating || feedback.rating;
     feedback.comment = req.body.comment || feedback.comment;
-    // Type usually shouldn't change, but if needed: feedback.type = req.body.type || feedback.type;
     
-    // Reset status to Pending on edit if you want admins to re-review
+    // Reset status to Pending on edit
     feedback.status = "Pending"; 
 
     await feedback.save();
@@ -70,17 +69,16 @@ exports.getMyFeedback = async (req, res) => {
 // @access  Private (Admin)
 exports.getAllFeedback = async (req, res) => {
   try {
+    // [UPDATED] Added 'profileImage' to populate
     const feedbacks = await Feedback.find()
-      .populate("member", "name email")
+      .populate("member", "name email profileImage") 
       .sort({ createdAt: -1 });
     
-    // Transform for UI if needed, or send as is. 
-    // The frontend expects: { id, member, type, rating, message, date, status, reply }
     const formatted = feedbacks.map(f => ({
        _id: f._id,
        member: f.member ? f.member.name : "Unknown",
        email: f.member ? f.member.email : "",
-       avatar: f.member?.profileImage || "", // Assuming profileImage exists on User
+       avatar: f.member?.profileImage || "", // Now this will contain the image path
        type: f.type,
        rating: f.rating,
        message: f.comment,
@@ -106,7 +104,6 @@ exports.updateFeedbackStatus = async (req, res) => {
       return res.status(404).json({ message: "Feedback not found" });
     }
 
-    // If reply is provided, save it and mark as Reviewed
     if (req.body.reply) {
        feedback.reply = req.body.reply;
        feedback.replyDate = new Date();
@@ -149,7 +146,6 @@ exports.getTrainersFeedback = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: "Failed to fetch trainer feedback",

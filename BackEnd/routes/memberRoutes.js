@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const upload = require("../middlewares/uploadMiddleware"); // ✅ Import Upload Middleware
 
 const {
   getMemberProfile,
@@ -10,6 +11,7 @@ const {
   updateMemberByAdmin,
   deactivateMember,
   getAllMembersAllForManageMember,
+  uploadProfileImage 
 } = require("../controllers/memberController");
 
 const { protect, authorize } = require("../middlewares/authMiddleware");
@@ -19,6 +21,15 @@ router
   .route("/profile")
   .get(protect, authorize("member"), getMemberProfile)
   .put(protect, authorize("member"), updateMemberProfile);
+
+
+router.post(
+  "/profile/image", 
+  protect, 
+  authorize("member"), 
+  upload.single("file"), 
+  uploadProfileImage
+);
 
 // Admin / Trainer routes
 router.post("/", protect, authorize("admin"), createMember);
