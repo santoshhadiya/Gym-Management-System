@@ -1,80 +1,94 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom'; // Import Link for navigation
 import { useGlobalContext } from '../../context/GlobalContext';
 
 const BottomSectionDashbord_Admin = () => {
   const { api } = useGlobalContext();
   const [newMembers, setNewMembers] = useState([]);
+  const [reviews, setReviews] = useState([]); // State for reviews
 
   useEffect(() => {
-    const fetchNewMembers = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get("/members");
-        // Sort by joinDate desc and take top 5
-        const sorted = res.data
+        // Fetch Members and Feedback in parallel
+        const [membersRes, feedbackRes] = await Promise.all([
+          api.get("/members"),
+          api.get("/feedback") // Fetches from getAllFeedback controller
+        ]);
+
+        // Process Members (Sort by joinDate desc, take top 5)
+        const sortedMembers = membersRes.data
           .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate))
           .slice(0, 5);
-        
-        setNewMembers(sorted);
+        setNewMembers(sortedMembers);
+
+        // Process Reviews (Controller already returns formatted data, just take top 3)
+        // Assuming backend returns newest first. If not, sort by date here.
+        const recentReviews = feedbackRes.data.slice(0, 3);
+        setReviews(recentReviews);
+
       } catch (error) {
-        console.error("Failed to fetch new members", error);
+        console.error("Failed to fetch dashboard data", error);
       }
     };
-    fetchNewMembers();
+    fetchData();
   }, [api]);
-
-  // Keep reviews static as there is no backend for them yet
-  const reviewsData = [
-    {
-      name: "Sarah Johnson",
-      rating: "5/5",
-      image: "https://i.pravatar.cc/100?img=1",
-      review: "Great progress in strength and fitness!",
-    },
-    {
-      name: "Michael Brown",
-      rating: "4.7/5",
-      image: "https://i.pravatar.cc/100?img=2",
-      review: "Fantastic trainers and productive sessions.",
-    },
-    {
-      name: "Lisa Parker",
-      rating: "4.9/5",
-      image: "https://i.pravatar.cc/100?img=3",
-      review: "Transformed my fitness journey completely.",
-    },
-  ];
 
   return (
     <div className="mt-8 flex flex-col gap-8">
 
-      {/* Reviews */}
+      {/* Reviews Section */}
       <div className="w-full">
-        <div className="flex items-center gap-2 mb-6 pl-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-[#FEEF75]">
-            <i className="fa-solid fa-star text-sm"></i>
+        <div className="flex justify-between items-end mb-6 pl-2 pr-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[#FEEF75]">
+              <i className="fa-solid fa-star text-sm"></i>
+            </div>
+            <h2 className="text-md font-semibold text-gray-800">Recent Reviews</h2>
           </div>
-          <h2 className="text-md font-semibold text-gray-800">Reviews</h2>
+          
+          {/* Navigation Link */}
+          <Link to="/admin/feedbacks" className="text-xs font-bold text-gray-400 hover:text-blue-500 transition-colors flex items-center gap-1 cursor-pointer">
+            View All <i className="fa-solid fa-arrow-right"></i>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {reviewsData.map((review, index) => (
-            <div key={index} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-              <div className="flex items-center gap-4 mb-4">
-                <img src={review.image} alt={review.name} className="w-12 h-12 rounded-full object-cover shadow-sm" />
-                <div>
-                  <p className="font-semibold text-gray-900">{review.name}</p>
-                  <p className="text-sm text-yellow-500 flex items-center gap-1">
-                    <i className="fa-solid fa-star"></i> {review.rating}
-                  </p>
+          {reviews.length > 0 ? (
+            reviews.map((review, index) => (
+              <div key={review._id || index} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col h-full">
+                <div className="flex items-center gap-4 mb-4">
+                  <img 
+                    src={review.avatar || `https://ui-avatars.com/api/?name=${review.member}&background=random`} 
+                    alt={review.member} 
+                    className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100" 
+                  />
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">{review.member}</p>
+                    <p className="text-xs text-yellow-500 flex items-center gap-1 font-bold">
+                      <i className="fa-solid fa-star"></i> {review.rating}/5
+                    </p>
+                  </div>
+                </div>
+                <p className="text-gray-500 text-xs leading-relaxed italic line-clamp-3 mb-3">"{review.message}"</p>
+                
+                <div className="mt-auto flex justify-between items-center pt-3 border-t border-gray-50">
+                   <span className="text-[10px] text-gray-400">{new Date(review.date).toLocaleDateString()}</span>
+                   <span className={`text-[10px] px-2 py-1 rounded ${review.type === 'Trainer' ? 'bg-blue-50 text-blue-600' : 'bg-gray-50 text-gray-500'}`}>
+                      {review.type}
+                   </span>
                 </div>
               </div>
-              <p className="text-gray-500 text-sm leading-relaxed italic">"{review.review}"</p>
+            ))
+          ) : (
+            <div className="col-span-3 text-center py-12 bg-white rounded-3xl border border-dashed border-gray-200">
+               <p className="text-gray-400 text-sm">No reviews submitted yet.</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 
-      {/* New Members */}
+      {/* New Members Section */}
       <div className="w-full bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-2">
@@ -98,11 +112,10 @@ const BottomSectionDashbord_Admin = () => {
               </div>
             </div>
           )) : (
-            <p className="text-gray-400 text-sm col-span-5 text-center">No members found.</p>
+            <p className="text-gray-400 text-sm col-span-5 text-center">No new members found.</p>
           )}
         </div>
       </div>
-
     </div>
   )
 }

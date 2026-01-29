@@ -39,6 +39,7 @@ const Sidebar_Admin = () => {
     { name: "Chat with Trainers", path: "/admin/chat-trainers", icon: "fa-regular fa-comment-dots" },
     { name: "View Inquiry", path: "/admin/view-inquiry", icon: "fa-regular fa-star" },
     { name: "View Feedback", path: "/admin/feedbacks", icon: "fa-regular fa-star" },
+    { name: "Attendance QR", path: "/admin/attendance-qr", icon: "fa-regular fa-star" },
     { name: "Update Sessions", path: "/admin/update-session", icon: "fa-solid fa-rotate" },
   ];
 

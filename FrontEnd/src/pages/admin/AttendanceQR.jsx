@@ -30,4 +30,5 @@ const AttendanceQR = () => {
   );
 };
 
+
 export default AttendanceQR;

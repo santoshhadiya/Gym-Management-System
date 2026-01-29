@@ -73,6 +73,8 @@ import ViewInquiry from './pages/admin/ViewInquiry'
 import AnnouncementsTrainer from './pages/trainer/AnnouncementsTrainer'
 import AnnouncementsMember from './pages/member/AnnouncementsMember'
 import GalleryMember from './pages/member/GalleryMember'
+import AttendanceQR from './pages/admin/AttendanceQR'
+import ScanAttendance from './pages/member/ScanAttendance'
 
 const App = () => {
   const { user } = useGlobalContext()
@@ -108,9 +110,9 @@ const App = () => {
             <Route path="chat-members" element={<ChatWithMember_admin />} />
             <Route path="chat-trainers" element={<ChatWithTrainer />} />
             <Route path="view-inquiry" element={<ViewInquiry/>} />
-
             <Route path="feedbacks" element={<Feedbacks_admin />} />
             <Route path="update-session" element={<UpdateSessions />} />
+            <Route path="attendance-qr" element={<AttendanceQR/>} />
           </Route>
         </Route>
 
@@ -149,6 +151,7 @@ const App = () => {
             <Route path="dietPlans" element={<DietPlans />} />
             <Route path="announcements" element={<AnnouncementsMember/>} />
             <Route path="gallery" element={<GalleryMember/>} />
+            <Route path="scan-attendance" element={<ScanAttendance/>} />
           </Route>
         </Route>
 

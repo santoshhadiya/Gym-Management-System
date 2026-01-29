@@ -21,6 +21,7 @@ const ScanAttendance = () => {
       }
     });
 
+
     return () => scanner.clear();
   }, []);
 
@@ -32,5 +33,6 @@ const ScanAttendance = () => {
     </div>
   );
 };
+
 
 export default ScanAttendance;
