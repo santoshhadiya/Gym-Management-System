@@ -1,79 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
-  LineElement,
-  PointElement,
-  ArcElement,
   Tooltip,
-  Filler,
+  Legend
 } from "chart.js";
-
 import { Bar } from "react-chartjs-2";
+import { useGlobalContext } from '../../context/GlobalContext';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  LineElement,
-  PointElement,
-  ArcElement,
   Tooltip,
-  Filler
+  Legend
 );
 
-// Custom Stylish Dropdown Component
 const TimeDropdown = ({ selected, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const options = ["This Year", "This Month", "This Week"];
+  const options = ["Today", "This Week", "This Month", "This Year"];
 
   return (
     <div className="relative">
-      {/* Trigger Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`
-          flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border outline-none
-          ${isOpen 
-            ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm ring-2 ring-blue-100/50' 
-            : 'bg-white border-gray-100 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-          }
-        `}
-      >
+      <button onClick={() => setIsOpen(!isOpen)} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border outline-none ${isOpen ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm ring-2 ring-blue-100/50' : 'bg-white border-gray-100 text-gray-600 hover:border-gray-300 hover:bg-gray-50'}`}>
         <span>{selected}</span>
         <i className={`fa-solid fa-chevron-down text-[10px] transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-500' : 'text-gray-400'}`}></i>
       </button>
-
-      {/* Dropdown Menu */}
       {isOpen && (
         <>
-          {/* Invisible Backdrop to handle outside clicks */}
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          
-          {/* Menu Container */}
           <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20 origin-top-right animate-in fade-in zoom-in-95 duration-100">
             <div className="p-1.5 space-y-0.5">
               {options.map((option) => (
-                <button
-                  key={option}
-                  onClick={() => {
-                    onSelect(option);
-                    setIsOpen(false);
-                  }}
-                  className={`
-                    w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 flex items-center justify-between group
-                    ${selected === option 
-                      ? 'bg-blue-50 text-blue-700' 
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }
-                  `}
-                >
+                <button key={option} onClick={() => { onSelect(option); setIsOpen(false); }} className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 flex items-center justify-between group ${selected === option ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
                   {option}
-                  {selected === option && (
-                    <i className="fa-solid fa-check text-blue-500 text-[10px]"></i>
-                  )}
+                  {selected === option && <i className="fa-solid fa-check text-blue-500 text-[10px]"></i>}
                 </button>
               ))}
             </div>
@@ -85,82 +48,108 @@ const TimeDropdown = ({ selected, onSelect }) => {
 };
 
 const TotalMembersChart_Admin = () => {
-  const [timePeriod, setTimePeriod] = useState("This Year");
+  const { api } = useGlobalContext();
+  const [members, setMembers] = useState([]);
+  const [timePeriod, setTimePeriod] = useState("This Week");
 
-  const chartConfig = {
-    "This Year": {
-      labels: [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-      ],
-      data: [400, 480, 530, 600, 400, 650, 350, 550, 680, 260, 220, 400],
-      stepSize: 150
-    },
-    "This Month": {
-      labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-      data: [120, 150, 180, 210],
-      stepSize: 50
-    },
-    "This Week": {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      data: [45, 60, 75, 50, 80, 95, 110], 
-      stepSize: 25
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const res = await api.get("/members");
+        setMembers(res.data);
+      } catch (error) { console.error(error); }
+    };
+    fetchMembers();
+  }, [api]);
+
+  const chartData = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+
+    let labels = [];
+    let data = [];
+
+    if (timePeriod === "This Year") {
+      labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      data = new Array(12).fill(0);
+      members.forEach(m => {
+        if (!m.joinDate) return;
+        const d = new Date(m.joinDate);
+        if (d.getFullYear() === currentYear) data[d.getMonth()] += 1;
+      });
+
+    } else if (timePeriod === "This Month") {
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      labels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`);
+      data = new Array(daysInMonth).fill(0);
+      members.forEach(m => {
+        if (!m.joinDate) return;
+        const d = new Date(m.joinDate);
+        if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
+          data[d.getDate() - 1] += 1;
+        }
+      });
+
+    } else if (timePeriod === "This Week") {
+      labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      data = new Array(7).fill(0);
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0,0,0,0);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23,59,59,999);
+
+      members.forEach(m => {
+        if (!m.joinDate) return;
+        const d = new Date(m.joinDate);
+        if (d >= startOfWeek && d <= endOfWeek) data[d.getDay()] += 1;
+      });
+
+    } else if (timePeriod === "Today") {
+      // 4-hour blocks
+      labels = ["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"];
+      data = new Array(6).fill(0);
+      members.forEach(m => {
+        if (!m.joinDate) return;
+        const d = new Date(m.joinDate);
+        if (d.getFullYear() === currentYear && d.getMonth() === currentMonth && d.getDate() === currentDate) {
+          const hour = d.getHours();
+          data[Math.floor(hour / 4)] += 1;
+        }
+      });
     }
-  };
 
-  const currentConfig = chartConfig[timePeriod];
+    return { labels, data };
+  }, [members, timePeriod]);
 
   const data = {
-    labels: currentConfig.labels,
-    datasets: [
-      {
-        label: "Total Members",
-        data: currentConfig.data,
-        backgroundColor: ["#CDE7FE"],
-        hoverBackgroundColor: "#FEEF75",
-        borderRadius: 15,
-        // using maxBarThickness allows bars to be wider when there are fewer of them (like in Week view)
-        maxBarThickness: 40, 
-      },
-    ],
+    labels: chartData.labels,
+    datasets: [{
+      label: "New Members",
+      data: chartData.data,
+      backgroundColor: ["#CDE7FE"],
+      hoverBackgroundColor: "#FEEF75",
+      borderRadius: 8,
+      barThickness: 'flex',
+      maxBarThickness: 30, 
+    }],
   };
 
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
+      legend: { display: false },
       tooltip: {
-        backgroundColor: "#ffffff",
-        titleColor: "#000",
-        bodyColor: "#555",
-        borderColor: "#ddd",
-        borderWidth: 1,
-        padding: 10,
-        displayColors: false,
-        callbacks: {
-          title: (context) => context[0].label,
-          label: (context) => `Total Members: ${context.raw}`,
-        },
-      },
-      legend: {
-        display: false,
-      },
+        backgroundColor: "#fff", titleColor: "#000", bodyColor: "#555", borderColor: "#ddd", borderWidth: 1, padding: 10, displayColors: false,
+      }
     },
     scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: currentConfig.stepSize,
-        },
-        grid: {
-          color: "#eee",
-        },
-      },
-      x: {
-        grid: {
-          display: false,
-        },
-      },
+      y: { beginAtZero: true, grid: { color: "#eee" } },
+      x: { grid: { display: false } },
     },
   };
 
@@ -171,10 +160,8 @@ const TotalMembersChart_Admin = () => {
           <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400">
             <i className="fa-solid fa-users text-sm"></i>
           </div>
-          <h3 className="font-semibold text-gray-800 text-md">Total Members</h3>
+          <h3 className="font-semibold text-gray-800 text-md">Member Growth</h3>
         </div>
-        
-        {/* Pass state and handler to dropdown */}
         <TimeDropdown selected={timePeriod} onSelect={setTimePeriod} />
       </div>
       <div className="h-[300px] w-full">
@@ -184,4 +171,4 @@ const TotalMembersChart_Admin = () => {
   )
 }
 
-export default TotalMembersChart_Admin
+export default TotalMembersChart_Admin;
