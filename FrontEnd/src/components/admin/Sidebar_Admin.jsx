@@ -17,32 +17,57 @@ const Sidebar_Admin = () => {
     navigate("/login", { replace: true });
   };
 
-  const navItems = [
-    { name: "Dashboard", path: "/admin", icon: "fa-solid fa-table-columns" },
-    { name: "Manage Members", path: "/admin/members", icon: "fa-regular fa-user" },
-    { name: "Manage Trainers", path: "/admin/trainers", icon: "fa-solid fa-user-tie" },
-    { name: "Membership Plans", path: "/admin/membership-plans", icon: "fa-regular fa-id-card" },
-   /*  { name: "Payments", path: "/admin/payments", icon: "fa-regular fa-credit-card" }, */
-    { name: "Payment History", path: "/admin/payment-history", icon: "fa-solid fa-clock-rotate-left" },
-    { name: "Assign Trainers", path: "/admin/assign-trainers", icon: "fa-solid fa-user-plus" },
-    /* { name: "Chat with Members", path: "/admin/chat-members", icon: "fa-regular fa-comments" }, */
-    { name: "Performance Reports", path: "/admin/performance-reports", icon: "fa-regular fa-file-lines" },
-    { name: "Verify Accounts", path: "/admin/verify-accounts", icon: "fa-regular fa-square-check" },
-    { name: "Staff Schedules", path: "/admin/staff-schedules", icon: "fa-regular fa-calendar" },
-    { name: "Manage Bookings", path: "/admin/bookings", icon: "fa-regular fa-calendar-check" },
-    { name: "Announcements", path: "/admin/announcements", icon: "fa-regular fa-bell" },
-    { name: "Financial Reports", path: "/admin/financial-reports", icon: "fa-solid fa-chart-pie" },
-    { name: "Media Gallery", path: "/admin/media-gallery", icon: "fa-regular fa-images" },
-    { name: "Manage Offers", path: "/admin/offers", icon: "fa-solid fa-percent" },
-    { name: "Equipment Tracking", path: "/admin/equipment-tracking", icon: "fa-solid fa-dumbbell" },
-    { name: "Monitor Progress", path: "/admin/monitor-progress", icon: "fa-solid fa-stairs" },
-    { name: "Chat with Trainers", path: "/admin/chat-trainers", icon: "fa-regular fa-comment-dots" },
-    { name: "View Inquiry", path: "/admin/view-inquiry", icon: "fa-regular fa-star" },
-    { name: "View Feedback", path: "/admin/feedbacks", icon: "fa-regular fa-star" },
-    { name: "Attendance QR", path: "/admin/attendance-qr", icon: "fa-regular fa-star" },
-    { name: "Attendance", path: "/admin/attendance", icon: "fa-regular fa-star" },
-    { name: "Update Sessions", path: "/admin/update-session", icon: "fa-solid fa-rotate" },
-  ];
+ const navItems = [
+  { name: "Dashboard", path: "/admin", icon: "fa-solid fa-table-columns" },
+
+  { name: "Manage Members", path: "/admin/members", icon: "fa-regular fa-user" },
+
+  { name: "Manage Trainers", path: "/admin/trainers", icon: "fa-solid fa-user-tie" },
+
+  { name: "Membership Plans", path: "/admin/membership-plans", icon: "fa-regular fa-id-card" },
+
+  /* { name: "Payments", path: "/admin/payments", icon: "fa-regular fa-credit-card" }, */
+
+  { name: "Payment History", path: "/admin/payment-history", icon: "fa-solid fa-clock-rotate-left" },
+
+  { name: "Assign Trainers", path: "/admin/assign-trainers", icon: "fa-solid fa-user-plus" },
+
+  /* { name: "Chat with Members", path: "/admin/chat-members", icon: "fa-regular fa-comments" }, */
+
+  { name: "Performance Reports", path: "/admin/performance-reports", icon: "fa-regular fa-file-lines" },
+
+  { name: "Verify Accounts", path: "/admin/verify-accounts", icon: "fa-regular fa-square-check" },
+
+  { name: "Staff Schedules", path: "/admin/staff-schedules", icon: "fa-regular fa-calendar" },
+
+  { name: "Manage Bookings", path: "/admin/bookings", icon: "fa-regular fa-calendar-check" },
+
+  { name: "Announcements", path: "/admin/announcements", icon: "fa-regular fa-bell" },
+
+  { name: "Financial Reports", path: "/admin/financial-reports", icon: "fa-solid fa-chart-pie" },
+
+  { name: "Media Gallery", path: "/admin/media-gallery", icon: "fa-regular fa-images" },
+
+  { name: "Manage Offers", path: "/admin/offers", icon: "fa-solid fa-percent" },
+
+  { name: "Equipment Tracking", path: "/admin/equipment-tracking", icon: "fa-solid fa-dumbbell" },
+
+  { name: "Monitor Progress", path: "/admin/monitor-progress", icon: "fa-solid fa-chart-line" },
+
+  { name: "Chat with Trainers", path: "/admin/chat-trainers", icon: "fa-regular fa-comment-dots" },
+
+  // 🔽 Replaced repeated stars
+
+  { name: "View Inquiry", path: "/admin/view-inquiry", icon: "fa-solid fa-circle-question" },
+
+  { name: "View Feedback", path: "/admin/feedbacks", icon: "fa-solid fa-message" },
+
+  { name: "Attendance QR", path: "/admin/attendance-qr", icon: "fa-solid fa-qrcode" },
+
+  { name: "Attendance", path: "/admin/attendance", icon: "fa-solid fa-clipboard-user" },
+
+  { name: "Update Sessions", path: "/admin/update-session", icon: "fa-solid fa-rotate" },
+];
 
   return (
     <aside
