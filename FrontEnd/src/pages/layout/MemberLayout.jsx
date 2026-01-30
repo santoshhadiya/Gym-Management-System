@@ -20,25 +20,40 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
     navigate("/login", { replace: true });
   }
 
-  const menuItems = [
-    { name: 'Dashboard', path: '/member', icon: 'fa-table-columns' },
-    { name: 'Profile', path: '/member/profile', icon: 'fa-user' },
-    { name: 'Membership', path: '/member/membership', icon: 'fa-id-card' },
-    { name: 'Plans', path: '/member/plans', icon: 'fa-layer-group' },
-    { name: 'Workouts & Diet Plans', path: '/member/workout', icon: 'fa-dumbbell' },
-    /* { name: 'Diet Plans', path: '/member/dietPlans', icon: 'fa-utensils' }, */
-    { name: 'Progress', path: '/member/progress', icon: 'fa-chart-line' },
-    { name: 'Bookings', path: '/member/booking', icon: 'fa-calendar-check' },
-    { name: 'Chat', path: '/member/chat', icon: 'fa-comments' },
-    { name: 'Announcements', path: '/member/announcements', icon: 'fa-comments' },
-    { name: 'Feedback', path: '/member/feedback', icon: 'fa-star' },
-    { name: 'Payments', path: '/member/payment', icon: 'fa-credit-card' },
-    { name: 'Invoices', path: '/member/invoices', icon: 'fa-file-invoice-dollar' },
-    { name: 'Gallery', path: '/member/gallery', icon: 'fa-arrows-rotate' },
-    { name: 'Renew', path: '/member/renew', icon: 'fa-arrows-rotate' },
-    { name: 'Attendance History', path: '/member/attendance-history', icon: 'fa-arrows-rotate' },
-    { name: 'Scan Attendance', path: '/member/scan-attendance', icon: 'fa-arrows-rotate' },
-  ];
+const menuItems = [
+  { name: "Dashboard", path: "/member", icon: "fa-solid fa-table-columns" },
+
+  { name: "Profile", path: "/member/profile", icon: "fa-regular fa-user" },
+
+  { name: "Membership", path: "/member/membership", icon: "fa-regular fa-id-card" },
+
+  { name: "Plans", path: "/member/plans", icon: "fa-solid fa-layer-group" },
+
+  { name: "Workouts & Diet Plans", path: "/member/workout", icon: "fa-solid fa-dumbbell" },
+
+  { name: "Progress", path: "/member/progress", icon: "fa-solid fa-chart-line" },
+
+  { name: "Bookings", path: "/member/booking", icon: "fa-regular fa-calendar-check" },
+
+  { name: "Chat", path: "/member/chat", icon: "fa-regular fa-comments" },
+
+  { name: "Announcements", path: "/member/announcements", icon: "fa-regular fa-bell" },
+
+  { name: "Feedback", path: "/member/feedback", icon: "fa-solid fa-star-half-stroke" },
+
+  { name: "Payments", path: "/member/payment", icon: "fa-regular fa-credit-card" },
+
+  { name: "Invoices", path: "/member/invoices", icon: "fa-solid fa-file-invoice-dollar" },
+
+  { name: "Gallery", path: "/member/gallery", icon: "fa-regular fa-images" },
+
+  { name: "Renew", path: "/member/renew", icon: "fa-solid fa-rotate-right" },
+
+  { name: "Attendance History", path: "/member/attendance-history", icon: "fa-solid fa-clipboard-list" },
+
+  { name: "Scan Attendance", path: "/member/scan-attendance", icon: "fa-solid fa-qrcode" },
+];
+
 
   return (
     <>
