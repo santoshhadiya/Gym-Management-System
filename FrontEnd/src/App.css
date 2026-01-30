@@ -40,3 +40,8 @@
 .read-the-docs {
   color: #888;
 }
+#reader video {
+  object-fit: cover !important;
+  width: 100% !important;
+  height: 100% !important;
+}
