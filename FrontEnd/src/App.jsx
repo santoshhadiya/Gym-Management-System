@@ -75,6 +75,8 @@ import AnnouncementsMember from './pages/member/AnnouncementsMember'
 import GalleryMember from './pages/member/GalleryMember'
 import AttendanceQR from './pages/admin/AttendanceQR'
 import ScanAttendance from './pages/member/ScanAttendance'
+import AttendanceHistory from './pages/member/AttendanceHistory'
+import Attendance from './pages/admin/Attendance'
 
 const App = () => {
   const { user } = useGlobalContext()
@@ -113,6 +115,7 @@ const App = () => {
             <Route path="feedbacks" element={<Feedbacks_admin />} />
             <Route path="update-session" element={<UpdateSessions />} />
             <Route path="attendance-qr" element={<AttendanceQR/>} />
+            <Route path="attendance" element={<Attendance/>} />
           </Route>
         </Route>
 
@@ -152,6 +155,7 @@ const App = () => {
             <Route path="announcements" element={<AnnouncementsMember/>} />
             <Route path="gallery" element={<GalleryMember/>} />
             <Route path="scan-attendance" element={<ScanAttendance/>} />
+            <Route path="attendance-history" element={<AttendanceHistory/>} />
           </Route>
         </Route>
 

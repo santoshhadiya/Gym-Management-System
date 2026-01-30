@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useGlobalContext } from '../../context/GlobalContext';
 
-const AdminDashboard = () => {
+const Attendance = () => {
   const { api } = useGlobalContext();
   const [report, setReport] = useState(null);
 
   useEffect(() => {
     const fetchReport = async () => {
       try {
-        const res = await api.get('/attendance/admin-report');
+        const res = await api.get('/attendance/report');
         setReport(res.data);
       } catch (err) {
         console.error("Report fetch failed");
       }
+
     };
     fetchReport();
   }, []);
@@ -74,4 +75,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default Attendance;

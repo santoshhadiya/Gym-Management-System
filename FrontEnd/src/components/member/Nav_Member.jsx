@@ -87,7 +87,7 @@ const Nav_Member = ({ onMenuClick }) => {
   };
 
   return (
-    <nav className="flex justify-between items-center bg-[#99A1AF] px-2 py-2 mb-6 relative z-20">
+    <nav className="flex justify-between items-center bg-[#F9FAFB] px-6 py-4 mb-6 relative z-20 rounded-4xl">
       
       {/* Left: Mobile Menu & Welcome Text */}
       <div className="flex items-center gap-4">
@@ -102,7 +102,7 @@ const Nav_Member = ({ onMenuClick }) => {
           <h2 className="text-xl font-black text-gray-900 hidden sm:block">
             Welcome back, {displayName.split(' ')[0]}! 👋
           </h2>
-          <p className="text-xs text-white font-medium hidden sm:block">
+          <p className="text-xs text-gray-400 font-medium hidden sm:block">
             Let's crush your goals today.
           </p>
         </div>

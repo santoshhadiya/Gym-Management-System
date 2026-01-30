@@ -36,6 +36,7 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
     { name: 'Invoices', path: '/member/invoices', icon: 'fa-file-invoice-dollar' },
     { name: 'Gallery', path: '/member/gallery', icon: 'fa-arrows-rotate' },
     { name: 'Renew', path: '/member/renew', icon: 'fa-arrows-rotate' },
+    { name: 'Attendance History', path: '/member/attendance-history', icon: 'fa-arrows-rotate' },
     { name: 'Scan Attendance', path: '/member/scan-attendance', icon: 'fa-arrows-rotate' },
   ];
 

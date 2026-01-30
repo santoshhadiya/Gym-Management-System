@@ -13,6 +13,7 @@ const AttendanceHistory = () => {
       } catch (err) {
         console.error("Failed to fetch history");
       }
+      
     };
     fetchHistory();
   }, [api]);
