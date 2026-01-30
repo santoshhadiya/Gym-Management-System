@@ -25,7 +25,7 @@ const AttendanceQR = () => {
 
   useEffect(() => {
     refreshQR();
-    const interval = setInterval(refreshQR, 5000); // 5-second refresh
+    const interval = setInterval(refreshQR, 5000000); // 5-second refresh
     return () => clearInterval(interval);
   }, []);
 
