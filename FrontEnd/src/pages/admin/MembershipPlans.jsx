@@ -222,15 +222,7 @@ const MembershipPlans = () => {
                 </button>
               </div>
 
-              {/* Promo Action */}
-              {plan.status === 'Active' && (
-                <button
-                  onClick={() => handleSendNotification(plan.name)}
-                  className="mt-2 w-full text-[10px] text-blue-500 font-bold hover:underline"
-                >
-                  <i className="fa-regular fa-paper-plane mr-1"></i> Send Promo Notification
-                </button>
-              )}
+              
             </div>
           ))}
         </div>

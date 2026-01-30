@@ -2,116 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import logo from "../../assets/logo.png"
 import { useGlobalContext } from '../../context/GlobalContext';
+import Nav_Member from '../../components/member/Nav_Member';
 
 // --- INTERNAL COMPONENT: MEMBER NAVIGATION (Top Bar) ---
-const Nav_Member = ({ onMenuClick }) => {
-  const [member, setMember] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-        const token = userInfo?.token;
-
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-
-        const res = await fetch("http://localhost:5000/api/members/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setMember(data);
-        }
-      } catch (err) {
-        console.error("Failed to load member profile", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  const displayName = member?.name || member?.user?.name || "Member";
-  const planName = member?.plan?.name || "Member";
-
-  // Get initials (for avatar)
-  const initials = displayName
-    .split(" ")
-    .map(w => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-  return (
-    // Changed: Added responsive padding (px-4 for mobile, px-6 for desktop)
-    <section className="w-full bg-gray-100 rounded-3xl px-4 py-3 md:px-6 md:py-4 mb-6 transition-all duration-300">
-      <div className="flex items-center justify-between">
-
-        {/* Left: Greeting & Mobile Toggle */}
-        <div className="flex items-center gap-3 md:gap-4">
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-600 shadow-sm hover:text-blue-600 transition-colors cursor-pointer shrink-0"
-          >
-            <i className="fa-solid fa-bars"></i>
-          </button>
-
-          <div className="flex flex-col">
-            {/* Changed: Text size is smaller on mobile (text-lg) and larger on desktop (md:text-2xl) */}
-            <h1 className="text-lg md:text-2xl font-bold text-gray-900 flex items-center gap-1 md:gap-2">
-              <span>
-                Hello
-                {/* Changed: Name is hidden on small screens (mobile), shown on sm+ screens */}
-                <span className="hidden sm:inline">, {loading ? "..." : displayName}</span>!
-              </span>
-              <span className="inline-block hover:animate-wave cursor-default">👋</span>
-            </h1>
-            
-            {/* Changed: Subtext is hidden on mobile to save space, visible on medium screens+ */}
-            <p className="text-xs text-gray-500 font-medium hidden md:block">
-              Let's crush your goals today!
-            </p>
-          </div>
-        </div>
-
-        {/* Right: Actions */}
-        <div className="flex items-center gap-2 md:gap-5">
-
-          {/* Notifications */}
-          <button className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#FEEF75] hover:text-yellow-800 hover:border-yellow-200 transition-all relative cursor-pointer group shadow-sm shrink-0">
-            <i className="fa-regular fa-bell group-hover:animate-swing"></i>
-            <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-          </button>
-
-          {/* Profile */}
-          <div className="flex items-center gap-3 cursor-pointer group">
-            <div className="w-10 h-10 rounded-full bg-[#D9F17F] flex items-center justify-center text-green-900 font-bold border-2 border-white shadow-sm group-hover:scale-105 transition-transform shrink-0">
-              {loading ? "..." : initials}
-            </div>
-
-            <div className="hidden xl:block text-right">
-              <p className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                {loading ? "Loading..." : displayName}
-              </p>
-              <p className="text-[10px] text-gray-500">
-                {loading ? "" : planName}
-              </p>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-  );
-};
 
 
 // --- INTERNAL COMPONENT: SIDEBAR ---
@@ -132,8 +25,8 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
     { name: 'Profile', path: '/member/profile', icon: 'fa-user' },
     { name: 'Membership', path: '/member/membership', icon: 'fa-id-card' },
     { name: 'Plans', path: '/member/plans', icon: 'fa-layer-group' },
-    { name: 'Workouts', path: '/member/workout', icon: 'fa-dumbbell' },
-    { name: 'Diet Plans', path: '/member/dietPlans', icon: 'fa-utensils' },
+    { name: 'Workouts & Diet Plans', path: '/member/workout', icon: 'fa-dumbbell' },
+    /* { name: 'Diet Plans', path: '/member/dietPlans', icon: 'fa-utensils' }, */
     { name: 'Progress', path: '/member/progress', icon: 'fa-chart-line' },
     { name: 'Bookings', path: '/member/booking', icon: 'fa-calendar-check' },
     { name: 'Chat', path: '/member/chat', icon: 'fa-comments' },

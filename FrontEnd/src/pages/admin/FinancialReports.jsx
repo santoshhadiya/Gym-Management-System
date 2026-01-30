@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -36,20 +36,20 @@ const FinancialReports = () => {
   // --- STATE ---
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
+  
+  // Analytics Filter State
+  const [graphFilter, setGraphFilter] = useState("This Week");
+  
+  // Transaction History Filter State
+  const [historyFrom, setHistoryFrom] = useState("");
+  const [historyTo, setHistoryTo] = useState("");
+
+  // Stats State
   const [stats, setStats] = useState({
     totalRevenue: 0,
     monthlyRevenue: 0,
     transactionCount: 0,
-    growth: 0
   });
-
-  const [chartData, setChartData] = useState({
-    trend: { labels: [], data: [] },
-    plans: { labels: [], data: [] },
-    methods: { labels: [], data: [] }
-  });
-
-  const [filter, setFilter] = useState("This Year"); 
 
   // --- STYLE INJECTION ---
   useEffect(() => {
@@ -69,16 +69,18 @@ const FinancialReports = () => {
     };
   }, []);
 
-  // --- FETCH & PROCESS DATA ---
+  // --- FETCH DATA ---
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const res = await api.get("/payments/all");
-        const data = res.data; // Array of transactions
-
+        const data = res.data; 
         setTransactions(data);
-        processAnalytics(data);
+        
+        // Initial Global Stats (Independent of filters)
+        calculateGlobalStats(data);
+        
       } catch (error) {
         console.error("Financial Data Error:", error);
         toast.error("Failed to load financial reports");
@@ -90,47 +92,20 @@ const FinancialReports = () => {
     fetchData();
   }, []);
 
-  const processAnalytics = (data) => {
+  // --- CALCULATE GLOBAL STATS ---
+  const calculateGlobalStats = (data) => {
     const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    // 1. Summary Stats
     let totalRev = 0;
     let monthRev = 0;
-    
-    // 2. Chart Helpers
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const monthlyTrend = new Array(12).fill(0);
-    const planMap = {};
-    const methodMap = {};
 
     data.forEach(t => {
-       // Assuming backend sends date in 'YYYY-MM-DD'
        const tDate = new Date(t.date); 
        const amount = Number(t.amount);
-
-       // Filter: Only count 'Success' / 'Paid' (Backend returns 'Paid' status string based on logic)
        if (t.status === "Paid" || t.status === "Success") {
           totalRev += amount;
-
-          // Monthly Revenue
-          if (tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear) {
+          if (tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear()) {
              monthRev += amount;
           }
-
-          // Trend Data (Current Year)
-          if (tDate.getFullYear() === currentYear) {
-             monthlyTrend[tDate.getMonth()] += amount;
-          }
-
-          // Plan Performance
-          const planName = t.plan || "Unknown";
-          planMap[planName] = (planMap[planName] || 0) + amount;
-
-          // Payment Methods (Count)
-          const method = t.method || "Other";
-          methodMap[method] = (methodMap[method] || 0) + 1;
        }
     });
 
@@ -138,29 +113,155 @@ const FinancialReports = () => {
        totalRevenue: totalRev,
        monthlyRevenue: monthRev,
        transactionCount: data.length,
-       growth: 0 // Requires historical data comparison, leaving 0 or implementing logic if needed
-    });
-
-    setChartData({
-       trend: {
-          labels: months,
-          data: monthlyTrend
-       },
-       plans: {
-          labels: Object.keys(planMap),
-          data: Object.values(planMap)
-       },
-       methods: {
-          labels: Object.keys(methodMap),
-          data: Object.values(methodMap)
-       }
     });
   };
+
+  // --- DYNAMIC CHART DATA GENERATION ---
+  const chartData = useMemo(() => {
+    if (!transactions.length) return { trend: {}, plans: {}, methods: {} };
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+
+    let filteredTxns = [];
+    let trendLabels = [];
+    let trendData = [];
+
+    // 1. FILTER DATA & SETUP AXIS
+    if (graphFilter === "Today") {
+      trendLabels = ["6 AM", "10 AM", "2 PM", "6 PM", "10 PM"];
+      trendData = new Array(5).fill(0); // 4-hour blocks
+      
+      filteredTxns = transactions.filter(t => {
+        const d = new Date(t.date);
+        return d.getDate() === currentDate && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+
+      filteredTxns.forEach(t => {
+        if (t.status !== "Paid" && t.status !== "Success") return;
+        const h = new Date(t.date).getHours();
+        if (h >= 6 && h < 10) trendData[0] += t.amount;
+        else if (h >= 10 && h < 14) trendData[1] += t.amount;
+        else if (h >= 14 && h < 18) trendData[2] += t.amount;
+        else if (h >= 18 && h < 22) trendData[3] += t.amount;
+        else if (h >= 22 || h < 2) trendData[4] += t.amount; 
+      });
+
+    } else if (graphFilter === "This Week") {
+      trendLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      trendData = new Array(7).fill(0);
+      
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0,0,0,0);
+      
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23,59,59,999);
+
+      filteredTxns = transactions.filter(t => {
+        const d = new Date(t.date);
+        return d >= startOfWeek && d <= endOfWeek;
+      });
+
+      filteredTxns.forEach(t => {
+        if (t.status === "Paid" || t.status === "Success") {
+           trendData[new Date(t.date).getDay()] += t.amount;
+        }
+      });
+
+    } else if (graphFilter === "This Month") {
+      // Divide into 4 weeks roughly
+      trendLabels = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"];
+      trendData = new Array(5).fill(0);
+
+      filteredTxns = transactions.filter(t => {
+        const d = new Date(t.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+
+      filteredTxns.forEach(t => {
+        if (t.status === "Paid" || t.status === "Success") {
+           const d = new Date(t.date).getDate();
+           const week = Math.floor((d - 1) / 7);
+           trendData[week] += t.amount;
+        }
+      });
+
+    } else if (graphFilter === "This Year") {
+      trendLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      trendData = new Array(12).fill(0);
+
+      filteredTxns = transactions.filter(t => new Date(t.date).getFullYear() === currentYear);
+
+      filteredTxns.forEach(t => {
+        if (t.status === "Paid" || t.status === "Success") {
+           trendData[new Date(t.date).getMonth()] += t.amount;
+        }
+      });
+
+    } else if (graphFilter === "All Time") {
+      // Group by Year
+      const years = [...new Set(transactions.map(t => new Date(t.date).getFullYear()))].sort();
+      trendLabels = years;
+      trendData = new Array(years.length).fill(0);
+      
+      filteredTxns = transactions; // All data
+
+      filteredTxns.forEach(t => {
+        if (t.status === "Paid" || t.status === "Success") {
+           const idx = years.indexOf(new Date(t.date).getFullYear());
+           if(idx > -1) trendData[idx] += t.amount;
+        }
+      });
+    }
+
+    // 2. AGGREGATE FOR PIE/BAR (Using Filtered Data)
+    const planMap = {};
+    const methodMap = {};
+
+    filteredTxns.forEach(t => {
+       if (t.status === "Paid" || t.status === "Success") {
+          // Plan
+          const plan = t.plan || "Unknown";
+          planMap[plan] = (planMap[plan] || 0) + t.amount;
+          
+          // Method (Count)
+          const method = t.method || "Other";
+          methodMap[method] = (methodMap[method] || 0) + 1;
+       }
+    });
+
+    return {
+      trend: { labels: trendLabels, data: trendData },
+      plans: { labels: Object.keys(planMap), data: Object.values(planMap) },
+      methods: { labels: Object.keys(methodMap), data: Object.values(methodMap) }
+    };
+
+  }, [transactions, graphFilter]);
+
+
+  // --- TRANSACTION LIST FILTERING ---
+  const filteredTransactions = transactions.filter(t => {
+    if (!historyFrom && !historyTo) return true;
+    
+    const tDate = new Date(t.date).setHours(0,0,0,0);
+    const from = historyFrom ? new Date(historyFrom).setHours(0,0,0,0) : null;
+    const to = historyTo ? new Date(historyTo).setHours(0,0,0,0) : null;
+
+    if (from && to) return tDate >= from && tDate <= to;
+    if (from) return tDate >= from;
+    if (to) return tDate <= to;
+    return true;
+  });
+
 
   // --- HELPERS ---
   const handleExport = () => {
     const headers = ["ID,Date,Member,Plan,Amount,Method,Status"];
-    const rows = transactions.map(t => 
+    const rows = filteredTransactions.map(t => 
       `${t.id},${t.date},${t.member},${t.plan},${t.amount},${t.method},${t.status}`
     );
     const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
@@ -168,10 +269,9 @@ const FinancialReports = () => {
     link.href = encodeURI(csvContent);
     link.download = `financial_report_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
-    toast.success("Financial Report Downloaded");
+    toast.success("Filtered Data Downloaded");
   };
 
-  // --- CHART OPTIONS ---
   const commonOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -185,7 +285,6 @@ const FinancialReports = () => {
     plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 10 } } }
   };
 
-  // --- DATASETS BUILDERS ---
   const trendDataset = {
     labels: chartData.trend.labels,
     datasets: [{
@@ -231,113 +330,113 @@ const FinancialReports = () => {
     <div className="w-full bg-white rounded-3xl p-8 shadow-sm border border-gray-100 font-sans min-h-screen relative">
       <ToastContainer position="top-right" autoClose={4000} />
 
-      {/* HEADER & FILTERS */}
+      {/* HEADER & TOP STATS */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Financial Reports</h1>
-          <p className="text-sm text-gray-500 mt-1">Comprehensive overview of income and trends.</p>
+          <p className="text-sm text-gray-500 mt-1">Overview of your business performance.</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100">
-          <select 
-            value={filter} 
-            onChange={(e) => setFilter(e.target.value)}
-            className="px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] cursor-pointer"
-          >
-            <option>This Year</option>
-            {/* Additional filters can be implemented in processAnalytics if needed */}
-          </select>
-
-          <div className="h-6 w-px bg-gray-300 mx-1 hidden sm:block"></div>
-
-          <button 
-            onClick={handleExport}
-            className="px-5 py-2 bg-[#FEEF75] text-yellow-900 rounded-full text-xs font-bold shadow-sm hover:bg-yellow-300 transition-colors flex items-center gap-2"
-          >
-            <i className="fa-solid fa-download"></i> Export CSV
-          </button>
-        </div>
-      </div>
-
-      {/* SUMMARY DASHBOARD */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        
-        {/* Total Revenue */}
-        <div className="bg-[#f0fdf4] border border-green-100 p-5 rounded-3xl relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-3 opacity-10"><i className="fa-solid fa-sack-dollar text-6xl text-green-700"></i></div>
-           <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">Total Revenue</p>
-           <h2 className="text-3xl font-black text-gray-900">₹{stats.totalRevenue.toLocaleString()}</h2>
-           <p className="text-xs text-green-600 mt-2 font-bold">All time earnings</p>
-        </div>
-
-        {/* Monthly Income */}
-        <div className="bg-[#eff6ff] border border-blue-100 p-5 rounded-3xl relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-3 opacity-10"><i className="fa-solid fa-calendar-check text-6xl text-blue-700"></i></div>
-           <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">Monthly Income</p>
-           <h2 className="text-3xl font-black text-gray-900">₹{stats.monthlyRevenue.toLocaleString()}</h2>
-           <p className="text-xs text-blue-600 mt-2 font-bold">Current Month</p>
-        </div>
-
-        {/* Total Transactions (Replaced Pending Dues/Refunds) */}
-        <div className="bg-gray-50 border border-gray-200 p-5 rounded-3xl relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-3 opacity-10"><i className="fa-solid fa-receipt text-6xl text-gray-600"></i></div>
-           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Total Transactions</p>
-           <h2 className="text-3xl font-black text-gray-800">{stats.transactionCount}</h2>
-           <p className="text-xs text-gray-400 mt-2 font-bold">Processed Payments</p>
-        </div>
-
-      </div>
-
-      {/* CHARTS SECTION */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-        
-        {/* Revenue Trend */}
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm xl:col-span-2">
-           <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[#D9F17F]/30 flex items-center justify-center text-green-700">
-                 <i className="fa-solid fa-chart-line text-sm"></i>
-              </div>
-              Monthly Revenue Trend (Current Year)
-           </h3>
-           <div className="h-64">
-              <Line data={trendDataset} options={commonOptions} />
+        {/* Global Summary Cards (Static) */}
+        <div className="flex gap-4">
+           <div className="px-5 py-3 bg-[#f0fdf4] border border-green-100 rounded-2xl">
+              <p className="text-xs text-green-600 font-bold uppercase">Total Revenue</p>
+              <p className="text-xl font-black text-gray-900">₹{stats.totalRevenue.toLocaleString()}</p>
            </div>
-        </div>
-
-        {/* Payment Methods */}
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-           <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[#CDE7FE]/30 flex items-center justify-center text-blue-700">
-                 <i className="fa-solid fa-wallet text-sm"></i>
-              </div>
-              Payment Methods
-           </h3>
-           <div className="h-48">
-              <Doughnut data={methodDataset} options={pieOptions} />
-           </div>
-           <p className="text-xs text-gray-400 text-center mt-4">Distribution by transaction count</p>
-        </div>
-
-        {/* Plan Performance (Full Width on Mobile/Tablet) */}
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm xl:col-span-3">
-           <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[#FEEF75]/30 flex items-center justify-center text-yellow-800">
-                 <i className="fa-solid fa-layer-group text-sm"></i>
-              </div>
-              Revenue by Membership Plan
-           </h3>
-           <div className="h-56">
-              <Bar data={planDataset} options={commonOptions} />
+           <div className="px-5 py-3 bg-[#eff6ff] border border-blue-100 rounded-2xl">
+              <p className="text-xs text-blue-600 font-bold uppercase">This Month</p>
+              <p className="text-xl font-black text-gray-900">₹{stats.monthlyRevenue.toLocaleString()}</p>
            </div>
         </div>
       </div>
 
-      {/* AUDIT TRAIL / RECENT TRANSACTIONS */}
-      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
-         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-            <h3 className="font-bold text-gray-900 text-lg">Transaction History</h3>
-            <span className="text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">Latest</span>
+      {/* CHARTS SECTION WITH FILTER */}
+      <div className="mb-8">
+         <div className="flex justify-between items-center mb-6">
+            <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+               <i className="fa-solid fa-chart-pie text-[#CDE7FE]"></i> Analytics
+            </h3>
+            <div className="bg-gray-50 p-1 rounded-xl border border-gray-100 flex">
+               {["Today", "This Week", "This Month", "This Year", "All Time"].map(period => (
+                  <button
+                     key={period}
+                     onClick={() => setGraphFilter(period)}
+                     className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${graphFilter === period ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
+                  >
+                     {period}
+                  </button>
+               ))}
+            </div>
          </div>
+
+         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {/* Revenue Trend */}
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm xl:col-span-2">
+               <h4 className="font-bold text-gray-700 mb-4 text-sm">Revenue Trend ({graphFilter})</h4>
+               <div className="h-64">
+                  <Line data={trendDataset} options={commonOptions} />
+               </div>
+            </div>
+
+            {/* Payment Methods */}
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+               <h4 className="font-bold text-gray-700 mb-4 text-sm">Payment Methods</h4>
+               <div className="h-48">
+                  {chartData.methods.data.length > 0 ? (
+                     <Doughnut data={methodDataset} options={pieOptions} />
+                  ) : (
+                     <div className="h-full flex items-center justify-center text-gray-400 text-xs">No data for this period</div>
+                  )}
+               </div>
+            </div>
+
+            {/* Plan Performance */}
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm xl:col-span-3">
+               <h4 className="font-bold text-gray-700 mb-4 text-sm">Revenue by Plan ({graphFilter})</h4>
+               <div className="h-56">
+                  {chartData.plans.data.length > 0 ? (
+                     <Bar data={planDataset} options={commonOptions} />
+                  ) : (
+                     <div className="h-full flex items-center justify-center text-gray-400 text-xs">No data for this period</div>
+                  )}
+               </div>
+            </div>
+         </div>
+      </div>
+
+      {/* TRANSACTION HISTORY WITH DATE FILTERS */}
+      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+         <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h3 className="font-bold text-gray-900 text-lg">Transaction History</h3>
+            
+            <div className="flex flex-wrap items-center gap-2">
+               <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
+                  <span className="text-xs font-bold text-gray-500">From</span>
+                  <input 
+                     type="date" 
+                     value={historyFrom}
+                     onChange={(e) => setHistoryFrom(e.target.value)}
+                     className="bg-transparent text-xs font-bold text-gray-700 outline-none"
+                  />
+               </div>
+               <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
+                  <span className="text-xs font-bold text-gray-500">To</span>
+                  <input 
+                     type="date" 
+                     value={historyTo}
+                     onChange={(e) => setHistoryTo(e.target.value)}
+                     className="bg-transparent text-xs font-bold text-gray-700 outline-none"
+                  />
+               </div>
+               <button 
+                  onClick={handleExport}
+                  className="px-4 py-2 bg-[#FEEF75] text-yellow-900 rounded-xl text-xs font-bold hover:bg-yellow-300 transition-colors"
+               >
+                  <i className="fa-solid fa-download mr-1"></i> Export
+               </button>
+            </div>
+         </div>
+
          <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-gray-500">
                <thead className="bg-gray-50 text-gray-900 font-semibold uppercase text-xs">
@@ -352,7 +451,7 @@ const FinancialReports = () => {
                   </tr>
                </thead>
                <tbody className="divide-y divide-gray-100">
-                  {transactions.map((t) => (
+                  {filteredTransactions.length > 0 ? filteredTransactions.map((t) => (
                      <tr key={t._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 font-mono text-xs">{t.id}</td>
                         <td className="px-6 py-4">{t.date}</td>
@@ -368,10 +467,11 @@ const FinancialReports = () => {
                            </span>
                         </td>
                      </tr>
-                  ))}
-                  {transactions.length === 0 && (
+                  )) : (
                      <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center text-gray-400">No transactions found.</td>
+                        <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
+                           No transactions found for the selected dates.
+                        </td>
                      </tr>
                   )}
                </tbody>

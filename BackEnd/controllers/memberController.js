@@ -181,7 +181,8 @@ exports.getAllMembersAll = async (req, res) => {
 exports.getAllMembersAllForManageMember = async (req, res) => {
   try {
     const members = await Member.find()
-      .populate("user", "name email phone status createdAt")
+      // [UPDATED] Populate profileImage here
+      .populate("user", "name email phone status createdAt profileImage")
       .populate("assignedTrainer", "name email")
       .populate("plan", "name price");
 
@@ -202,6 +203,7 @@ exports.getAllMembersAllForManageMember = async (req, res) => {
           _id: m._id,
           name: m.user.name,
           email: m.user.email,
+          image: m.user.profileImage, 
           phone: m.user.phone,
           status: m.user.status,
           plan: m.plan ? { _id: m.plan._id, name: m.plan.name, price: m.plan.price } : null,

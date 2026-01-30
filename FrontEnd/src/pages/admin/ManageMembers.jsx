@@ -3,7 +3,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { useGlobalContext } from "../../context/GlobalContext";
 
 const ManageMember = () => {
-  const { api } = useGlobalContext();
+  const { api, BACKEND_URL } = useGlobalContext();
   const [members, setMembers] = useState([]);
   const [plans, setPlans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,6 +66,7 @@ const ManageMember = () => {
     fetchData();
   }, []);
 
+  // --- HELPERS ---
   const getStatusColor = (status) => {
     if (status === "Inactive") return "bg-gray-100 text-gray-500 border-gray-200";
     return "bg-[#D9F17F] text-green-800 border-green-200";
@@ -74,6 +75,12 @@ const ManageMember = () => {
   const getPlanName = (planData) => {
     if (!planData) return "No Plan";
     return typeof planData === "object" ? planData.name : planData;
+  };
+
+  const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith("http")) return path;
+    return `${BACKEND_URL}/${path}`;
   };
 
   const handleExportCSV = () => {
@@ -203,12 +210,12 @@ const ManageMember = () => {
                   />
                   <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
                 </div>
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-4 py-3 rounded-2xl bg-white border border-gray-100 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 font-medium">
+                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-4 py-3 rounded-2xl bg-white border border-gray-100 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 font-medium cursor-pointer">
                   <option value="All">All Statuses</option>
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                 </select>
-                <select value={filterPlan} onChange={(e) => setFilterPlan(e.target.value)} className="px-4 py-3 rounded-2xl bg-white border border-gray-100 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 font-medium">
+                <select value={filterPlan} onChange={(e) => setFilterPlan(e.target.value)} className="px-4 py-3 rounded-2xl bg-white border border-gray-100 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 font-medium cursor-pointer">
                   <option value="All">All Membership Plans</option>
                   {plans.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
                 </select>
@@ -228,12 +235,18 @@ const ManageMember = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                      {filteredMembers.map((member) => (
+                      {filteredMembers.map((member) => {
+                        const imageUrl = getImageUrl(member.image);
+                        return (
                         <tr key={member._id} className="hover:bg-blue-50/30 transition-all duration-200 group">
                           <td className="px-8 py-5">
                             <div className="flex items-center gap-4">
-                              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 font-bold shadow-sm">
-                                {member.name.slice(0, 2).toUpperCase()}
+                              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 font-bold shadow-sm overflow-hidden relative">
+                                {imageUrl ? (
+                                  <img src={imageUrl} alt={member.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  member.name.slice(0, 2).toUpperCase()
+                                )}
                               </div>
                               <div>
                                 <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{member.name}</div>
@@ -266,7 +279,7 @@ const ManageMember = () => {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      )})}
                     </tbody>
                   </table>
                   {filteredMembers.length === 0 && (
@@ -281,111 +294,101 @@ const ManageMember = () => {
           )}
 
           {viewState === "form" && (
-            <div className="max-w-4xl mx-auto animate-fadeIn">
+            <div className="max-w-3xl mx-auto animate-fadeIn">
               <button onClick={() => setViewState("list")} className="mb-8 px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-900 flex items-center gap-2 group transition-all">
                 <i className="fa-solid fa-arrow-left-long group-hover:-translate-x-1 transition-transform"></i> Return to List
               </button>
               
-              <form onSubmit={handleSaveMember} className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-gray-100 shadow-2xl shadow-gray-100">
-                <div className="mb-10 text-center md:text-left">
-                  <h2 className="text-3xl font-black text-gray-900">{isEditing ? "Update Profile" : "Register Member"}</h2>
-                  <p className="text-gray-400 mt-2 text-sm font-medium">Fill in the details below to manage your gym community member.</p>
+              <div className="bg-white p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100/50">
+                <div className="mb-8 border-b border-gray-100 pb-6">
+                  <h2 className="text-2xl font-black text-gray-900">{isEditing ? "Update Profile" : "Register Member"}</h2>
+                  <p className="text-gray-400 mt-1 text-sm font-medium">Manage member details and access.</p>
                 </div>
 
-                <div className="space-y-10">
-                  {/* Section: Personal Info */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
-                       <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] mb-4">Personal Details</h3>
+                <form onSubmit={handleSaveMember} className="space-y-6">
+                  
+                  {/* Personal */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2">Full Name</label>
+                        <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white" placeholder="e.g. John Doe" />
                     </div>
-                    
-                    <div className="relative">
-                      <i className="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-                      <input required placeholder="Full Name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium placeholder:text-gray-400" />
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2">Email Address</label>
+                        <input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white" placeholder="john@example.com" />
                     </div>
-
-                    <div className="relative">
-                      <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-                      <input required type="email" placeholder="Email Address" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium placeholder:text-gray-400" />
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2">Phone Number</label>
+                        <input required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white" placeholder="+91 98765 43210" />
                     </div>
-
-                    <div className="relative">
-                      <i className="fa-solid fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-                      <input required placeholder="Phone Number" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium placeholder:text-gray-400" />
-                    </div>
-
                     {!isEditing && (
-                      <div className="relative">
-                        <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-                        <input required type="password" placeholder="Create Password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-blue-50/50 border-2 border-dashed border-blue-100 focus:ring-2 focus:ring-blue-200 focus:bg-white transition-all font-medium" />
+                      <div>
+                          <label className="block text-xs font-bold text-gray-500 mb-2">Create Password</label>
+                          <input required type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white" placeholder="••••••••" />
                       </div>
                     )}
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="relative">
-                           <i className="fa-solid fa-venus-mars absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-                           <select value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium appearance-none">
-                              <option value="Male">Male</option>
-                              <option value="Female">Female</option>
-                              <option value="Other">Other</option>
-                           </select>
-                        </div>
-                        <div className="relative">
-                          <i className="fa-solid fa-calendar-day absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-                          <input type="number" placeholder="Age" value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium" />
-                        </div>
-                    </div>
                   </div>
 
-                  {/* Section: Physical Stats */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
-                       <h3 className="text-[10px] font-black text-green-500 uppercase tracking-[0.2em] mb-4">Physical Metrics</h3>
-                    </div>
-                    <div className="relative">
-                      <i className="fa-solid fa-ruler-vertical absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-                      <input type="number" placeholder="Height (cm)" value={formData.height} onChange={e => setFormData({ ...formData, height: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium" />
-                    </div>
-                    <div className="relative">
-                      <i className="fa-solid fa-weight-scale absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-                      <input type="number" placeholder="Weight (kg)" value={formData.currentWeight} onChange={e => setFormData({ ...formData, currentWeight: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium" />
-                    </div>
+                  {/* Demographics */}
+                  <div className="grid grid-cols-2 gap-5 pt-2">
+                     <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2">Gender</label>
+                        <select value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white cursor-pointer">
+                           <option value="Male">Male</option>
+                           <option value="Female">Female</option>
+                           <option value="Other">Other</option>
+                        </select>
+                     </div>
+                     <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2">Age</label>
+                        <input type="number" value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white" placeholder="25" />
+                     </div>
                   </div>
 
-                  {/* Section: Membership */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
-                       <h3 className="text-[10px] font-black text-purple-500 uppercase tracking-[0.2em] mb-4">Membership & Goals</h3>
-                    </div>
-                    <div className="relative">
-                      <i className="fa-solid fa-gem absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-                      <select required value={formData.plan} onChange={e => setFormData({ ...formData, plan: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium appearance-none">
-                        <option value="">Choose a Plan</option>
-                        {plans.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
-                      </select>
-                    </div>
-                    <div className="relative">
-                      <i className="fa-solid fa-bullseye absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-                      <select value={formData.fitnessGoal} onChange={e => setFormData({ ...formData, fitnessGoal: e.target.value })} className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-blue-200 transition-all font-medium appearance-none">
-                         <option value="">Select Primary Goal</option>
-                         <option>Weight Loss</option>
-                         <option>Muscle Gain</option>
-                         <option>General Fitness</option>
-                         <option>Endurance</option>
-                      </select>
-                    </div>
+                  {/* Physical */}
+                  <div className="grid grid-cols-2 gap-5">
+                     <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2">Height (cm)</label>
+                        <input type="number" value={formData.height} onChange={e => setFormData({ ...formData, height: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white" placeholder="175" />
+                     </div>
+                     <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2">Weight (kg)</label>
+                        <input type="number" value={formData.currentWeight} onChange={e => setFormData({ ...formData, currentWeight: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white" placeholder="70" />
+                     </div>
                   </div>
-                </div>
 
-                <div className="mt-12 flex flex-col md:flex-row justify-end gap-4">
-                  <button type="button" onClick={() => setViewState("list")} className="px-8 py-3 rounded-2xl font-bold text-gray-400 hover:text-gray-900 transition-all order-2 md:order-1">
-                    Discard Changes
-                  </button>
-                  <button type="submit" className="px-12 py-3 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 hover:scale-[1.02] transition-all shadow-xl shadow-blue-100 order-1 md:order-2">
-                    {isEditing ? "Save Profile" : "Register Now"}
-                  </button>
-                </div>
-              </form>
+                  {/* Plan */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                     <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2">Assign Plan</label>
+                        <select required value={formData.plan} onChange={e => setFormData({ ...formData, plan: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white cursor-pointer">
+                           <option value="">Select Membership</option>
+                           {plans.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
+                        </select>
+                     </div>
+                     <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2">Primary Goal</label>
+                        <select value={formData.fitnessGoal} onChange={e => setFormData({ ...formData, fitnessGoal: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white cursor-pointer">
+                           <option value="">Select Goal</option>
+                           <option>Weight Loss</option>
+                           <option>Muscle Gain</option>
+                           <option>General Fitness</option>
+                           <option>Endurance</option>
+                        </select>
+                     </div>
+                  </div>
+
+                  <div className="pt-6 flex justify-end gap-3">
+                    <button type="button" onClick={() => setViewState("list")} className="px-6 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-bold hover:bg-gray-50 transition-all">
+                      Cancel
+                    </button>
+                    <button type="submit" className="px-8 py-2.5 rounded-xl bg-[#FEEF75] text-yellow-900 text-sm font-bold hover:bg-yellow-300 shadow-sm transition-all">
+                      {isEditing ? "Update Member" : "Register Member"}
+                    </button>
+                  </div>
+
+                </form>
+              </div>
             </div>
           )}
 
@@ -401,8 +404,12 @@ const ManageMember = () => {
                 <div className="lg:col-span-4 space-y-6">
                   <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100 text-center">
                     <div className="relative inline-block mb-6">
-                       <div className="w-28 h-28 bg-gradient-to-tr from-blue-500 to-blue-300 rounded-[2rem] mx-auto flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-blue-200">
-                        {selectedMember.name.slice(0, 2).toUpperCase()}
+                       <div className="w-28 h-28 bg-gradient-to-tr from-blue-500 to-blue-300 rounded-[2rem] mx-auto flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-blue-200 overflow-hidden">
+                        {getImageUrl(selectedMember.image) ? (
+                           <img src={getImageUrl(selectedMember.image)} alt={selectedMember.name} className="w-full h-full object-cover" />
+                        ) : (
+                           selectedMember.name.slice(0, 2).toUpperCase()
+                        )}
                       </div>
                       <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center ${selectedMember.status === 'Active' ? 'bg-green-400' : 'bg-gray-300'}`}>
                          <i className={`fa-solid ${selectedMember.status === 'Active' ? 'fa-check' : 'fa-xmark'} text-[10px] text-white`}></i>

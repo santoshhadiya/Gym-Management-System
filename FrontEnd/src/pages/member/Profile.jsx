@@ -90,11 +90,9 @@ const Profile = () => {
             setProfile(formattedUser);
             setTempData(formattedUser);
          } catch (error) {
-<<<<<<< HEAD
-            /* console.error("Error fetching profile:", error); */
-=======
+
             console.error("Error fetching profile:", error);
->>>>>>> 2e68915be25c33e4e05d969772bab352060bb9a0
+
             // toast.error("Failed to load profile data");
          } finally {
             setLoading(false);
@@ -222,13 +220,11 @@ const Profile = () => {
             <div className="relative flex flex-col md:flex-row items-center md:items-end gap-6 mt-12 px-2 md:px-4 text-center md:text-left">
 
                {/* Avatar */}
-<<<<<<< HEAD
-               <div className="relative group mx-auto md:mx-0">
-                  <div className="w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-200">
-=======
+
+
                <div className="relative group">
                   <div className={`w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-200 ${isEditing ? 'cursor-pointer hover:opacity-90' : ''}`} onClick={triggerFileInput}>
->>>>>>> 2e68915be25c33e4e05d969772bab352060bb9a0
+
                      <img src={tempData.profileImage || profile.profileImage} alt="Profile" className="w-full h-full object-cover" />
                   </div>
                   
