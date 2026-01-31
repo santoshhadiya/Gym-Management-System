@@ -14,6 +14,7 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
   const { theme, toggleTheme, colors } = useTheme(); 
   
   const navigate = useNavigate();
+  
   const { pathname } = useLocation();
 
   const signOutMember = () => {
