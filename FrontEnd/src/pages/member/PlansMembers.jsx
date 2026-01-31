@@ -1,46 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useGlobalContext } from '../../context/GlobalContext';
+import { useTheme } from '../../context/ThemeContext'; // Import Theme Context
 
 const PlansMembers = () => {
   const { api } = useGlobalContext();
+  const { colors, theme } = useTheme(); // Consume Theme
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState([]);
   const [expandedPlan, setExpandedPlan] = useState(null);
 
-  // Inject Font Awesome
   useEffect(() => {
-    const link = document.createElement("link");
-    link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
-
-    return () => {
-      document.head.removeChild(link);
+    const fetchPlans = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/plans");
+        setPlans(res.data);
+      } catch (error) {
+        console.error("Error fetching plans:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-  }, []);
-
-  useEffect(() => {
     fetchPlans();
-  }, []);
-
-  const fetchPlans = async () => {
-    try {
-      setLoading(true);
-      // Fetch active plans only (public endpoint usually filters by status=Active)
-      const res = await api.get("/plans");
-      setPlans(res.data);
-    } catch (error) {
-      console.error("Error fetching plans:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [api]);
 
   const handleSubscribe = (plan) => {
-    // Navigate to payment page with plan details
     navigate('/member/payment', { state: { plan } });
   };
 
@@ -48,29 +35,49 @@ const PlansMembers = () => {
     setExpandedPlan(expandedPlan === id ? null : id);
   };
 
-  // Helper to get card styles based on plan name/price (Mock logic for visual variety)
+  // Helper to get visual styles
   const getPlanStyle = (index) => {
     const styles = [
-      { border: "border-gray-100", bg: "bg-white", icon: "fa-dumbbell", iconColor: "text-blue-500", iconBg: "bg-blue-50" },
-      { border: "border-[#FEEF75]", bg: "bg-[#fffcf0]", icon: "fa-fire", iconColor: "text-yellow-700", iconBg: "bg-[#FEEF75]", tag: "POPULAR" },
-      { border: "border-[#D9F17F]", bg: "bg-[#f4fbf6]", icon: "fa-crown", iconColor: "text-green-800", iconBg: "bg-[#D9F17F]", tag: "BEST VALUE" },
+      { 
+         borderColor: theme === 'dark' ? '#374151' : '#f3f4f6', // gray-100
+         bgLight: 'bg-white', 
+         icon: "fa-dumbbell", 
+         iconColor: "text-blue-500", 
+         iconBg: theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-50' 
+      },
+      { 
+         borderColor: '#FEEF75', 
+         bgLight: 'bg-[#fffcf0]', 
+         icon: "fa-fire", 
+         iconColor: "text-yellow-700", 
+         iconBg: theme === 'dark' ? 'bg-yellow-900/30' : 'bg-[#FEEF75]', 
+         tag: "POPULAR" 
+      },
+      { 
+         borderColor: '#D9F17F', 
+         bgLight: 'bg-[#f4fbf6]', 
+         icon: "fa-crown", 
+         iconColor: "text-green-800", 
+         iconBg: theme === 'dark' ? 'bg-green-900/30' : 'bg-[#D9F17F]', 
+         tag: "BEST VALUE" 
+      },
     ];
     return styles[index % styles.length];
   };
 
   if (loading) {
     return (
-      <div className="w-full h-96 flex items-center justify-center">
-        <i className="fa-solid fa-circle-notch fa-spin text-4xl text-[#CDE7FE]"></i>
+      <div className="w-full h-96 flex items-center justify-center" style={{ color: colors.textMuted }}>
+        <i className="fa-solid fa-circle-notch fa-spin text-4xl" style={{ color: colors.secondary }}></i>
       </div>
     );
   }
 
   return (
-    <div className="font-sans text-gray-800 pb-20">
+    <div className="font-sans pb-20 transition-colors duration-300" style={{ color: colors.text }}>
 
-      {/* 1. HEADER SECTION */}
-       <section className="relative bg-gray-900 py-20 mb-10 overflow-hidden rounded-4xl">
+      {/* 1. HEADER SECTION - Always Dark for impact */}
+      <section className="relative bg-gray-900 py-20 mb-10 overflow-hidden rounded-4xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#D9F17F] rounded-full filter blur-[100px] opacity-10 translate-x-1/2 -translate-y-1/2"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#CDE7FE] rounded-full filter blur-[100px] opacity-10 -translate-x-1/2 translate-y-1/2"></div>
 
@@ -89,9 +96,12 @@ const PlansMembers = () => {
 
       {/* 2. PLANS GRID */}
       {plans.length === 0 ? (
-        <div className="text-center py-20 bg-gray-50 rounded-[3rem] border border-dashed border-gray-200">
-          <i className="fa-solid fa-box-open text-4xl text-gray-300 mb-3 block"></i>
-          <p className="text-gray-400">No plans available at the moment.</p>
+        <div 
+           className="text-center py-20 rounded-[3rem] border border-dashed"
+           style={{ backgroundColor: colors.card, borderColor: colors.border }}
+        >
+          <i className="fa-solid fa-box-open text-4xl mb-3 block" style={{ color: colors.textMuted }}></i>
+          <p style={{ color: colors.textMuted }}>No plans available at the moment.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -103,7 +113,11 @@ const PlansMembers = () => {
             return (
               <div
                 key={plan._id}
-                className={`relative p-8 rounded-[2.5rem] border-2 ${style.border} ${style.bg} hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col`}
+                className={`relative p-8 rounded-[2.5rem] border-2 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col ${theme === 'light' ? style.bgLight : ''}`}
+                style={{ 
+                   backgroundColor: theme === 'dark' ? colors.card : undefined,
+                   borderColor: style.borderColor
+                }}
               >
                 {/* Tag */}
                 {style.tag && (
@@ -114,16 +128,16 @@ const PlansMembers = () => {
                   </div>
                 )}
 
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-6 ${style.iconBg} ${style.iconColor} shadow-inner`}>
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner ${style.iconColor} ${style.iconBg}`}>
                   <i className={`fa-solid ${style.icon}`}></i>
                 </div>
 
-                <h3 className="text-2xl font-black text-gray-900 mb-2">{plan.name}</h3>
+                <h3 className="text-2xl font-black mb-2" style={{ color: colors.text }}>{plan.name}</h3>
 
                 {/* Price */}
                 <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-4xl font-black text-gray-900">₹{plan.price.toLocaleString()}</span>
-                  <span className="text-sm text-gray-500 font-medium">/ {plan.durationLabel}</span>
+                  <span className="text-4xl font-black" style={{ color: colors.text }}>₹{plan.price.toLocaleString()}</span>
+                  <span className="text-sm font-medium" style={{ color: colors.textMuted }}>/ {plan.durationLabel}</span>
                   {plan.originalPrice > plan.price && (
                     <span className="text-xs text-red-400 line-through font-bold">₹{plan.originalPrice}</span>
                   )}
@@ -132,8 +146,9 @@ const PlansMembers = () => {
                 {/* Features */}
                 <ul className="space-y-4 mb-8 flex-1">
                   {featuresToShow.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-gray-700 font-medium">
-                      <div className="mt-0.5 w-5 h-5 rounded-full bg-white border border-green-200 flex items-center justify-center shrink-0 text-green-500 text-xs">
+                    <li key={i} className="flex items-start gap-3 text-sm font-medium" style={{ color: theme === 'dark' ? colors.textMuted : '#374151' }}>
+                      <div className="mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center shrink-0 text-xs"
+                           style={{ backgroundColor: colors.background, borderColor: colors.primary, color: 'green' }}>
                         <i className="fa-solid fa-check"></i>
                       </div>
                       <span className="leading-snug">{feature}</span>
@@ -143,7 +158,8 @@ const PlansMembers = () => {
                   {plan.features.length > 4 && (
                     <button
                       onClick={() => toggleFeatures(plan._id)}
-                      className="text-xs font-bold text-blue-600 hover:underline mt-2 flex items-center gap-1"
+                      className="text-xs font-bold hover:underline mt-2 flex items-center gap-1"
+                      style={{ color: colors.secondary }}
                     >
                       {isFeaturesExpanded ? "Show Less" : `+ ${plan.features.length - 4} More Features`}
                     </button>
@@ -153,7 +169,12 @@ const PlansMembers = () => {
                 {/* CTA */}
                 <button
                   onClick={() => handleSubscribe(plan)}
-                  className={`w-full py-4 rounded-xl font-bold text-sm shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${style.tag ? 'bg-gray-900 text-white hover:bg-gray-800' : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-900 hover:text-gray-900'}`}
+                  className={`w-full py-4 rounded-xl font-bold text-sm shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${style.tag ? 'bg-gray-900 text-white hover:bg-gray-800' : 'border-2'}`}
+                  style={!style.tag ? { 
+                      backgroundColor: colors.background, 
+                      borderColor: colors.border, 
+                      color: colors.text 
+                  } : {}}
                 >
                   Choose Plan <i className="fa-solid fa-arrow-right"></i>
                 </button>
@@ -164,8 +185,8 @@ const PlansMembers = () => {
       )}
 
       {/* 3. FAQ SECTION */}
-      <section className="mt-24 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-black text-center text-gray-900 mb-8">Frequently Asked Questions</h2>
+      <section className="mt-24 max-w-4xl mx-auto px-4">
+        <h2 className="text-2xl font-black text-center mb-8" style={{ color: colors.text }}>Frequently Asked Questions</h2>
         <div className="grid md:grid-cols-2 gap-6">
           {[
             { q: "Can I upgrade later?", a: "Yes, you can upgrade your plan at any time. The remaining value will be adjusted." },
@@ -173,11 +194,18 @@ const PlansMembers = () => {
             { q: "Can I freeze my membership?", a: "Yearly memberships allow freezing for up to 30 days for medical reasons." },
             { q: "Are there joining fees?", a: "No, the price you see is the price you pay. No hidden charges." },
           ].map((faq, idx) => (
-            <div key={idx} className="bg-gray-50 p-6 rounded-2xl border border-gray-100 hover:bg-white hover:shadow-sm transition-all">
-              <h4 className="font-bold text-gray-900 mb-2 flex items-start gap-3">
-                <i className="fa-solid fa-circle-question text-[#CDE7FE] mt-1"></i> {faq.q}
+            <div 
+               key={idx} 
+               className="p-6 rounded-2xl border hover:shadow-sm transition-all"
+               style={{ 
+                  backgroundColor: colors.card, 
+                  borderColor: colors.border 
+               }}
+            >
+              <h4 className="font-bold mb-2 flex items-start gap-3" style={{ color: colors.text }}>
+                <i className="fa-solid fa-circle-question mt-1" style={{ color: colors.secondary }}></i> {faq.q}
               </h4>
-              <p className="text-sm text-gray-600 pl-7 leading-relaxed">{faq.a}</p>
+              <p className="text-sm pl-7 leading-relaxed" style={{ color: colors.textMuted }}>{faq.a}</p>
             </div>
           ))}
         </div>

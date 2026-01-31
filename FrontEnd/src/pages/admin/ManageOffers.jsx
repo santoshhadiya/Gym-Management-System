@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-hot-toast'; // Switched to react-hot-toast
 import { useGlobalContext } from "../../context/GlobalContext";
+import { useTheme } from "../../context/ThemeContext"; // Import useTheme
 
 const ManageOffers = () => {
-  // Use local mock API directly to avoid context errors in preview
-  const { api } = useGlobalContext()
-
+  const { api } = useGlobalContext();
+  const { colors, theme } = useTheme(); // Access custom colors and current theme
 
   // --- STATE ---
   const [offers, setOffers] = useState([]);
@@ -23,33 +23,25 @@ const ManageOffers = () => {
 
   // --- STYLE INJECTION ---
   useEffect(() => {
-    const linkToast = document.createElement("link");
-    linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
-    linkToast.rel = "stylesheet";
-    document.head.appendChild(linkToast);
-
+    // Note: react-toastify link removed as it is no longer used
     const linkFA = document.createElement("link");
     linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
     linkFA.rel = "stylesheet";
     document.head.appendChild(linkFA);
 
     return () => {
-      document.head.removeChild(linkToast);
       document.head.removeChild(linkFA);
     };
   }, []);
 
-
-
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
-
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = String(date.getFullYear()).slice();
-
     return `${day}-${month}-${year}`;
   };
+
   // --- FETCH DATA ---
   const fetchData = async () => {
     try {
@@ -86,28 +78,21 @@ const ManageOffers = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-
     const { startDate, endDate } = formData;
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // ❌ End date before start date
     if (end < start) {
       toast.error("End date cannot be before start date");
       return;
     }
-
-    //  End date before today
     if (end < today) {
       toast.error("End date cannot be in the past");
       return;
     }
 
-    // Continue if valid
     try {
       await api.post("/offers", formData);
       toast.success("Offer created successfully");
@@ -118,35 +103,40 @@ const ManageOffers = () => {
     }
   };
 
-
   const deactivateOffer = async (planId) => {
     if (!window.confirm("Are you sure you want to deactivate this offer?")) return;
-
     try {
-
       await api.put(`/offers/${planId}/deactivate`);
       toast.success("Offer Deactivated");
-      fetchData(); // Refresh list
+      fetchData();
     } catch (error) {
       toast.error("Failed to deactivate");
     }
   };
 
   return (
-    <div className="w-full bg-white rounded-3xl p-8 shadow-sm border border-gray-100 font-sans min-h-screen relative">
-      <ToastContainer position="top-right" autoClose={3000} />
+    <div 
+      className="w-full rounded-3xl p-8 shadow-sm border font-sans min-h-screen relative transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.background, 
+        borderColor: colors.border,
+        color: colors.text 
+      }}
+    >
+      {/* Toaster is managed globally in ThemeContext.jsx */}
 
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Manage Offers</h1>
-          <p className="text-sm text-gray-500 mt-1">Create and manage discounts on membership plans.</p>
+          <h1 className="text-2xl font-bold" style={{ color: colors.text }}>Manage Offers</h1>
+          <p className="text-sm mt-1" style={{ color: colors.textMuted }}>Create and manage discounts on membership plans.</p>
         </div>
 
         {viewState === 'list' && (
           <button
             onClick={handleOpenForm}
-            className="px-5 py-2.5 bg-[#D9F17F] text-green-900 rounded-full text-xs font-bold shadow-sm hover:bg-green-300 transition-colors flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2.5 rounded-full text-xs font-bold shadow-sm transition-colors flex items-center gap-2 cursor-pointer"
+            style={{ backgroundColor: colors.primary, color: '#111827' }} // Lime Green with dark text
           >
             <i className="fa-solid fa-plus"></i> Create Offer
           </button>
@@ -154,7 +144,8 @@ const ManageOffers = () => {
         {viewState === 'form' && (
           <button
             onClick={() => setViewState("list")}
-            className="px-5 py-2.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold hover:bg-gray-200 transition-colors cursor-pointer"
+            className="px-5 py-2.5 rounded-full text-xs font-bold transition-colors cursor-pointer border"
+            style={{ backgroundColor: colors.card, color: colors.text, borderColor: colors.border }}
           >
             Back to List
           </button>
@@ -165,35 +156,48 @@ const ManageOffers = () => {
       {viewState === 'list' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {offers.length > 0 ? offers.map(offer => (
-            <div key={offer._id} className={`relative bg-white border ${offer.isActive ? 'border-[#FEEF75]' : 'border-gray-200 opacity-70'} rounded-3xl p-6 shadow-sm`}>
+            <div 
+              key={offer._id} 
+              className={`relative border rounded-3xl p-6 shadow-sm transition-opacity ${!offer.isActive && 'opacity-70'}`}
+              style={{ 
+                backgroundColor: colors.card, 
+                borderColor: offer.isActive ? colors.accent : colors.border 
+              }}
+            >
               <div className="flex justify-between items-start mb-4">
-                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${offer.isActive ? 'bg-[#FEEF75] text-yellow-900 border-yellow-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                <span 
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold border"
+                  style={{ 
+                    backgroundColor: offer.isActive ? colors.accent : colors.background, 
+                    color: offer.isActive ? (theme === 'dark' ? '#fff' : '#854d0e') : colors.textMuted,
+                    borderColor: offer.isActive ? colors.accent : colors.border
+                  }}
+                >
                   {offer.isActive ? "Active" : "Inactive"}
                 </span>
                 {offer.isActive && (
                   <button onClick={() => deactivateOffer(offer.plan._id)} className="text-red-500 hover:text-red-700 text-xs font-bold underline">
                     Deactivate
-
                   </button>
                 )}
               </div>
 
-              <h3 className="font-bold text-gray-900 text-lg mb-1">{offer.plan.name || "Unknown Plan"}</h3>
+              <h3 className="font-bold text-lg mb-1" style={{ color: colors.text }}>{offer.plan.name || "Unknown Plan"}</h3>
 
               <div className="flex items-baseline gap-2 mb-4">
                 <span className="text-3xl font-black text-red-500">
                   {offer.discountType === 'percentage' ? `${offer.discountValue}%` : `₹${offer.discountValue}`}
                 </span>
-                <span className="text-sm font-bold text-gray-400">OFF</span>
+                <span className="text-sm font-bold" style={{ color: colors.textMuted }}>OFF</span>
               </div>
 
-              <div className="text-xs text-gray-500 space-y-1">
-                <p><i className="fa-regular fa-calendar mr-2"></i> Start: <span className="font-medium text-gray-800">{formatDate(offer.startDate)}</span></p>
-                <p><i className="fa-regular fa-calendar-check mr-2"></i> End: <span className="font-medium text-gray-800">{formatDate(offer.endDate)}</span></p>
+              <div className="text-xs space-y-1" style={{ color: colors.textMuted }}>
+                <p><i className="fa-regular fa-calendar mr-2"></i> Start: <span className="font-medium" style={{ color: colors.text }}>{formatDate(offer.startDate)}</span></p>
+                <p><i className="fa-regular fa-calendar-check mr-2"></i> End: <span className="font-medium" style={{ color: colors.text }}>{formatDate(offer.endDate)}</span></p>
               </div>
             </div>
           )) : (
-            <div className="col-span-full py-20 text-center text-gray-400">
+            <div className="col-span-full py-20 text-center" style={{ color: colors.textMuted }}>
               <p>No active offers found.</p>
             </div>
           )}
@@ -202,18 +206,22 @@ const ManageOffers = () => {
 
       {/* --- FORM VIEW --- */}
       {viewState === 'form' && (
-        <div className="max-w-xl mx-auto bg-gray-50 p-8 rounded-3xl border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Create New Offer</h2>
+        <div 
+          className="max-w-xl mx-auto p-8 rounded-3xl border transition-colors"
+          style={{ backgroundColor: colors.card, borderColor: colors.border }}
+        >
+          <h2 className="text-xl font-bold mb-6" style={{ color: colors.text }}>Create New Offer</h2>
 
           <form onSubmit={handleSave} className="space-y-6">
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-2">Select Plan</label>
+              <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Select Plan</label>
               <select
                 required
                 value={formData.planId}
                 onChange={e => setFormData({ ...formData, planId: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 bg-white"
+                className="w-full px-4 py-3 rounded-xl border focus:outline-none transition-colors"
+                style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border }}
               >
                 <option value="">-- Choose a Plan --</option>
                 {plans.map(p => (
@@ -224,24 +232,26 @@ const ManageOffers = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-2">Discount Type</label>
+                <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Discount Type</label>
                 <select
                   value={formData.discountType}
                   onChange={e => setFormData({ ...formData, discountType: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 bg-white"
+                  className="w-full px-4 py-3 rounded-xl border focus:outline-none"
+                  style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border }}
                 >
                   <option value="percentage">Percentage (%)</option>
                   <option value="flat">Flat Amount (₹)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-2">Value</label>
+                <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Value</label>
                 <input
                   type="number"
                   required
                   value={formData.discountValue}
                   onChange={e => setFormData({ ...formData, discountValue: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400"
+                  className="w-full px-4 py-3 rounded-xl border focus:outline-none"
+                  style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border }}
                   placeholder="e.g. 20"
                 />
               </div>
@@ -249,38 +259,51 @@ const ManageOffers = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-2">Start Date</label>
+                <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Start Date</label>
                 <input
                   type="date"
                   required
                   min={new Date().toISOString().split("T")[0]}
                   value={formData.startDate}
                   onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 text-sm"
+                  className="w-full px-4 py-3 rounded-xl border focus:outline-none text-sm"
+                  style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border }}
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-2">End Date</label>
+                <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>End Date</label>
                 <input
                   type="date"
                   required
                   min={formData.startDate}
                   value={formData.endDate}
                   onChange={e => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 text-sm"
+                  className="w-full px-4 py-3 rounded-xl border focus:outline-none text-sm"
+                  style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border }}
                 />
               </div>
             </div>
 
-            <div className="pt-4 border-t border-gray-200 flex gap-4">
-              <button type="button" onClick={() => setViewState("list")} className="flex-1 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50">Cancel</button>
-              <button type="submit" className="flex-1 py-3 bg-[#FEEF75] text-yellow-900 rounded-xl font-bold hover:bg-yellow-300 shadow-sm">Apply Offer</button>
+            <div className="pt-4 border-t flex gap-4" style={{ borderColor: colors.border }}>
+              <button 
+                type="button" 
+                onClick={() => setViewState("list")} 
+                className="flex-1 py-3 border rounded-xl font-bold transition-colors"
+                style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="flex-1 py-3 rounded-xl font-bold shadow-sm transition-colors"
+                style={{ backgroundColor: colors.accent, color: theme === 'dark' ? '#fff' : '#854d0e' }}
+              >
+                Apply Offer
+              </button>
             </div>
-
           </form>
         </div>
       )}
-
     </div>
   );
 };

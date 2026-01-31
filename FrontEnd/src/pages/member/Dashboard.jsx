@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import toast from 'react-hot-toast'; // Updated to React Hot Toast
 import {
    Chart as ChartJS,
    CategoryScale,
@@ -13,8 +14,8 @@ import {
    Filler,
    ArcElement
 } from "chart.js";
-import { Line, Bar, Doughnut } from "react-chartjs-2";
-import { ToastContainer, toast } from 'react-toastify';
+import { Line, Doughnut } from "react-chartjs-2";
+import { useTheme } from "../../context/ThemeContext";
 
 ChartJS.register(
    CategoryScale,
@@ -36,24 +37,22 @@ const Dashboard = () => {
    // --- STATE ---
    const [memberData, setMemberData] = useState(null);
    const [loading, setLoading] = useState(true);
+   
+   // Access Global Theme Colors
+   const { colors, theme } = useTheme();
 
    const user = JSON.parse(localStorage.getItem("userInfo"));
 
    // --- STYLE INJECTION ---
+   // Removed local Toastify CSS injection as it's now global
    useEffect(() => {
       const linkFA = document.createElement("link");
       linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
       linkFA.rel = "stylesheet";
       document.head.appendChild(linkFA);
 
-      const linkToast = document.createElement("link");
-      linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
-      linkToast.rel = "stylesheet";
-      document.head.appendChild(linkToast);
-
       return () => {
          document.head.removeChild(linkFA);
-         document.head.removeChild(linkToast);
       };
    }, []);
 
@@ -61,7 +60,6 @@ const Dashboard = () => {
    useEffect(() => {
       const fetchData = async () => {
          try {
-            setLoading(true);
             const token = user?.token;
             if (!token) return;
 
@@ -122,7 +120,7 @@ const Dashboard = () => {
             // Last Payment
             const lastPaymentData = payments.length > 0 ? {
                amount: payments[0].amount,
-               pending: 0, 
+               pending: 0,
                date: new Date(payments[0].paidAt).toLocaleDateString()
             } : { amount: 0, pending: 0, date: "N/A" };
 
@@ -145,47 +143,53 @@ const Dashboard = () => {
                nextSession: nextSessionData,
                lastPayment: lastPaymentData,
                notifications: notifications,
-
-               // Chart Data Helpers
                weightData: weightHistory.map(w => w.weight),
                weightLabels: weightHistory.map(w => new Date(w.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
-
-               // Diet Adherence (Pie)
                dietCompleted: progressLogs.filter(p => p.dietCompleted).length,
                dietMissed: totalTrackedDays - progressLogs.filter(p => p.dietCompleted).length
             });
-
+setLoading(false)
          } catch (err) {
             console.error(err);
+            toast.error("Failed to load dashboard data"); // React Hot Toast
          } finally {
             setLoading(false);
          }
       };
 
       if (user) fetchData();
-   }, []);
+   }, [user]);
 
-   if (loading) return <div className="p-10 text-center text-gray-500">Loading Dashboard...</div>;
-   if (!memberData) return <div className="p-10 text-center text-gray-500">No data available.</div>;
+   if (loading) return (
+      <div className="p-10 text-center" style={{ color: colors.textMuted }}>
+         Loading Dashboard...
+      </div>
+   );
+   
+   if (!memberData) return (
+      <div className="p-10 text-center" style={{ color: colors.textMuted }}>
+         No data available.
+      </div>
+   );
 
    // --- CHART CONFIG ---
    const weightChartData = {
-      labels: memberData.weightLabels.length > 0 ? memberData.weightLabels : ["Start", "Current"],
+      labels: memberData.weightLabels,
       datasets: [{
          label: "Weight",
-         data: memberData.weightData.length > 0 ? memberData.weightData : [0, 0],
-         borderColor: "#D9F17F",
+         data: memberData.weightData,
+         borderColor: colors.primary, 
          backgroundColor: (context) => {
             const ctx = context.chart.ctx;
             const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-            gradient.addColorStop(0, "rgba(217, 241, 127, 0.4)");
+            gradient.addColorStop(0, "rgba(217, 241, 127, 0.4)"); 
             gradient.addColorStop(1, "rgba(217, 241, 127, 0)");
             return gradient;
          },
          tension: 0.4,
          fill: true,
-         pointBackgroundColor: "#fff",
-         pointBorderColor: "#D9F17F",
+         pointBackgroundColor: colors.card, 
+         pointBorderColor: colors.primary,
       }]
    };
 
@@ -193,16 +197,16 @@ const Dashboard = () => {
       labels: ["Followed", "Missed"],
       datasets: [{
          data: [memberData.dietCompleted, memberData.dietMissed],
-         backgroundColor: ["#1f2937", "#f3f4f6"],
+         // Use theme colors for chart segments
+         backgroundColor: [theme === 'dark' ? '#374151' : '#1f2937', colors.border],
          borderWidth: 0,
       }]
    };
 
    return (
       <div className="w-full max-w-7xl mx-auto space-y-6 pb-10 font-sans px-4 sm:px-0">
-         <ToastContainer position="top-right" autoClose={3000} />
-
-         {/* 1. WELCOME HEADER */}
+         
+         {/* 1. WELCOME HEADER - Always Dark Style for contrast */}
          <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden w-full md:w-fit mx-auto md:mx-0">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#D9F17F] rounded-full filter blur-[80px] opacity-20 translate-x-1/2 -translate-y-1/2"></div>
             <div className="relative z-10 flex gap-6 mt-4 md:mt-0 text-center w-full justify-center md:justify-start md:w-auto">
@@ -220,155 +224,145 @@ const Dashboard = () => {
 
          {/* 2. KEY STATS GRID */}
          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
-               <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center text-green-600 mb-2">
-                  <i className="fa-solid fa-check-double"></i>
+            {[
+               { icon: "fa-check-double", label: "Attendance", value: `${memberData.attendance}%`, color: "green" },
+               { icon: "fa-weight-scale", label: "Weight Change", value: memberData.weightChange, color: "blue" },
+               { icon: "fa-user-ninja", label: "Trainer", value: memberData.trainer, color: "orange" },
+               { icon: "fa-calendar-check", label: "Status", value: memberData.status, color: "purple", isBadge: true }
+            ].map((stat, i) => (
+               <div 
+                  key={i} 
+                  className="p-5 rounded-3xl border shadow-sm flex flex-col justify-between transition-colors duration-300"
+                  style={{ 
+                     backgroundColor: colors.card, 
+                     borderColor: colors.border 
+                  }}
+               >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-${stat.color}-50 text-${stat.color}-600`}>
+                     <i className={`fa-solid ${stat.icon}`}></i>
+                  </div>
+                  <div>
+                     <p className="text-xs font-bold uppercase" style={{ color: colors.textMuted }}>{stat.label}</p>
+                     {stat.isBadge ? (
+                        <span className={`text-xs font-bold px-2 py-1 rounded-lg ${stat.value === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                           {stat.value}
+                        </span>
+                     ) : (
+                        <h3 className="text-2xl font-black" style={{ color: colors.text }}>{stat.value}</h3>
+                     )}
+                  </div>
                </div>
-               <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase">Attendance</p>
-                  <h3 className="text-2xl font-black text-gray-900">{memberData.attendance}%</h3>
-               </div>
-            </div>
-            <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
-               <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-2">
-                  <i className="fa-solid fa-weight-scale"></i>
-               </div>
-               <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase">Weight Change</p>
-                  <h3 className="text-2xl font-black text-gray-900">{memberData.weightChange}</h3>
-               </div>
-            </div>
-            <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
-               <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center text-orange-600 mb-2">
-                  <i className="fa-solid fa-user-ninja"></i>
-               </div>
-               <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase">Trainer</p>
-                  <h3 className="text-lg font-bold text-gray-900 truncate">{memberData.trainer}</h3>
-               </div>
-            </div>
-            <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
-               <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center text-purple-600 mb-2">
-                  <i className="fa-solid fa-calendar-check"></i>
-               </div>
-               <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase">Status</p>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-lg ${memberData.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                     {memberData.status}
-                  </span>
-               </div>
-            </div>
+            ))}
          </div>
 
          {/* 3. MAIN DASHBOARD CONTENT */}
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            {/* Left Column: Charts */}
             <div className="lg:col-span-2 space-y-6">
-
+               
                {/* Weight Chart */}
-               <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm">
+               <div 
+                  className="p-6 rounded-[2.5rem] border shadow-sm transition-colors duration-300"
+                  style={{ backgroundColor: colors.card, borderColor: colors.border }}
+               >
                   <div className="flex justify-between items-center mb-6">
-                     <h3 className="text-lg font-bold text-gray-900">Progress Tracking</h3>
-                     <select className="bg-gray-50 border-none text-xs font-bold rounded-lg px-3 py-1.5 text-gray-500 cursor-pointer focus:ring-0">
-                        <option>Weight</option>
-                     </select>
+                     <h3 className="text-lg font-bold" style={{ color: colors.text }}>Progress Tracking</h3>
                   </div>
                   <div className="h-64 w-full">
-                     <Line
-                        data={weightChartData}
+                     <Line 
+                        data={weightChartData} 
                         options={{
-                           responsive: true,
-                           maintainAspectRatio: false,
-                           plugins: { legend: { display: false } },
-                           scales: { y: { grid: { display: false } }, x: { grid: { display: false } } }
-                        }}
+                           responsive: true, 
+                           maintainAspectRatio: false, 
+                           scales: { 
+                              y: { ticks: { color: colors.textMuted }, grid: { display: false } }, 
+                              x: { ticks: { color: colors.textMuted }, grid: { display: false } } 
+                           },
+                           plugins: {
+                              legend: { labels: { color: colors.text } }
+                           }
+                        }} 
                      />
                   </div>
                </div>
 
                {/* Next Session Card */}
-               <div className="bg-[#f8f9fa] p-6 rounded-[2.5rem] border border-gray-100 flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4 sm:gap-0">
-                  <div>
-                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Up Next</p>
+               <div 
+                  className="p-6 rounded-[2.5rem] border flex flex-col sm:flex-row justify-between items-center transition-colors duration-300"
+                  style={{ 
+                     backgroundColor: theme === 'dark' ? '#1f2937' : '#f8f9fa', 
+                     borderColor: colors.border 
+                  }}
+               >
+                  <div className="text-center sm:text-left">
+                     <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: colors.textMuted }}>Up Next</p>
                      {memberData.nextSession ? (
                         <>
-                           <h3 className="text-xl font-bold text-gray-900">{memberData.nextSession.type}</h3>
-                           <p className="text-sm text-gray-500 mt-1">
+                           <h3 className="text-xl font-bold" style={{ color: colors.text }}>{memberData.nextSession.type}</h3>
+                           <p className="text-sm mt-1" style={{ color: colors.textMuted }}>
                               <i className="fa-regular fa-clock mr-2"></i> {memberData.nextSession.date}
                            </p>
                         </>
                      ) : (
-                        <p className="text-gray-500 font-bold">No upcoming sessions.</p>
+                        <p style={{ color: colors.textMuted }}>No upcoming sessions.</p>
                      )}
                   </div>
                   <Link to="/member/booking">
-                     <button className="bg-white text-gray-900 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 transition-colors border border-gray-200">
+                     <button 
+                        className="mt-4 sm:mt-0 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-colors border"
+                        style={{ 
+                           backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                           color: colors.text,
+                           borderColor: colors.border
+                        }}
+                     >
                         {memberData.nextSession ? "Manage" : "Book Now"}
                      </button>
                   </Link>
                </div>
             </div>
 
-            {/* Right Column: Diet & Info */}
+            {/* Right Column */}
             <div className="space-y-6">
-
                {/* Diet Adherence */}
-               <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm text-center relative">
-                  <h3 className="text-lg font-bold text-gray-900 mb-6">Diet Adherence</h3>
+               <div 
+                  className="p-6 rounded-[2.5rem] border shadow-sm text-center relative transition-colors duration-300"
+                  style={{ backgroundColor: colors.card, borderColor: colors.border }}
+               >
+                  <h3 className="text-lg font-bold mb-6" style={{ color: colors.text }}>Diet Adherence</h3>
                   <div className="w-40 h-40 mx-auto relative">
-                     <Doughnut
-                        data={dietChartData}
-                        options={{ cutout: '75%', plugins: { legend: { display: false } } }}
-                     />
+                     <Doughnut data={dietChartData} options={{ cutout: '75%', plugins: { legend: { display: false } }, borderJoinStyle: 'round' }} />
                      <div className="absolute inset-0 flex items-center justify-center flex-col">
-                        <span className="text-3xl font-black text-gray-900">
+                        <span className="text-3xl font-black" style={{ color: colors.text }}>
                            {memberData.dietCompleted + memberData.dietMissed > 0
                               ? Math.round((memberData.dietCompleted / (memberData.dietCompleted + memberData.dietMissed)) * 100)
                               : 0}%
                         </span>
                      </div>
                   </div>
-                  <div className="mt-6 flex justify-center gap-4 text-xs font-bold">
-                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-gray-800"></span> Followed</div>
-                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-gray-200"></span> Missed</div>
-                  </div>
                </div>
 
                {/* Notifications */}
-               <div className="bg-blue-50/50 p-6 rounded-[2.5rem] border border-blue-100">
-                  <h3 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2">
+               <div 
+                  className="p-6 rounded-[2.5rem] border"
+                  style={{ 
+                     backgroundColor: theme === 'dark' ? 'rgba(30, 58, 138, 0.2)' : '#eff6ff', // blue-900/20 vs blue-50
+                     borderColor: theme === 'dark' ? 'rgba(30, 58, 138, 0.4)' : '#dbeafe'
+                  }}
+               >
+                  <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: theme === 'dark' ? '#93c5fd' : '#1e3a8a' }}>
                      <i className="fa-regular fa-bell"></i> Alerts
                   </h3>
                   <div className="space-y-3">
                      {memberData.notifications.map(n => (
-                        <div key={n.id} className="flex gap-3 items-start p-2 hover:bg-white/50 rounded-xl transition-colors cursor-default">
+                        <div key={n.id} className="flex gap-3 items-start p-2 rounded-xl transition-colors cursor-default hover:bg-black/5 dark:hover:bg-white/5">
                            <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-500 shrink-0"></div>
-                           <p className="text-xs text-gray-600 leading-relaxed">{n.text}</p>
+                           <p className="text-xs leading-relaxed" style={{ color: colors.textMuted }}>{n.text}</p>
                         </div>
                      ))}
                   </div>
                </div>
-
-               {/* Payment Overview */}
-               <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
-                  <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider">Payment Status</h3>
-                  <div className="flex justify-between items-center mb-2">
-                     <span className="text-xs text-gray-500">Last Payment</span>
-                     <span className="text-sm font-bold text-gray-900">₹{memberData.lastPayment.amount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center mb-1">
-                     <span className="text-xs text-gray-500">Date</span>
-                     <span className="text-xs font-medium text-gray-700">{memberData.lastPayment.date}</span>
-                  </div>
-                  <Link to="/member/payment-history" className="block mt-4 text-center text-xs font-bold text-blue-600 hover:underline">
-                     View History
-                  </Link>
-               </div>
-
             </div>
          </div>
-
       </div>
    );
 };

@@ -12,6 +12,7 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { useGlobalContext } from '../../context/GlobalContext';
+import { useTheme } from '../../context/ThemeContext'; // Import useTheme
 
 ChartJS.register(
   CategoryScale,
@@ -26,31 +27,44 @@ ChartJS.register(
 
 const TimeDropdown = ({ selected, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { colors, theme } = useTheme(); // Access custom colors and current theme
   const options = ["Today", "This Week", "This Month", "This Year"];
 
   return (
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border outline-none ${isOpen ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm ring-2 ring-blue-100/50' : 'bg-white border-gray-100 text-gray-600 hover:border-gray-300 hover:bg-gray-50'}`}
+        className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border outline-none"
+        style={{ 
+            backgroundColor: isOpen ? colors.secondary : colors.card, 
+            borderColor: colors.border,
+            color: isOpen ? (theme === 'dark' ? '#fff' : '#1e3a8a') : colors.text 
+        }}
       >
         <span>{selected}</span>
-        <i className={`fa-solid fa-chevron-down text-[10px] transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-500' : 'text-gray-400'}`}></i>
+        <i className={`fa-solid fa-chevron-down text-[10px] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} style={{ color: isOpen ? (theme === 'dark' ? '#fff' : colors.secondary) : colors.textMuted }}></i>
       </button>
 
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20 origin-top-right animate-in fade-in zoom-in-95 duration-100">
+          <div 
+            className="absolute right-0 top-full mt-2 w-40 rounded-2xl shadow-xl border overflow-hidden z-20 origin-top-right animate-in fade-in zoom-in-95 duration-100"
+            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+          >
             <div className="p-1.5 space-y-0.5">
               {options.map((option) => (
                 <button
                   key={option}
                   onClick={() => { onSelect(option); setIsOpen(false); }}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 flex items-center justify-between group ${selected === option ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                  className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 flex items-center justify-between group"
+                  style={{ 
+                    backgroundColor: selected === option ? colors.secondary : 'transparent',
+                    color: selected === option ? (theme === 'dark' ? '#fff' : '#1e3a8a') : colors.text 
+                  }}
                 >
                   {option}
-                  {selected === option && <i className="fa-solid fa-check text-blue-500 text-[10px]"></i>}
+                  {selected === option && <i className="fa-solid fa-check text-[10px]"></i>}
                 </button>
               ))}
             </div>
@@ -63,6 +77,7 @@ const TimeDropdown = ({ selected, onSelect }) => {
 
 const MonthlyEarningsChart_Admin = () => {
   const { api } = useGlobalContext();
+  const { colors, theme } = useTheme(); // Access custom colors and current theme
   const [timePeriod, setTimePeriod] = useState("This Week");
   const [payments, setPayments] = useState([]);
 
@@ -84,7 +99,6 @@ const MonthlyEarningsChart_Admin = () => {
     const currentMonth = now.getMonth();
     const currentDate = now.getDate();
 
-    // Default: Empty Year
     let labels = [];
     let data = [];
 
@@ -99,7 +113,6 @@ const MonthlyEarningsChart_Admin = () => {
       });
 
     } else if (timePeriod === "This Month") {
-      // Days of the month (1-31)
       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
       labels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`);
       data = new Array(daysInMonth).fill(0);
@@ -115,7 +128,6 @@ const MonthlyEarningsChart_Admin = () => {
       labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       data = new Array(7).fill(0);
       
-      // Calculate start of week (Sunday)
       const startOfWeek = new Date(now);
       startOfWeek.setDate(now.getDate() - now.getDay());
       startOfWeek.setHours(0,0,0,0);
@@ -132,28 +144,16 @@ const MonthlyEarningsChart_Admin = () => {
       });
 
     } else if (timePeriod === "Today") {
-      // Hourly breakdown (00:00 to 23:00)
-      labels = ["6AM", "9AM", "12PM", "3PM", "6PM", "9PM"]; // Simplified labels for clean UI
-      // But we track all 24 hours internally
+      labels = ["6AM", "9AM", "12PM", "3PM", "6PM", "9PM"];
       const hourlyData = new Array(24).fill(0);
       
       payments.forEach(p => {
-        const d = new Date(p.date); // This relies on backend saving full timestamp in DB (paidAt)
-        // Note: The /payments/all endpoint formatted date as YYYY-MM-DD string in previous turn. 
-        // If it's a string, we lose time. Ideally, modify controller to send full ISO string.
-        // Assuming p.date might be ISO or we handle full date object if available.
-        
-        // *Fallback Logic*: If date is just YYYY-MM-DD, all payments appear at 00:00 or 5:30.
-        // For accurate "Today" charts, ensure backend sends 'createdAt' or 'paidAt' with time.
-        
+        const d = new Date(p.date);  
         if (d.getFullYear() === currentYear && d.getMonth() === currentMonth && d.getDate() === currentDate && p.status === "Paid") {
-           // If using mapped data from previous controller code (YYYY-MM-DD), hours won't be accurate.
-           // Assuming we get full date for this specific feature to work perfectly.
            hourlyData[d.getHours()] += Number(p.amount);
         }
       });
 
-      // Map 24h data to the 6 buckets for the chart points
       data = [
         hourlyData[6] + hourlyData[7] + hourlyData[8],
         hourlyData[9] + hourlyData[10] + hourlyData[11],
@@ -174,12 +174,12 @@ const MonthlyEarningsChart_Admin = () => {
     datasets: [{
       label: "Earnings",
       data: chartData.data,
-      borderColor: "#70a6d6",
-      backgroundColor: "rgba(111,168,220,0.25)",
+      borderColor: colors.primary, // Lime Green
+      backgroundColor: theme === 'dark' ? 'rgba(217, 241, 127, 0.1)' : 'rgba(217, 241, 127, 0.2)',
       tension: 0.4,
       fill: true,
-      pointBackgroundColor: "#ffffff",
-      pointBorderColor: "#CDE7FE",
+      pointBackgroundColor: colors.background,
+      pointBorderColor: colors.primary,
       pointRadius: 5,
       pointHoverRadius: 7,
     }],
@@ -188,27 +188,46 @@ const MonthlyEarningsChart_Admin = () => {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    plugins: { 
+        legend: { display: false },
+        tooltip: {
+            backgroundColor: colors.card,
+            titleColor: colors.text,
+            bodyColor: colors.textMuted,
+            borderColor: colors.border,
+            borderWidth: 1
+        }
+    },
     scales: {
-      y: { beginAtZero: true, grid: { color: "#eee" } },
-      x: { grid: { display: false } },
+      y: { 
+        beginAtZero: true, 
+        grid: { color: colors.border },
+        ticks: { color: colors.textMuted }
+      },
+      x: { 
+        grid: { display: false },
+        ticks: { color: colors.textMuted }
+      },
     },
   };
 
   return (
-    <div className="w-full bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+    <div 
+        className="w-full border rounded-3xl p-6 shadow-sm transition-colors duration-300"
+        style={{ backgroundColor: colors.card, borderColor: colors.border }}
+    >
       <div className="flex justify-between items-start mb-1">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ color: colors.textMuted }}>
             <i className="fa-solid fa-indian-rupee-sign text-sm"></i>
           </div>
-          <h3 className="font-semibold text-gray-800 text-md">Earnings Analysis</h3>
+          <h3 className="font-semibold text-md" style={{ color: colors.text }}>Earnings Analysis</h3>
         </div>
         <TimeDropdown selected={timePeriod} onSelect={setTimePeriod} />
       </div>
 
-      <p className="text-sm text-gray-500 mb-6 pl-10">
-        Total: <span className="font-semibold text-gray-900">₹{totalEarnings.toLocaleString()}</span>
+      <p className="text-sm mb-6 pl-10" style={{ color: colors.textMuted }}>
+        Total: <span className="font-semibold" style={{ color: colors.text }}>₹{totalEarnings.toLocaleString()}</span>
       </p>
       
       <div className="h-[300px] w-full">

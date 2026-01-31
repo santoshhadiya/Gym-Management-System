@@ -89,7 +89,7 @@ const GalleryMember = () => {
   const filteredMedia = filter === "All" ? media : media.filter(m => m.category === filter);
 
   return (
-    <div className="font-sans text-gray-800 bg-white pt-6 min-h-screen pb-20">
+    <div className="font-sans text-gray-800  pt-6 min-h-screen pb-20">
       <ToastContainer position="top-right" autoClose={2000} />
 
       {/* HEADER */}

@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../../context/ThemeContext"; // Import Context
 
 const Nav_Member = ({ onMenuClick }) => {
   const navigate = useNavigate();
+  const { colors, theme } = useTheme(); // Consume Theme
+
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -11,6 +14,7 @@ const Nav_Member = ({ onMenuClick }) => {
   const [announcements, setAnnouncements] = useState([]);
   const notificationRef = useRef(null);
 
+  // Use backend URL from env or default
   const BACKEND_URL = "http://localhost:5000";
 
   useEffect(() => {
@@ -87,22 +91,29 @@ const Nav_Member = ({ onMenuClick }) => {
   };
 
   return (
-    <nav className="flex justify-between items-center bg-[#F9FAFB] px-6 py-4 mb-6 relative z-20 rounded-4xl">
+    <nav 
+      className="flex justify-between items-center px-6 py-4 mb-6 relative z-20 rounded-4xl shadow-sm transition-colors"
+      style={{ backgroundColor: colors.card, color: colors.text }}
+    >
       
       {/* Left: Mobile Menu & Welcome Text */}
       <div className="flex items-center gap-4">
         <button 
           onClick={onMenuClick}
-          className="lg:hidden w-10 h-10 flex items-center justify-center bg-gray-50 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors"
+          className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl transition-colors hover:opacity-80"
+          style={{ 
+             backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb', 
+             color: colors.textMuted 
+          }}
         >
           <i className="fa-solid fa-bars text-lg"></i>
         </button>
         
         <div >
-          <h2 className="text-xl font-black text-gray-900 hidden sm:block">
+          <h2 className="text-xl font-black hidden sm:block" style={{ color: colors.text }}>
             Welcome back, {displayName.split(' ')[0]}! 👋
           </h2>
-          <p className="text-xs text-gray-400 font-medium hidden sm:block">
+          <p className="text-xs font-medium hidden sm:block" style={{ color: colors.textMuted }}>
             Let's crush your goals today.
           </p>
         </div>
@@ -115,7 +126,12 @@ const Nav_Member = ({ onMenuClick }) => {
         <div className="relative" ref={notificationRef}>
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
-            className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#FEEF75] hover:text-yellow-800 hover:border-yellow-200 transition-all relative cursor-pointer group shadow-sm shrink-0"
+            className="w-10 h-10 rounded-full border flex items-center justify-center transition-all relative cursor-pointer group shadow-sm shrink-0"
+            style={{ 
+               backgroundColor: colors.background, 
+               borderColor: colors.border,
+               color: colors.textMuted 
+            }}
           >
             <i className="fa-regular fa-bell group-hover:animate-swing"></i>
             {announcements.length > 0 && (
@@ -125,9 +141,16 @@ const Nav_Member = ({ onMenuClick }) => {
 
           {/* Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right z-50">
-                <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
-                  <h3 className="font-bold text-gray-900 text-sm">Announcements</h3>
+            <div 
+               className="absolute right-0 top-12 w-80 rounded-2xl shadow-xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right z-50"
+               style={{ backgroundColor: colors.card, borderColor: colors.border }}
+            >
+                <div className="p-4 border-b flex justify-between items-center"
+                     style={{ 
+                        backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb', 
+                        borderColor: colors.border 
+                     }}>
+                  <h3 className="font-bold text-sm" style={{ color: colors.text }}>Announcements</h3>
                   <button onClick={handleNotificationClick} className="text-[10px] font-bold text-blue-500 hover:underline">View All</button>
                 </div>
                 <div className="max-h-64 overflow-y-auto">
@@ -136,17 +159,21 @@ const Nav_Member = ({ onMenuClick }) => {
                         <div 
                           key={item.id || item._id} 
                           onClick={handleNotificationClick}
-                          className="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer group"
+                          className="p-4 border-b transition-colors cursor-pointer group hover:opacity-90"
+                          style={{ 
+                             borderColor: colors.border,
+                             backgroundColor: theme === 'dark' ? '#1f2937' : '#fff'
+                          }}
                         >
-                          <p className="text-sm font-bold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-1">{item.title}</p>
-                          <p className="text-[10px] text-gray-400 mt-1 flex justify-between">
+                          <p className="text-sm font-bold group-hover:text-blue-600 transition-colors line-clamp-1" style={{ color: colors.text }}>{item.title}</p>
+                          <p className="text-[10px] mt-1 flex justify-between" style={{ color: colors.textMuted }}>
                              <span>{new Date(item.publishDate || item.date).toLocaleDateString()}</span>
                              {item.priority === 'Critical' && <span className="text-red-500 font-bold">Important</span>}
                           </p>
                         </div>
                     ))
                   ) : (
-                    <div className="p-6 text-center text-gray-400 text-xs">No new announcements.</div>
+                    <div className="p-6 text-center text-xs" style={{ color: colors.textMuted }}>No new announcements.</div>
                   )}
                 </div>
             </div>
@@ -156,7 +183,12 @@ const Nav_Member = ({ onMenuClick }) => {
         {/* PROFILE */}
         <div className="flex items-center gap-3 cursor-pointer group pl-2">
           {/* Avatar / Image */}
-          <div className="w-10 h-10 rounded-full bg-[#D9F17F] flex items-center justify-center text-green-900 font-bold border-2 border-white shadow-sm group-hover:scale-105 transition-transform shrink-0 overflow-hidden">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 shadow-sm group-hover:scale-105 transition-transform shrink-0 overflow-hidden"
+               style={{ 
+                  backgroundColor: colors.primary, 
+                  color: '#14532d', // Keep text dark on lime bg
+                  borderColor: colors.card 
+               }}>
             {profileImage ? (
                <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
             ) : (
@@ -165,10 +197,10 @@ const Nav_Member = ({ onMenuClick }) => {
           </div>
 
           <div className="hidden xl:block text-right">
-            <p className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+            <p className="text-sm font-bold group-hover:text-blue-600 transition-colors" style={{ color: colors.text }}>
               {loading ? "Loading..." : displayName}
             </p>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: colors.textMuted }}>
               {loading ? "..." : planName}
             </p>
           </div>

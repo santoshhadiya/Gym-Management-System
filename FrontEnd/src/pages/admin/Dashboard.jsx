@@ -45,7 +45,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className=" bg-white min-h-screen font-sans">
+    <div className="  min-h-screen font-sans">
       
       {/* Top*/}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">

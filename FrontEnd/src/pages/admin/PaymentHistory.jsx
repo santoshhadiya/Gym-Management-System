@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-hot-toast'; // Switched to react-hot-toast
 import { useGlobalContext } from "../../context/GlobalContext";
+import { useTheme } from "../../context/ThemeContext"; // Import useTheme
 import logo from "../../assets/logo.png"
 import {
    Document,
@@ -21,14 +22,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
     backgroundColor: '#ffffff',
   },
-  // --- Red/Black Accents ---
   brandBar: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     height: 8,
-    backgroundColor: '#e11d48', // Primary Red
+    backgroundColor: '#D9F17F', // Updated to your Lime Green
   },
   header: {
     flexDirection: 'row',
@@ -63,10 +63,8 @@ const styles = StyleSheet.create({
   receiptTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#e11d48',
+    color: '#111827',
   },
-  
-  // --- Detail Sections ---
   infoGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -78,7 +76,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 8,
     fontWeight: 'bold',
-    color: '#e11d48',
+    color: '#111827',
     textTransform: 'uppercase',
     marginBottom: 6,
     borderBottom: '1 solid #f4f4f5',
@@ -91,8 +89,6 @@ const styles = StyleSheet.create({
   },
   label: { color: '#666', fontSize: 9 },
   value: { fontWeight: 'bold', fontSize: 9 },
-
-  // --- Table Design ---
   table: {
     marginTop: 10,
   },
@@ -117,8 +113,6 @@ const styles = StyleSheet.create({
   colDesc: { flex: 3 },
   colQty: { flex: 1, textAlign: 'center' },
   colPrice: { flex: 1, textAlign: 'right' },
-
-  // --- Payment Summary ---
   summaryContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -127,12 +121,12 @@ const styles = StyleSheet.create({
   paymentStatus: {
     marginTop: 10,
     padding: 10,
-    border: '2 solid #005205',
+    border: '2 solid #D9F17F',
     borderRadius: 4,
     alignSelf: 'flex-start',
   },
   statusText: {
-    color: '#005205',
+    color: '#111827',
     fontWeight: 'bold',
     fontSize: 14,
     textTransform: 'uppercase',
@@ -152,8 +146,6 @@ const styles = StyleSheet.create({
     borderTop: '1 solid #cbd5e1',
     paddingTop: 5,
   },
-
-  // --- Footer ---
   footer: {
     position: 'absolute',
     bottom: 40,
@@ -180,8 +172,6 @@ const PaymentReceiptPDF = ({ txn }) => (
   <Document title={`SongarsGym_Receipt_${txn.id}`}>
     <Page size="A4" style={styles.page}>
       <View style={styles.brandBar} />
-
-      {/* Header Area */}
       <View style={styles.header}>
         <View>
           <Image src={logo} style={styles.logo} />
@@ -197,8 +187,6 @@ const PaymentReceiptPDF = ({ txn }) => (
           <Text style={{ fontSize: 10, color: '#666' }}>Date: {txn.date}</Text>
         </View>
       </View>
-
-      {/* Member & Payment Meta */}
       <View style={styles.infoGrid}>
         <View style={styles.infoSection}>
           <Text style={styles.sectionLabel}>Member Information</Text>
@@ -211,15 +199,12 @@ const PaymentReceiptPDF = ({ txn }) => (
           <View style={styles.detailRow}><Text style={styles.label}>Invoice Ref:</Text><Text style={styles.value}>{txn.invoiceId || 'N/A'}</Text></View>
         </View>
       </View>
-
-      {/* Billing Table */}
       <View style={styles.table}>
         <View style={styles.tableHeader}>
           <Text style={[styles.tableHeaderText, styles.colDesc]}>Membership Plan</Text>
           <Text style={[styles.tableHeaderText, styles.colQty]}>Duration</Text>
           <Text style={[styles.tableHeaderText, styles.colPrice]}>Amount</Text>
         </View>
-        
         <View style={styles.tableRow}>
           <View style={styles.colDesc}>
             <Text style={{ fontWeight: 'bold' }}>{txn.plan}</Text>
@@ -229,8 +214,6 @@ const PaymentReceiptPDF = ({ txn }) => (
           <Text style={styles.colPrice}>rs.{txn.amount.toLocaleString()}</Text>
         </View>
       </View>
-
-      {/* Summary Area */}
       <View style={styles.summaryContainer}>
         <View style={styles.paymentStatus}>
           <Text style={styles.statusText}>{txn.status}</Text>
@@ -240,14 +223,11 @@ const PaymentReceiptPDF = ({ txn }) => (
             <Text style={styles.label}>Subtotal</Text>
             <Text style={styles.value}>rs.{txn.amount.toLocaleString()}</Text>
           </View>
-         
           <Text style={styles.totalAmount}>Total: rs.{txn.amount.toLocaleString()}</Text>
         </View>
       </View>
-
-      {/* Footer & Signature */}
       <View style={styles.footer}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <View style={{ flexDirection: 'row', justifyBetween: 'space-between', alignItems: 'flex-end' }}>
           <View>
             <Text style={{ fontSize: 9, marginBottom: 2 }}>Authorized By:</Text>
             <Text style={styles.ownerNote}>{txn.recordedBy || 'Manthan Prajapati'}</Text>
@@ -256,7 +236,6 @@ const PaymentReceiptPDF = ({ txn }) => (
              <Text style={{ fontSize: 8, fontStyle: 'italic' }}>Owner: Manthan Prajapati</Text>
           </View>
         </View>
-        
         <Text style={styles.disclaimer}>
           1. Membership fees are non-refundable. | 2. Please carry your digital ID at all times. | 3. This is a computer-generated receipt.
         </Text>
@@ -264,8 +243,10 @@ const PaymentReceiptPDF = ({ txn }) => (
     </Page>
   </Document>
 );
+
 const PaymentHistory = () => {
    const { BACKEND_URL } = useGlobalContext();
+   const { colors, theme } = useTheme();
 
    // --- STATE ---
    const [payments, setPayments] = useState([]);
@@ -276,15 +257,6 @@ const PaymentHistory = () => {
    const [filterDate, setFilterDate] = useState("");
    const [selectedTxn, setSelectedTxn] = useState(null);
    const [showModal, setShowModal] = useState(false);
-
-   // --- STYLE INJECTION ---
-   useEffect(() => {
-      const link = document.createElement("link");
-      link.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
-      link.rel = "stylesheet";
-      document.head.appendChild(link);
-      return () => { document.head.removeChild(link); };
-   }, []);
 
    // --- FETCH DATA ---
    useEffect(() => {
@@ -316,11 +288,11 @@ const PaymentHistory = () => {
    // --- HELPERS ---
    const getStatusStyle = (status) => {
       switch (status) {
-         case "Paid": return "bg-[#D9F17F] text-green-900 border-green-200";
-         case "Pending": return "bg-[#FEEF75] text-yellow-900 border-yellow-200";
-         case "Failed": return "bg-red-50 text-red-600 border-red-200";
-         case "Refunded": return "bg-gray-100 text-gray-500 border-gray-200 line-through";
-         default: return "bg-gray-50 text-gray-600 border-gray-200";
+         case "Paid": return { backgroundColor: colors.primary, color: '#111827', borderColor: '#d1e675' };
+         case "Pending": return { backgroundColor: colors.accent, color: theme === 'dark' ? '#fff' : '#854d0e', borderColor: '#fde047' };
+         case "Failed": return { backgroundColor: '#fee2e2', color: '#ef4444', borderColor: '#fecaca' };
+         case "Refunded": return { backgroundColor: colors.border, color: colors.textMuted, borderColor: colors.border, textDecoration: 'line-through' };
+         default: return { backgroundColor: colors.background, color: colors.textMuted, borderColor: colors.border };
       }
    };
 
@@ -357,27 +329,23 @@ const PaymentHistory = () => {
       .filter(p => p.status === "Paid" || p.status === "Pending")
       .reduce((sum, p) => sum + p.amount, 0);
 
-   const totalRefunds = filteredPayments
-      .filter(p => p.status === "Refunded")
-      .reduce((sum, p) => sum + p.amount, 0);
-
-   const pendingCount = filteredPayments.filter(p => p.status === "Pending").length;
-
-   if (loading) return <div className="p-10 text-center text-gray-500">Loading History...</div>;
+   if (loading) return <div className="p-10 text-center" style={{ color: colors.textMuted }}>Loading History...</div>;
 
    return (
-      <div className="w-full bg-white rounded-3xl p-8 shadow-sm border border-gray-100 font-sans min-h-screen relative">
-         <ToastContainer />
-
+      <div 
+         className="w-full rounded-3xl p-8 shadow-sm border font-sans min-h-screen relative transition-colors duration-300"
+         style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
+      >
          {/* HEADER */}
          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div>
-               <h1 className="text-2xl font-bold text-gray-900">Financial Records</h1>
-               <p className="text-sm text-gray-500 mt-1">Audit logs and transaction history.</p>
+               <h1 className="text-2xl font-bold" style={{ color: colors.text }}>Financial Records</h1>
+               <p className="text-sm mt-1" style={{ color: colors.textMuted }}>Audit logs and transaction history.</p>
             </div>
             <button
                onClick={handleExportCSV}
-               className="px-5 py-2.5 rounded-full bg-[#CDE7FE] text-blue-900 text-sm font-semibold hover:bg-blue-200 transition-colors shadow-sm flex items-center gap-2"
+               className="px-5 py-2.5 rounded-full text-sm font-semibold transition-colors shadow-sm flex items-center gap-2"
+               style={{ backgroundColor: colors.secondary, color: theme === 'dark' ? '#fff' : '#1e3a8a' }}
             >
                <i className="fa-solid fa-download"></i> Export Data
             </button>
@@ -385,29 +353,35 @@ const PaymentHistory = () => {
 
          {/* SUMMARY CARDS */}
          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-[#f0fdf4] border border-green-100 p-5 rounded-3xl">
+            <div 
+               className="p-5 rounded-3xl border transition-colors"
+               style={{ backgroundColor: theme === 'dark' ? colors.card : '#f0fdf4', borderColor: theme === 'dark' ? colors.border : '#dcfce7' }}
+            >
                <div className="flex justify-between items-start">
                   <div>
-                     <p className="text-xs text-green-600 font-bold uppercase tracking-wider">Net Collection</p>
-                     <p className="text-2xl font-bold text-gray-900 mt-1">₹{totalCollected.toLocaleString()}</p>
+                     <p className="text-xs font-bold uppercase tracking-wider" style={{ color: colors.primary }}>Net Collection</p>
+                     <p className="text-2xl font-bold mt-1" style={{ color: colors.text }}>₹{totalCollected.toLocaleString()}</p>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.secondary, color: colors.text }}>
                      <i className="fa-solid fa-sack-dollar"></i>
                   </div>
                </div>
             </div>
-            
          </div>
 
          {/* FILTERS TOOLBAR */}
-         <div className="flex flex-wrap gap-3 mb-6 bg-gray-50 p-3 rounded-2xl border border-gray-200">
+         <div 
+            className="flex flex-wrap gap-3 mb-6 p-3 rounded-2xl border transition-colors"
+            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+         >
             <div className="relative flex-grow md:flex-grow-0 md:w-64">
                <input
                   type="text"
                   placeholder="Search Transaction ID or Name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 text-sm"
+                  style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border, '--tw-ring-color': colors.secondary }}
                />
                <i className="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
             </div>
@@ -415,7 +389,8 @@ const PaymentHistory = () => {
             <select
                value={filterStatus}
                onChange={(e) => setFilterStatus(e.target.value)}
-               className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] cursor-pointer"
+               className="px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors"
+               style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border, '--tw-ring-color': colors.secondary }}
             >
                <option value="All">All Status</option>
                <option value="Paid">Paid</option>
@@ -427,7 +402,8 @@ const PaymentHistory = () => {
             <select
                value={filterMethod}
                onChange={(e) => setFilterMethod(e.target.value)}
-               className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] cursor-pointer"
+               className="px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors"
+               style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border, '--tw-ring-color': colors.secondary }}
             >
                <option value="All">All Methods</option>
                <option value="Cash">Cash</option>
@@ -439,7 +415,8 @@ const PaymentHistory = () => {
                type="date"
                value={filterDate}
                onChange={(e) => setFilterDate(e.target.value)}
-               className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] cursor-pointer"
+               className="px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors"
+               style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border, '--tw-ring-color': colors.secondary }}
             />
 
             {(searchTerm || filterStatus !== "All" || filterMethod !== "All" || filterDate) && (
@@ -453,42 +430,46 @@ const PaymentHistory = () => {
          </div>
 
          {/* PAYMENTS TABLE */}
-         <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
-            <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-               <thead className="bg-[#f8f9fa]">
+         <div className="overflow-hidden rounded-2xl border shadow-sm transition-colors" style={{ borderColor: colors.border }}>
+            <table className="w-full border-collapse text-left text-sm">
+               <thead style={{ backgroundColor: colors.card }}>
                   <tr>
-                     <th className="px-6 py-4 font-semibold text-gray-900">Transaction ID</th>
-                     <th className="px-6 py-4 font-semibold text-gray-900">Member</th>
-                     <th className="px-6 py-4 font-semibold text-gray-900">Plan</th>
-                     <th className="px-6 py-4 font-semibold text-gray-900 text-right">Amount</th>
-                     <th className="px-6 py-4 font-semibold text-gray-900 text-center">Date & Mode</th>
-                     <th className="px-6 py-4 font-semibold text-gray-900 text-center">Status</th>
-                     <th className="px-6 py-4 font-semibold text-gray-900 text-right">Action</th>
+                     <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Transaction ID</th>
+                     <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Member</th>
+                     <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Plan</th>
+                     <th className="px-6 py-4 font-semibold text-right" style={{ color: colors.text }}>Amount</th>
+                     <th className="px-6 py-4 font-semibold text-center" style={{ color: colors.text }}>Date & Mode</th>
+                     <th className="px-6 py-4 font-semibold text-center" style={{ color: colors.text }}>Status</th>
+                     <th className="px-6 py-4 font-semibold text-right" style={{ color: colors.text }}>Action</th>
                   </tr>
                </thead>
-               <tbody className="divide-y divide-gray-100">
+               <tbody className="divide-y" style={{ divideColor: colors.border, backgroundColor: colors.background }}>
                   {filteredPayments.length > 0 ? filteredPayments.map((p) => (
-                     <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 font-mono text-xs text-gray-600">{p.id}</td>
+                     <tr key={p.id} className="hover:opacity-80 transition-opacity">
+                        <td className="px-6 py-4 font-mono text-xs" style={{ color: colors.textMuted }}>{p.id}</td>
                         <td className="px-6 py-4">
-                           <div className="font-bold text-gray-900">{p.member}</div>
-                           <div className="text-[10px] text-gray-400">{p.memberId ? `#${p.memberId.slice(-4)}` : ""}</div>
+                           <div className="font-bold" style={{ color: colors.text }}>{p.member}</div>
+                           <div className="text-[10px]" style={{ color: colors.textMuted }}>{p.memberId ? `#${p.memberId.slice(-4)}` : ""}</div>
                         </td>
-                        <td className="px-6 py-4 text-gray-800">{p.plan}</td>
-                        <td className="px-6 py-4 text-right font-bold text-gray-900">₹{p.amount.toLocaleString()}</td>
+                        <td className="px-6 py-4" style={{ color: colors.text }}>{p.plan}</td>
+                        <td className="px-6 py-4 text-right font-bold" style={{ color: colors.text }}>₹{p.amount.toLocaleString()}</td>
                         <td className="px-6 py-4 text-center">
-                           <div className="text-gray-900 text-xs">{p.date}</div>
-                           <div className="text-[10px] uppercase font-bold text-gray-400 bg-gray-100 inline-block px-1.5 rounded mt-1">{p.method}</div>
+                           <div className="text-xs" style={{ color: colors.text }}>{p.date}</div>
+                           <div className="text-[10px] uppercase font-bold inline-block px-1.5 rounded mt-1" style={{ backgroundColor: colors.border, color: colors.textMuted }}>{p.method}</div>
                         </td>
                         <td className="px-6 py-4 text-center">
-                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusStyle(p.status)}`}>
+                           <span 
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                              style={getStatusStyle(p.status)}
+                           >
                               {p.status}
                            </span>
                         </td>
                         <td className="px-6 py-4 text-right">
                            <button
                               onClick={() => handleViewDetails(p)}
-                              className="text-gray-400 hover:text-blue-600 transition-colors p-2"
+                              className="hover:opacity-70 transition-opacity p-2"
+                              style={{ color: colors.textMuted }}
                               title="View Details"
                            >
                               <i className="fa-regular fa-eye"></i>
@@ -497,7 +478,7 @@ const PaymentHistory = () => {
                      </tr>
                   )) : (
                      <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
+                        <td colSpan="7" className="px-6 py-12 text-center" style={{ color: colors.textMuted }}>
                            <i className="fa-solid fa-file-invoice-dollar text-2xl mb-2 block opacity-20"></i>
                            No payment records found.
                         </td>
@@ -510,82 +491,81 @@ const PaymentHistory = () => {
          {/* --- DETAILS MODAL --- */}
          {showModal && selectedTxn && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-               <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-
+               <div 
+                  className="rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                  style={{ backgroundColor: colors.card }}
+               >
                   {/* Modal Header */}
-                  <div className="bg-[#f8f9fa] px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                     <h3 className="font-bold text-gray-900">Transaction Details</h3>
-                     <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <div className="px-6 py-4 border-b flex justify-between items-center" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+                     <h3 className="font-bold" style={{ color: colors.text }}>Transaction Details</h3>
+                     <button onClick={() => setShowModal(false)} className="hover:opacity-70 transition-opacity" style={{ color: colors.textMuted }}>
                         <i className="fa-solid fa-xmark text-lg"></i>
                      </button>
                   </div>
 
                   {/* Modal Body */}
                   <div className="p-6">
-
-                     {/* Receipt Header */}
                      <div className="flex justify-between items-start mb-6">
-                        <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 text-xl">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style={{ backgroundColor: colors.secondary, color: colors.text }}>
                            <i className="fa-solid fa-receipt"></i>
                         </div>
                         <div className="text-right">
-                           <p className="text-2xl font-bold text-gray-900">₹{selectedTxn.amount.toLocaleString()}</p>
-                           <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${getStatusStyle(selectedTxn.status)}`}>
+                           <p className="text-2xl font-bold" style={{ color: colors.text }}>₹{selectedTxn.amount.toLocaleString()}</p>
+                           <span 
+                              className="inline-block px-2 py-0.5 rounded text-xs font-bold border"
+                              style={getStatusStyle(selectedTxn.status)}
+                           >
                               {selectedTxn.status}
                            </span>
                         </div>
                      </div>
 
-                     {/* Grid Details */}
                      <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm mb-6">
                         <div>
-                           <p className="text-xs text-gray-400 mb-1">Transaction ID</p>
-                           <p className="font-mono font-medium text-gray-800">{selectedTxn.id}</p>
+                           <p className="text-xs mb-1" style={{ color: colors.textMuted }}>Transaction ID</p>
+                           <p className="font-mono font-medium" style={{ color: colors.text }}>{selectedTxn.id}</p>
                         </div>
                         <div>
-                           <p className="text-xs text-gray-400 mb-1">Invoice Ref</p>
-                           <p className="font-mono font-medium text-gray-800">{selectedTxn.invoiceId || 'N/A'}</p>
+                           <p className="text-xs mb-1" style={{ color: colors.textMuted }}>Invoice Ref</p>
+                           <p className="font-mono font-medium" style={{ color: colors.text }}>{selectedTxn.invoiceId || 'N/A'}</p>
                         </div>
                         <div>
-                           <p className="text-xs text-gray-400 mb-1">Date</p>
-                           <p className="font-medium text-gray-800">{selectedTxn.date}</p>
+                           <p className="text-xs mb-1" style={{ color: colors.textMuted }}>Date</p>
+                           <p className="font-medium" style={{ color: colors.text }}>{selectedTxn.date}</p>
                         </div>
                         <div>
-                           <p className="text-xs text-gray-400 mb-1">Payment Method</p>
-                           <p className="font-medium text-gray-800 flex items-center gap-2">
+                           <p className="text-xs mb-1" style={{ color: colors.textMuted }}>Payment Method</p>
+                           <p className="font-medium flex items-center gap-2" style={{ color: colors.text }}>
                               {selectedTxn.method}
-                              {selectedTxn.method === 'UPI' && <i className="fa-solid fa-mobile-screen text-gray-300"></i>}
-                              {selectedTxn.method === 'Cash' && <i className="fa-solid fa-money-bill-wave text-gray-300"></i>}
+                              {selectedTxn.method === 'UPI' && <i className="fa-solid fa-mobile-screen opacity-30"></i>}
+                              {selectedTxn.method === 'Cash' && <i className="fa-solid fa-money-bill-wave opacity-30"></i>}
                            </p>
                         </div>
                      </div>
 
-                     {/* Member Details Section */}
-                     <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Payer Details</p>
+                     <div className="rounded-xl p-4 mb-6 border transition-colors" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
+                        <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: colors.textMuted }}>Payer Details</p>
                         <div className="flex justify-between items-center mb-2">
-                           <span className="text-gray-600">Member</span>
-                           <span className="font-bold text-gray-900">{selectedTxn.member}</span>
+                           <span style={{ color: colors.textMuted }}>Member</span>
+                           <span className="font-bold" style={{ color: colors.text }}>{selectedTxn.member}</span>
                         </div>
                         <div className="flex justify-between items-center mb-2">
-                           <span className="text-gray-600">Member ID</span>
-                           <span className="font-mono text-gray-900 text-xs">{selectedTxn.memberId ? `#${selectedTxn.memberId.slice(-4)}` : "-"}</span>
+                           <span style={{ color: colors.textMuted }}>Member ID</span>
+                           <span className="font-mono text-xs" style={{ color: colors.text }}>{selectedTxn.memberId ? `#${selectedTxn.memberId.slice(-4)}` : "-"}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                           <span className="text-gray-600">Plan</span>
-                           <span className="font-medium text-blue-600">{selectedTxn.plan}</span>
+                           <span style={{ color: colors.textMuted }}>Plan</span>
+                           <span className="font-medium" style={{ color: colors.secondary }}>{selectedTxn.plan}</span>
                         </div>
                      </div>
 
-                     {/* Audit Trail */}
-                     <div className="border-t border-gray-100 pt-4 mb-6">
-                        <p className="text-xs text-gray-400">
+                     <div className="border-t pt-4 mb-6" style={{ borderColor: colors.border }}>
+                        <p className="text-xs" style={{ color: colors.textMuted }}>
                            <i className="fa-solid fa-user-shield mr-1"></i>
-                           Recorded by: <span className="text-gray-700 font-medium">{selectedTxn.recordedBy}</span>
+                           Recorded by: <span className="font-medium" style={{ color: colors.text }}>{selectedTxn.recordedBy}</span>
                         </p>
                      </div>
 
-                     {/* Actions */}
                      <div className="flex gap-3">
                         <PDFDownloadLink
                            document={<PaymentReceiptPDF txn={selectedTxn} />}
@@ -595,22 +575,19 @@ const PaymentHistory = () => {
                            {({ loading }) => (
                               <button
                                  disabled={loading}
-                                 className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors shadow-sm disabled:bg-gray-400 cursor-pointer"
+                                 className="w-full py-3 rounded-xl font-bold text-sm transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                                 style={{ backgroundColor: colors.primary, color: '#111827' }}
                               >
                                  <i className={`fa-solid ${loading ? 'fa-spinner fa-spin' : 'fa-download'} mr-2`}></i>
                                  {loading ? 'Preparing...' : 'Download Receipt'}
                               </button>
                            )}
                         </PDFDownloadLink>
-
-                        
                      </div>
-
                   </div>
                </div>
             </div>
          )}
-
       </div>
    );
 };

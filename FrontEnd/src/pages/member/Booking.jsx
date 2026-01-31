@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from 'react-toastify';
+import toast from 'react-hot-toast'; // Updated Toast
 import { useGlobalContext } from "../../context/GlobalContext";
+import { useTheme } from "../../context/ThemeContext"; // Import Context
 
 const Booking = () => {
    const { api } = useGlobalContext();
+   const { colors, theme } = useTheme(); // Consume Theme
    const activeApi = api;
 
    // --- STATE ---
@@ -11,24 +13,6 @@ const Booking = () => {
    const [myBookings, setMyBookings] = useState([]);
    const [viewState, setViewState] = useState("upcoming");
    const [isLoading, setIsLoading] = useState(false);
-
-   // --- STYLE INJECTION ---
-   useEffect(() => {
-      const linkToast = document.createElement("link");
-      linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
-      linkToast.rel = "stylesheet";
-      document.head.appendChild(linkToast);
-
-      const linkFA = document.createElement("link");
-      linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
-      linkFA.rel = "stylesheet";
-      document.head.appendChild(linkFA);
-
-      return () => {
-         document.head.removeChild(linkToast);
-         document.head.removeChild(linkFA);
-      };
-   }, []);
 
    // --- FETCH DATA ---
    const fetchSessions = async () => {
@@ -67,7 +51,6 @@ const Booking = () => {
             return;
          }
          
-         // Optimistic Update
          const tempBooking = { _id: "temp_" + Date.now(), session: session, bookingStatus: "Confirmed" };
          setMyBookings(prev => [...prev, tempBooking]);
 
@@ -88,7 +71,7 @@ const Booking = () => {
       try {
          setMyBookings(prev => prev.filter(b => b.session?._id !== sessionId));
          await activeApi.delete(`/session-bookings/${sessionId}`);
-         toast.info("Booking cancelled.");
+         toast.success("Booking cancelled.");
 
          fetchMyBookings();
          fetchSessions();
@@ -99,77 +82,78 @@ const Booking = () => {
    };
 
    return (
-      // Changed: Added px-4 sm:px-6 for mobile padding
       <div className="w-full max-w-6xl mx-auto space-y-6 pb-10 font-sans px-4 sm:px-6">
-         <ToastContainer position="top-right" autoClose={3000} />
 
          {/* --- HEADER --- */}
-         {/* Changed: items-center to items-start md:items-center for better text wrapping on mobile */}
          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
-               <h1 className="text-2xl md:text-3xl font-black text-gray-900">Training Sessions</h1>
-               <p className="text-sm md:text-base text-gray-500 mt-1">Browse upcoming sessions and manage your bookings.</p>
+               <h1 className="text-2xl md:text-3xl font-black" style={{ color: colors.text }}>Training Sessions</h1>
+               <p className="text-sm md:text-base mt-1" style={{ color: colors.textMuted }}>Browse upcoming sessions and manage your bookings.</p>
             </div>
 
-            <div className="flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm w-full md:w-auto">
-               <button
-                  onClick={() => setViewState("upcoming")}
-                  className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-bold transition-all text-center ${viewState === 'upcoming' ? 'bg-[#CDE7FE] text-blue-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-               >
-                  Upcoming
-               </button>
-               <button
-                  onClick={() => setViewState("history")}
-                  className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-bold transition-all text-center ${viewState === 'history' ? 'bg-[#CDE7FE] text-blue-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-               >
-                  My Bookings
-               </button>
+            <div className="flex border rounded-xl p-1 shadow-sm w-full md:w-auto" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+               {['upcoming', 'history'].map(v => (
+                   <button
+                     key={v}
+                     onClick={() => setViewState(v)}
+                     className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-bold transition-all text-center capitalize`}
+                     style={{ 
+                         backgroundColor: viewState === v ? colors.secondary : 'transparent',
+                         color: viewState === v ? (theme === 'dark' ? '#fff' : '#1e3a8a') : colors.textMuted
+                     }}
+                   >
+                      {v === 'history' ? 'My Bookings' : v}
+                   </button>
+               ))}
             </div>
          </div>
 
          {/* --- CONTENT AREA --- */}
          {isLoading ? (
             <div className="flex justify-center py-20">
-               <i className="fa-solid fa-circle-notch fa-spin text-gray-300 text-3xl"></i>
+               <i className="fa-solid fa-circle-notch fa-spin text-3xl" style={{ color: colors.textMuted }}></i>
             </div>
          ) : (
             <div className="space-y-4">
 
                {/* VIEW: UPCOMING SESSIONS */}
                {viewState === 'upcoming' && (
-                  // FILTER: Only show "Upcoming" sessions. Hides Completed/Cancelled.
                   sessions.filter(s => s.status === 'Upcoming').length > 0 ? (
                      sessions
                         .filter(s => s.status === 'Upcoming')
                         .map(session => {
                            const existingBooking = myBookings.find(b => b.session?._id === session._id);
-                           
                            const isCancelled = existingBooking?.bookingStatus === "Cancelled";
                            const isActive = existingBooking && !isCancelled;
                            const capacity = session.capacity || 10;
                            const bookedCount = session.bookedCount || 0;
                            const isFull = bookedCount >= capacity;
-                           
-                           // Reason from individual booking
                            const cancelReason = existingBooking?.cancelReason;
 
                            return (
-                              <div key={session._id} className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:shadow-md ${isFull && !isActive ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-100'}`}>
+                              <div key={session._id} 
+                                   className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:shadow-md ${isFull && !isActive ? 'opacity-75' : ''}`}
+                                   style={{ 
+                                       backgroundColor: colors.card, 
+                                       borderColor: colors.border 
+                                   }}
+                              >
 
                                  <div className="flex-1 w-full">
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                                       <h3 className="text-xl font-bold text-gray-900">{session.type}</h3>
+                                       <h3 className="text-xl font-bold" style={{ color: colors.text }}>{session.type}</h3>
                                        <div className="flex flex-wrap gap-2">
-                                          <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold border border-blue-100 w-fit">
+                                          <span className="px-3 py-1 rounded-full text-xs font-bold border w-fit"
+                                                style={{ backgroundColor: theme === 'dark' ? '#1e3a8a' : '#eff6ff', color: theme === 'dark' ? '#bfdbfe' : '#2563eb', borderColor: theme === 'dark' ? '#1e40af' : '#dbeafe' }}>
                                              {session.duration}
                                           </span>
                                           
-                                          {/* Individual Booking Cancelled Badge */}
                                           {isCancelled && (
-                                             <div className="flex items-center gap-2 bg-red-50 border border-red-100 px-3 py-1 rounded-full">
-                                                <span className="text-xs font-bold text-red-600">You Cancelled</span>
+                                             <div className="flex items-center gap-2 px-3 py-1 rounded-full border"
+                                                  style={{ backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', borderColor: theme === 'dark' ? '#991b1b' : '#fee2e2' }}>
+                                                <span className="text-xs font-bold text-red-600 dark:text-red-400">You Cancelled</span>
                                                 {cancelReason && (
-                                                   <span className="text-xs text-red-500 border-l border-red-200 pl-2">
+                                                   <span className="text-xs pl-2 border-l border-red-200 dark:border-red-800 text-red-500 dark:text-red-300">
                                                       {cancelReason}
                                                    </span>
                                                 )}
@@ -177,59 +161,48 @@ const Booking = () => {
                                           )}
                                        </div>
                                     </div>
-                                    <p className="text-sm text-gray-500 mb-1">
-                                       <i className="fa-solid fa-user-ninja text-gray-400 mr-2 w-4"></i>
-                                       Trainer: <span className="font-medium text-gray-700">{session.trainer?.name}</span>
+                                    <p className="text-sm mb-1" style={{ color: colors.textMuted }}>
+                                       <i className="fa-solid fa-user-ninja mr-2 w-4"></i>
+                                       Trainer: <span className="font-medium" style={{ color: colors.text }}>{session.trainer?.name}</span>
                                     </p>
-                                    <p className="text-sm text-gray-500">
-                                       <i className="fa-regular fa-clock text-gray-400 mr-2 w-4"></i>
+                                    <p className="text-sm" style={{ color: colors.textMuted }}>
+                                       <i className="fa-regular fa-clock mr-2 w-4"></i>
                                        {session.date} • {session.time}
                                     </p>
                                  </div>
 
-                                 {/* Changed: Added w-full md:w-auto to button */}
                                  <button
                                     onClick={() => {
                                        if (isActive) handleCancelSession(session._id);
                                        else if (!isFull && !isCancelled) handleBookSession(session);
                                     }}
                                     disabled={(!isActive && isFull) || isCancelled}
-                                    className={`px-8 py-3 rounded-xl font-bold shadow-sm transition-colors flex items-center gap-2 min-w-[160px] justify-center w-full md:w-auto ${
-                                       isCancelled
-                                       ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200" 
-                                       : isActive 
-                                          ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 cursor-pointer" 
-                                          : isFull 
-                                             ? "bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300" 
-                                             : "bg-[#D9F17F] text-green-900 hover:bg-green-300 cursor-pointer" 
-                                    }`}
+                                    className={`px-8 py-3 rounded-xl font-bold shadow-sm transition-colors flex items-center gap-2 min-w-[160px] justify-center w-full md:w-auto cursor-pointer`}
+                                    style={
+                                        isCancelled ? { backgroundColor: colors.border, color: colors.textMuted, cursor: 'not-allowed' } :
+                                        isActive ? { backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', color: '#dc2626', borderColor: '#fee2e2', border: '1px solid' } :
+                                        isFull ? { backgroundColor: colors.border, color: colors.textMuted, cursor: 'not-allowed' } :
+                                        { backgroundColor: colors.primary, color: '#14532d' }
+                                    }
                                  >
                                     {isCancelled ? (
-                                       <>
-                                          <i className="fa-solid fa-ban"></i> Cancelled
-                                       </>
+                                       <><i className="fa-solid fa-ban"></i> Cancelled</>
                                     ) : isActive ? (
-                                       <>
-                                          <i className="fa-solid fa-xmark"></i> Cancel
-                                       </>
+                                       <><i className="fa-solid fa-xmark"></i> Cancel</>
                                     ) : isFull ? (
-                                       <>
-                                          <i className="fa-solid fa-ban"></i> Full
-                                       </>
+                                       <><i className="fa-solid fa-ban"></i> Full</>
                                     ) : (
-                                       <>
-                                          <span>Book Session</span>
-                                          <i className="fa-solid fa-arrow-right text-xs"></i>
-                                       </>
+                                       <><span>Book Session</span><i className="fa-solid fa-arrow-right text-xs"></i></>
                                     )}
                                  </button>
                               </div>
                            );
                         })
                   ) : (
-                     <div className="text-center py-16 bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-200">
-                        <i className="fa-regular fa-calendar-xmark text-4xl text-gray-300 mb-3"></i>
-                        <p className="text-gray-500">No upcoming sessions available.</p>
+                     <div className="text-center py-16 rounded-[2.5rem] border border-dashed"
+                          style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+                        <i className="fa-regular fa-calendar-xmark text-4xl mb-3" style={{ color: colors.textMuted }}></i>
+                        <p style={{ color: colors.textMuted }}>No upcoming sessions available.</p>
                      </div>
                   )
                )}
@@ -238,22 +211,21 @@ const Booking = () => {
                {viewState === 'history' && (
                   myBookings.length > 0 ? (
                      myBookings.map(b => {
-                        // Check GLOBAL Session Status (Admin actions)
                         const isSessionCompleted = b.session?.status === 'Completed';
                         const isSessionCancelled = b.session?.status === 'Cancelled';
-                        
-                        // Check USER Booking Status
                         const isUserCancelled = b.bookingStatus === 'Cancelled';
 
                         return (
-                        <div key={b._id} className={`p-6 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isUserCancelled || isSessionCancelled ? 'bg-gray-50 opacity-75' : 'bg-white'}`}>
+                        <div key={b._id} 
+                             className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isUserCancelled || isSessionCancelled ? 'opacity-75' : ''}`}
+                             style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                        >
                            <div className="flex-1 w-full">
-                              <h3 className="text-lg font-bold text-gray-900 mb-1">{b.session?.type || "Session"}</h3>
-                              <p className="text-sm text-gray-500">
+                              <h3 className="text-lg font-bold mb-1" style={{ color: colors.text }}>{b.session?.type || "Session"}</h3>
+                              <p className="text-sm" style={{ color: colors.textMuted }}>
                                  {b.session?.date} • {b.session?.time}
                               </p>
                               
-                              {/* DISPLAY REASON: If User Cancelled */}
                               {isUserCancelled && (
                                  <div className="mt-2 flex items-start gap-2">
                                     <i className="fa-solid fa-circle-info text-red-500 mt-0.5 text-xs"></i>
@@ -263,7 +235,6 @@ const Booking = () => {
                                  </div>
                               )}
 
-                              {/* DISPLAY REASON: If Admin Cancelled Session (Global) */}
                               {isSessionCancelled && !isUserCancelled && (
                                  <div className="mt-2 flex items-start gap-2">
                                     <i className="fa-solid fa-triangle-exclamation text-orange-500 mt-0.5 text-xs"></i>
@@ -273,7 +244,6 @@ const Booking = () => {
                                  </div>
                               )}
                               
-                              {/* DISPLAY STATUS: Completed */}
                               {isSessionCompleted && (
                                  <div className="mt-2 flex items-start gap-2">
                                     <i className="fa-solid fa-check-circle text-green-500 mt-0.5 text-xs"></i>
@@ -284,9 +254,7 @@ const Booking = () => {
                               )}
                            </div>
 
-                           {/* Changed: Added justify-between for mobile layout */}
                            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
-                              {/* Badge Logic */}
                               <div className={`px-4 py-2 rounded-xl text-sm font-bold border ${
                                  isUserCancelled 
                                     ? 'bg-red-50 text-red-600 border-red-100' 
@@ -306,11 +274,11 @@ const Booking = () => {
                                  }
                               </div>
                               
-                              {/* Cancel Button - Only show if Active and Future */}
                               {!isUserCancelled && !isSessionCancelled && !isSessionCompleted && (
                                  <button 
                                     onClick={() => handleCancelSession(b.session?._id)}
-                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                                    className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
+                                    style={{ backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', color: '#dc2626' }}
                                     title="Cancel Booking"
                                  >
                                     <i className="fa-solid fa-trash-can"></i>
@@ -320,9 +288,10 @@ const Booking = () => {
                         </div>
                      )})
                   ) : (
-                     <div className="text-center py-16 bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-200">
-                        <i className="fa-solid fa-ticket text-4xl text-gray-300 mb-3"></i>
-                        <p className="text-gray-500">You haven't booked any sessions yet.</p>
+                     <div className="text-center py-16 rounded-[2.5rem] border border-dashed"
+                          style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+                        <i className="fa-solid fa-ticket text-4xl mb-3" style={{ color: colors.textMuted }}></i>
+                        <p style={{ color: colors.textMuted }}>You haven't booked any sessions yet.</p>
                      </div>
                   )
                )}

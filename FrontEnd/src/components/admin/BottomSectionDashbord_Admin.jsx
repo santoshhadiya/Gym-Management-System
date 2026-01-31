@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom'; // Import Link for navigation
+import { Link } from 'react-router-dom'; 
 import { useGlobalContext } from '../../context/GlobalContext';
+import { useTheme } from '../../context/ThemeContext'; // Import useTheme
 
 const BottomSectionDashbord_Admin = () => {
   const { api, BACKEND_URL } = useGlobalContext();
+  const { colors, theme } = useTheme(); // Access custom colors and current theme
   const [newMembers, setNewMembers] = useState([]);
   const [reviews, setReviews] = useState([]); 
 
@@ -38,19 +40,19 @@ const BottomSectionDashbord_Admin = () => {
   };
 
   return (
-    <div className="mt-8 flex flex-col gap-8">
+    <div className="mt-8 flex flex-col gap-8 transition-colors duration-300">
 
       {/* Reviews Section */}
       <div className="w-full">
         <div className="flex justify-between items-end mb-6 pl-2 pr-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[#FEEF75]">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ color: colors.accent }}>
               <i className="fa-solid fa-star text-sm"></i>
             </div>
-            <h2 className="text-md font-semibold text-gray-800">Recent Reviews</h2>
+            <h2 className="text-md font-semibold" style={{ color: colors.text }}>Recent Reviews</h2>
           </div>
           
-          <Link to="/admin/feedbacks" className="text-xs font-bold text-gray-400 hover:text-blue-500 transition-colors flex items-center gap-1 cursor-pointer">
+          <Link to="/admin/feedbacks" className="text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer" style={{ color: colors.textMuted }}>
             View All <i className="fa-solid fa-arrow-right"></i>
           </Link>
         </div>
@@ -58,29 +60,39 @@ const BottomSectionDashbord_Admin = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {reviews.length > 0 ? (
             reviews.map((review, index) => {
-              // [UPDATED] Use helper to process avatar URL
               const avatarUrl = getImageUrl(review.avatar);
 
               return (
-                <div key={review._id || index} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col h-full">
+                <div 
+                  key={review._id || index} 
+                  className="rounded-3xl p-6 shadow-sm border transition-all flex flex-col h-full hover:shadow-md"
+                  style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                >
                   <div className="flex items-center gap-4 mb-4">
                     <img 
                       src={avatarUrl || `https://ui-avatars.com/api/?name=${review.member}&background=random`} 
                       alt={review.member} 
-                      className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100" 
+                      className="w-12 h-12 rounded-full object-cover shadow-sm border" 
+                      style={{ borderColor: colors.border }}
                     />
                     <div>
-                      <p className="font-semibold text-gray-900 text-sm">{review.member}</p>
-                      <p className="text-xs text-yellow-500 flex items-center gap-1 font-bold">
+                      <p className="font-semibold text-sm" style={{ color: colors.text }}>{review.member}</p>
+                      <p className="text-xs flex items-center gap-1 font-bold" style={{ color: colors.accent }}>
                         <i className="fa-solid fa-star"></i> {review.rating}/5
                       </p>
                     </div>
                   </div>
-                  <p className="text-gray-500 text-xs leading-relaxed italic line-clamp-3 mb-3">"{review.message}"</p>
+                  <p className="text-xs leading-relaxed italic line-clamp-3 mb-3" style={{ color: colors.textMuted }}>"{review.message}"</p>
                   
-                  <div className="mt-auto flex justify-between items-center pt-3 border-t border-gray-50">
-                     <span className="text-[10px] text-gray-400">{new Date(review.date).toLocaleDateString()}</span>
-                     <span className={`text-[10px] px-2 py-1 rounded ${review.type === 'Trainer' ? 'bg-blue-50 text-blue-600' : 'bg-gray-50 text-gray-500'}`}>
+                  <div className="mt-auto flex justify-between items-center pt-3 border-t" style={{ borderColor: colors.border }}>
+                     <span className="text-[10px]" style={{ color: colors.textMuted }}>{new Date(review.date).toLocaleDateString()}</span>
+                     <span 
+                      className="text-[10px] px-2 py-1 rounded"
+                      style={{ 
+                        backgroundColor: review.type === 'Trainer' ? colors.secondary : colors.background, 
+                        color: review.type === 'Trainer' ? (theme === 'dark' ? '#fff' : '#1e3a8a') : colors.textMuted 
+                      }}
+                     >
                         {review.type}
                      </span>
                   </div>
@@ -88,21 +100,27 @@ const BottomSectionDashbord_Admin = () => {
               );
             })
           ) : (
-            <div className="col-span-3 text-center py-12 bg-white rounded-3xl border border-dashed border-gray-200">
-               <p className="text-gray-400 text-sm">No reviews submitted yet.</p>
+            <div 
+              className="col-span-3 text-center py-12 rounded-3xl border border-dashed"
+              style={{ backgroundColor: colors.card, borderColor: colors.border }}
+            >
+               <p className="text-sm" style={{ color: colors.textMuted }}>No reviews submitted yet.</p>
             </div>
           )}
         </div>
       </div>
 
       {/* New Members Section */}
-      <div className="w-full bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
+      <div 
+        className="w-full rounded-3xl border p-8 shadow-sm transition-colors duration-300"
+        style={{ backgroundColor: colors.card, borderColor: colors.border }}
+      >
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[#CDE7FE]">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ color: colors.secondary }}>
               <i className="fa-solid fa-user-plus text-sm"></i>
             </div>
-            <h2 className="text-md font-semibold text-gray-800">New Members</h2>
+            <h2 className="text-md font-semibold" style={{ color: colors.text }}>New Members</h2>
           </div>
         </div>
 
@@ -111,8 +129,15 @@ const BottomSectionDashbord_Admin = () => {
             const imageUrl = getImageUrl(member.image);
             
             return (
-              <div key={index} className="group border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all rounded-2xl p-4 text-center cursor-pointer bg-white">
-                <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center bg-blue-50 mb-3 group-hover:scale-110 transition-transform overflow-hidden">
+              <div 
+                key={index} 
+                className="group border transition-all rounded-2xl p-4 text-center cursor-pointer"
+                style={{ backgroundColor: colors.background, borderColor: colors.border }}
+              >
+                <div 
+                  className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform overflow-hidden"
+                  style={{ backgroundColor: colors.secondary }}
+                >
                   {imageUrl ? (
                     <img 
                       src={imageUrl} 
@@ -120,20 +145,23 @@ const BottomSectionDashbord_Admin = () => {
                       className="w-full h-full object-cover" 
                     />
                   ) : (
-                    <span className="text-2xl font-bold text-blue-400 uppercase">
+                    <span className="text-2xl font-bold uppercase" style={{ color: theme === 'dark' ? '#fff' : '#1e3a8a' }}>
                       {member.name ? member.name.charAt(0) : "?"}
                     </span>
                   )}
                 </div>
-                <h3 className="font-semibold text-gray-900 text-sm mb-1">{member.name}</h3>
-                <p className="text-xs text-gray-400 mb-3 truncate">{member.email}</p>
-                <div className="inline-block text-[10px] font-medium px-2 py-1 rounded-md bg-gray-50 text-gray-500 border border-gray-200">
+                <h3 className="font-semibold text-sm mb-1" style={{ color: colors.text }}>{member.name}</h3>
+                <p className="text-xs mb-3 truncate" style={{ color: colors.textMuted }}>{member.email}</p>
+                <div 
+                  className="inline-block text-[10px] font-medium px-2 py-1 rounded-md border"
+                  style={{ backgroundColor: colors.card, color: colors.textMuted, borderColor: colors.border }}
+                >
                   {member.plan?.name || "No Plan"}
                 </div>
               </div>
             );
           }) : (
-            <p className="text-gray-400 text-sm col-span-5 text-center">No new members found.</p>
+            <p className="text-sm col-span-5 text-center" style={{ color: colors.textMuted }}>No new members found.</p>
           )}
         </div>
       </div>

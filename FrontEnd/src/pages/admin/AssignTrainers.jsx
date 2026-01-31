@@ -1,25 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-hot-toast'; // Switched to react-hot-toast
 import { useGlobalContext } from "../../context/GlobalContext";
+import { useTheme } from "../../context/ThemeContext"; // Import useTheme
 
 const AssignTrainers = () => {
-
-  const { api } = useGlobalContext()
+  const { api } = useGlobalContext();
+  const { colors, theme } = useTheme(); // Access custom colors and current theme
 
   // --- STYLE INJECTION ---
   useEffect(() => {
-    const linkToast = document.createElement("link");
-    linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
-    linkToast.rel = "stylesheet";
-    document.head.appendChild(linkToast);
-
+    // Note: react-toastify link removed as it is no longer used
     const linkFA = document.createElement("link");
     linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
     linkFA.rel = "stylesheet";
     document.head.appendChild(linkFA);
 
     return () => {
-      document.head.removeChild(linkToast);
       document.head.removeChild(linkFA);
     };
   }, []);
@@ -73,7 +69,6 @@ const AssignTrainers = () => {
   const getMemberById = (id) => members.find(m => m._id === id);
 
   // --- ACTIONS ---
-
   const handleOpenAssignModal = () => {
     setModalType("assign");
     setSelectedTrainer("");
@@ -93,11 +88,8 @@ const AssignTrainers = () => {
     if (window.confirm(`Are you sure you want to remove ${member.name}'s trainer assignment?`)) {
       try {
         await api.delete(`/assignments/${member._id}`);
-
-        toast.info("Member unassigned");
-        // Refresh data from DB to ensure sync
+        toast.success("Member unassigned");
         await fetchData();
-
       } catch (error) {
         console.error(error);
         toast.error("Failed to unassign member.");
@@ -109,7 +101,7 @@ const AssignTrainers = () => {
     e.preventDefault();
 
     if (!selectedTrainer || selectedMembers.length === 0) {
-      toast.warn("Please select a trainer and at least one member.");
+      toast.error("Please select a trainer and at least one member.");
       return;
     }
 
@@ -126,9 +118,6 @@ const AssignTrainers = () => {
 
     try {
       setIsSubmitting(true);
-
-      // --- API CALL ---
-      // The backend assignmentController will handle creating the automatic "Hello" message
       await api.post("/assignments", {
         trainerId: selectedTrainer,
         memberIds: selectedMembers,
@@ -137,12 +126,10 @@ const AssignTrainers = () => {
 
       toast.success(`Assigned & Intro Message Sent!`);
       setShowModal(false);
-
       await fetchData();
-
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Assignment failed. Please try again.");
+      toast.error(error.response?.data?.message || "Assignment failed.");
     } finally {
       setIsSubmitting(false);
     }
@@ -154,34 +141,33 @@ const AssignTrainers = () => {
   );
 
   return (
-    <div className="w-full bg-white rounded-3xl p-8 shadow-sm border border-gray-100 font-sans min-h-screen relative">
-      <ToastContainer position="top-right" autoClose={3000} />
-
+    <div 
+      className="w-full rounded-3xl p-8 shadow-sm border font-sans min-h-screen relative transition-colors duration-300"
+      style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
+    >
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Trainer Assignments</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage client allocations. Intro msg sent automatically on assignment.</p>
+          <h1 className="text-2xl font-bold" style={{ color: colors.text }}>Trainer Assignments</h1>
+          <p className="text-sm mt-1" style={{ color: colors.textMuted }}>Manage client allocations. Intro msg sent automatically on assignment.</p>
         </div>
-        <div className="flex bg-gray-100 p-1 rounded-xl">
+        <div className="flex p-1 rounded-xl" style={{ backgroundColor: colors.border }}>
           <button
             onClick={() => setViewState("current")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewState === 'current' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewState === 'current' ? 'shadow' : 'hover:opacity-80'}`}
+            style={{ 
+                backgroundColor: viewState === 'current' ? colors.card : 'transparent',
+                color: viewState === 'current' ? colors.secondary : colors.textMuted 
+            }}
           >
             Active Assignments
           </button>
-          {/* <button
-            onClick={() => setViewState("history")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewState === 'history' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            History Log
-          </button> */}
         </div>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center items-center py-20">
-          <i className="fa-solid fa-circle-notch fa-spin text-3xl text-gray-300"></i>
+          <i className="fa-solid fa-circle-notch fa-spin text-3xl" style={{ color: colors.border }}></i>
         </div>
       ) : (
         <>
@@ -190,18 +176,34 @@ const AssignTrainers = () => {
             <div className="mb-8 overflow-x-auto">
               <div className="flex gap-4 pb-2">
                 {trainers.map(t => (
-                  <div key={t._id} className={`min-w-[200px] p-4 rounded-2xl border ${t.status === 'Full' ? 'bg-red-50 border-red-100' : 'bg-blue-50 border-blue-100'}`}>
+                  <div 
+                    key={t._id} 
+                    className="min-w-[200px] p-4 rounded-2xl border transition-colors"
+                    style={{ 
+                        backgroundColor: t.status === 'Full' ? (theme === 'dark' ? '#450a0a' : '#fef2f2') : colors.card,
+                        borderColor: colors.border 
+                    }}
+                  >
                     <div className="flex justify-between items-center mb-2">
-                      <span className="font-bold text-gray-800">{t.name}</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${t.status === 'Full' ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}`}>{t.status}</span>
+                      <span className="font-bold" style={{ color: colors.text }}>{t.name}</span>
+                      <span 
+                        className="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                        style={{ 
+                            backgroundColor: t.status === 'Full' ? '#fee2e2' : colors.primary,
+                            color: t.status === 'Full' ? '#991b1b' : '#111827'
+                        }}
+                      >{t.status}</span>
                     </div>
-                    <div className="w-full bg-white rounded-full h-2 mb-1">
+                    <div className="w-full rounded-full h-2 mb-1" style={{ backgroundColor: colors.background }}>
                       <div
-                        className={`h-2 rounded-full ${t.status === 'Full' ? 'bg-red-500' : 'bg-blue-500'}`}
-                        style={{ width: `${(t.activeClients / t.capacity) * 100}%` }}
+                        className="h-2 rounded-full transition-all"
+                        style={{ 
+                            width: `${(t.activeClients / t.capacity) * 100}%`,
+                            backgroundColor: t.status === 'Full' ? '#ef4444' : colors.secondary
+                        }}
                       ></div>
                     </div>
-                    <p className="text-xs text-gray-500 text-right">{t.activeClients} / {t.capacity} Clients</p>
+                    <p className="text-xs text-right" style={{ color: colors.textMuted }}>{t.activeClients} / {t.capacity} Clients</p>
                   </div>
                 ))}
               </div>
@@ -217,13 +219,20 @@ const AssignTrainers = () => {
                   placeholder="Search member..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-full bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-full border focus:outline-none focus:ring-2 text-sm transition-colors"
+                  style={{ 
+                    backgroundColor: colors.card, 
+                    borderColor: colors.border, 
+                    color: colors.text,
+                    '--tw-ring-color': colors.secondary 
+                  }}
                 />
                 <i className="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
               </div>
               <button
                 onClick={handleOpenAssignModal}
-                className="px-5 py-2.5 rounded-full bg-[#D9F17F] text-green-900 text-sm font-bold hover:bg-green-300 transition-colors shadow-sm flex items-center gap-2"
+                className="px-5 py-2.5 rounded-full text-sm font-bold transition-colors shadow-sm flex items-center gap-2"
+                style={{ backgroundColor: colors.primary, color: '#111827' }}
               >
                 <i className="fa-solid fa-user-plus"></i> New Assignment
               </button>
@@ -232,90 +241,87 @@ const AssignTrainers = () => {
 
           {/* ASSIGNMENTS TABLE */}
           {viewState === "current" ? (
-            <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
-              <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                <thead className="bg-[#f8f9fa]">
+            <div className="overflow-hidden rounded-2xl border shadow-sm transition-colors" style={{ borderColor: colors.border }}>
+              <table className="w-full border-collapse text-left text-sm">
+                <thead style={{ backgroundColor: colors.card }}>
                   <tr>
-                    <th className="px-6 py-4 font-semibold text-gray-900">Member</th>
-                    <th className="px-6 py-4 font-semibold text-gray-900">Plan</th>
-                    <th className="px-6 py-4 font-semibold text-gray-900">Assigned Trainer</th>
-                    <th className="px-6 py-4 font-semibold text-gray-900 text-center">Since</th>
-                    <th className="px-6 py-4 font-semibold text-gray-900 text-right">Actions</th>
+                    <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Member</th>
+                    <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Plan</th>
+                    <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Assigned Trainer</th>
+                    <th className="px-6 py-4 font-semibold text-center" style={{ color: colors.text }}>Since</th>
+                    <th className="px-6 py-4 font-semibold text-right" style={{ color: colors.text }}>Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y" style={{ divideColor: colors.border, backgroundColor: colors.background }}>
                   {filteredMembers.map((member) => {
                     const assignedTrainer = member.trainer;
-
                     return (
-                      <tr key={member._id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 font-medium text-gray-900">{member.name}</td>
-                        <td className="px-6 py-4 text-gray-500">{member.plan?.name || "No Plan"}</td>
+                      <tr key={member._id} className="hover:opacity-80 transition-opacity">
+                        <td className="px-6 py-4 font-medium" style={{ color: colors.text }}>{member.name}</td>
+                        <td className="px-6 py-4" style={{ color: colors.textMuted }}>{member.plan?.name || "No Plan"}</td>
                         <td className="px-6 py-4">
                           {assignedTrainer ? (
                             <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-[#CDE7FE] flex items-center justify-center text-xs font-bold text-blue-600">
+                              <div 
+                                className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                                style={{ backgroundColor: colors.secondary, color: colors.text }}
+                              >
                                 {assignedTrainer.name ? assignedTrainer.name[0] : "T"}
                               </div>
-                              <span className="text-gray-900 font-medium">{assignedTrainer.name}</span>
+                              <span className="font-medium" style={{ color: colors.text }}>{assignedTrainer.name}</span>
                             </div>
                           ) : (
-                            <span className="text-gray-400 italic">Unassigned</span>
+                            <span className="italic" style={{ color: colors.textMuted }}>Unassigned</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-center text-xs">
+                        <td className="px-6 py-4 text-center text-xs" style={{ color: colors.textMuted }}>
                           {member.assignedDate ? new Date(member.assignedDate).toLocaleDateString() : "-"}
                         </td>
                         <td className="px-6 py-4 text-right">
                           {assignedTrainer ? (
                             <div className="flex justify-end gap-2">
-                              <button onClick={() => handleOpenReassignModal(member)} className="text-blue-500 hover:bg-blue-50 p-2 rounded-lg text-xs font-bold transition-colors">
+                              <button onClick={() => handleOpenReassignModal(member)} className="p-2 rounded-lg text-xs font-bold transition-colors" style={{ color: colors.secondary }}>
                                 Change
                               </button>
-                              <button onClick={() => handleUnassign(member)} className="text-red-400 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                              <button onClick={() => handleUnassign(member)} className="text-red-400 hover:opacity-70 p-2 rounded-lg transition-colors">
                                 <i className="fa-solid fa-user-xmark"></i>
                               </button>
                             </div>
                           ) : (
-                            <span className="text-xs text-orange-400 font-medium">Needs Trainer</span>
+                            <span className="text-xs font-medium" style={{ color: colors.accent }}>Needs Trainer</span>
                           )}
                         </td>
                       </tr>
                     );
                   })}
-                  {filteredMembers.length === 0 && (
-                    <tr><td colSpan="5" className="text-center py-8 text-gray-400">No members found</td></tr>
-                  )}
                 </tbody>
               </table>
             </div>
           ) : (
-            // HISTORY VIEW
-            <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
-              <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 font-semibold">Date</th>
-                    <th className="px-6 py-4 font-semibold">Member</th>
-                    <th className="px-6 py-4 font-semibold">Action</th>
-                    <th className="px-6 py-4 font-semibold">Reason</th>
+            // HISTORY VIEW (Minimal styling update as logic remains)
+            <div className="overflow-hidden rounded-2xl border shadow-sm" style={{ borderColor: colors.border }}>
+              <table className="w-full border-collapse text-left text-sm" style={{ backgroundColor: colors.card }}>
+                <thead>
+                  <tr style={{ backgroundColor: colors.border }}>
+                    <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Date</th>
+                    <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Member</th>
+                    <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Action</th>
+                    <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Reason</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {assignmentHistory.length > 0 ? assignmentHistory.map(h => (
+                <tbody className="divide-y" style={{ divideColor: colors.border, backgroundColor: colors.background }}>
+                  {assignmentHistory.map(h => (
                     <tr key={h._id}>
-                      <td className="px-6 py-4 text-gray-900">{h.date}</td>
-                      <td className="px-6 py-4 font-medium">{h.member}</td>
+                      <td className="px-6 py-4" style={{ color: colors.text }}>{h.date}</td>
+                      <td className="px-6 py-4 font-medium" style={{ color: colors.text }}>{h.member}</td>
                       <td className="px-6 py-4">
                         <span className="text-red-400 line-through mr-2">{h.oldTrainer || "Unassigned"}</span>
-                        <i className="fa-solid fa-arrow-right text-gray-400 text-xs mx-1"></i>
-                        <span className="text-green-600 font-medium ml-2">{h.newTrainer}</span>
+                        <i className="fa-solid fa-arrow-right text-xs mx-1" style={{ color: colors.textMuted }}></i>
+                        <span className="font-medium ml-2" style={{ color: colors.primary }}>{h.newTrainer}</span>
                       </td>
-                      <td className="px-6 py-4 text-gray-500 text-xs italic">"{h.reason}"</td>
+                      <td className="px-6 py-4 text-xs italic" style={{ color: colors.textMuted }}>"{h.reason}"</td>
                     </tr>
-                  )) : (
-                    <tr><td colSpan="4" className="text-center py-8 text-gray-400">No session history recorded yet.</td></tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -326,24 +332,27 @@ const AssignTrainers = () => {
       {/* --- ASSIGNMENT MODAL --- */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="bg-[#f8f9fa] px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="font-bold text-gray-900">{modalType === 'assign' ? "New Assignment" : "Reassign Trainer"}</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
+          <div className="rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200" style={{ backgroundColor: colors.card }}>
+            <div className="px-6 py-4 border-b flex justify-between items-center" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
+              <h3 className="font-bold" style={{ color: colors.text }}>{modalType === 'assign' ? "New Assignment" : "Reassign Trainer"}</h3>
+              <button onClick={() => setShowModal(false)} style={{ color: colors.textMuted }}>
                 <i className="fa-solid fa-xmark text-lg"></i>
               </button>
             </div>
 
             <form onSubmit={handleSubmitAssignment} className="p-6">
-
               {/* Step 1: Select Trainer */}
               <div className="mb-6">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Trainer</label>
+                <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: colors.textMuted }}>Select Trainer</label>
                 <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
                   {trainers.map(t => (
                     <label
                       key={t._id}
-                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${selectedTrainer === t._id ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500' : 'border-gray-200 hover:border-blue-300'}`}
+                      className="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
+                      style={{ 
+                        borderColor: selectedTrainer === t._id ? colors.secondary : colors.border,
+                        backgroundColor: selectedTrainer === t._id ? colors.background : 'transparent'
+                      }}
                     >
                       <div className="flex items-center gap-3">
                         <input
@@ -354,17 +363,20 @@ const AssignTrainers = () => {
                           onChange={(e) => setSelectedTrainer(e.target.value)}
                           className="hidden"
                         />
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedTrainer === t._id ? 'border-blue-600' : 'border-gray-300'}`}>
-                          {selectedTrainer === t._id && <div className="w-2 h-2 bg-blue-600 rounded-full"></div>}
+                        <div 
+                            className="w-4 h-4 rounded-full border flex items-center justify-center"
+                            style={{ borderColor: selectedTrainer === t._id ? colors.secondary : colors.textMuted }}
+                        >
+                          {selectedTrainer === t._id && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.secondary }}></div>}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-gray-900">{t.name}</p>
-                          <p className="text-xs text-gray-500">{t.specialization}</p>
+                          <p className="text-sm font-bold" style={{ color: colors.text }}>{t.name}</p>
+                          <p className="text-xs" style={{ color: colors.textMuted }}>{t.specialization}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className={`text-xs font-bold px-2 py-1 rounded ${t.status === 'Full' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>{t.status}</span>
-                        <p className="text-[10px] text-gray-400 mt-1">{t.activeClients}/{t.capacity} Active</p>
+                        <span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: colors.primary, color: '#111827' }}>{t.status}</span>
+                        <p className="text-[10px] mt-1" style={{ color: colors.textMuted }}>{t.activeClients}/{t.capacity} Active</p>
                       </div>
                     </label>
                   ))}
@@ -374,39 +386,39 @@ const AssignTrainers = () => {
               {/* Step 2: Select Members (Only visible for Bulk Assign) */}
               {modalType === 'assign' && (
                 <div className="mb-6">
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Members</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: colors.textMuted }}>Select Members</label>
                   <select
                     multiple
                     value={selectedMembers}
                     onChange={(e) => setSelectedMembers(Array.from(e.target.selectedOptions, option => option.value))}
-                    className="w-full p-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 h-32 bg-gray-50"
+                    className="w-full p-2 border rounded-xl text-sm focus:outline-none h-32 transition-colors"
+                    style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
                   >
-                    {/* Show only unassigned members here */}
                     {members.filter(m => !m.trainer).map(m => (
                       <option key={m._id} value={m._id}>
                         {m.name} ({m.plan?.name || "No Plan"})
                       </option>
                     ))}
-                    {members.filter(m => !m.trainer).length === 0 && <option disabled>No unassigned members available</option>}
                   </select>
-                  <p className="text-[10px] text-gray-400 mt-1">* Hold Ctrl/Cmd to select multiple</p>
+                  <p className="text-[10px] mt-1" style={{ color: colors.textMuted }}>* Hold Ctrl/Cmd to select multiple</p>
                 </div>
               )}
 
               {/* Step 2b: Reason (Only for Reassign) */}
               {modalType === 'reassign' && selectedMembers.length > 0 && (
                 <div className="mb-6">
-                  <div className="bg-yellow-50 p-3 rounded-xl mb-4 text-xs text-yellow-800 border border-yellow-100">
+                  <div className="p-3 rounded-xl mb-4 text-xs border" style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.secondary }}>
                     Reassigning <strong>{getMemberById(selectedMembers[0])?.name}</strong>
                   </div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Reason for Change</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: colors.textMuted }}>Reason for Change</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Member Request, Schedule Conflict"
+                    placeholder="e.g. Member Request"
                     value={changeReason}
                     onChange={(e) => setChangeReason(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 text-sm"
+                    className="w-full px-4 py-2 rounded-xl border focus:outline-none text-sm transition-colors"
+                    style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
                   />
                 </div>
               )}
@@ -414,17 +426,16 @@ const AssignTrainers = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 bg-[#FEEF75] text-yellow-900 font-bold rounded-xl hover:bg-yellow-300 shadow-sm transition-colors flex justify-center items-center gap-2"
+                className="w-full py-3 font-bold rounded-xl transition-colors flex justify-center items-center gap-2 shadow-sm"
+                style={{ backgroundColor: colors.accent, color: theme === 'dark' ? '#fff' : '#854d0e' }}
               >
                 {isSubmitting && <i className="fa-solid fa-spinner fa-spin"></i>}
                 {isSubmitting ? "Processing..." : "Confirm Assignment"}
               </button>
-
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 };

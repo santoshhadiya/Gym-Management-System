@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useGlobalContext } from '../../context/GlobalContext';
+import { useTheme } from '../../context/ThemeContext'; // Import useTheme
 
 const Cards_Admin = () => {
   const { api } = useGlobalContext();
+  const { colors } = useTheme(); // Access custom colors
   
   const [stats, setStats] = useState({
     trainers: 0,
@@ -15,11 +17,10 @@ const Cards_Admin = () => {
       try {
         const [trainersRes, sessionsRes, membersRes] = await Promise.all([
           api.get("/trainers"),
-          api.get("/sessions"), // Fetches all sessions
+          api.get("/sessions"),
           api.get("/members")
         ]);
 
-        // Filter for Upcoming sessions only
         const upcomingCount = sessionsRes.data.filter(s => s.status === 'Upcoming').length;
 
         setStats({
@@ -52,8 +53,8 @@ const Cards_Admin = () => {
       icon: "fa-solid fa-users",
     },
     {
-      title: "Upcoming Sessions", // Updated Label
-      value: stats.upcomingSessions, // Updated Value
+      title: "Upcoming Sessions",
+      value: stats.upcomingSessions,
       suffix: "Sessions",
       subtitle: "Scheduled classes",
       icon: "fa-solid fa-stopwatch",
@@ -66,10 +67,11 @@ const Cards_Admin = () => {
         {statsData.map((item, index) => (
           <div
             key={index}
-            className="bg-white border border-gray-100 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden lg:w-[200px]"
+            className="border rounded-3xl p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden lg:w-[200px]"
+            style={{ backgroundColor: colors.card, borderColor: colors.border }} // Dynamic styling
           >
-            <div className="flex items-center gap-2 mb-4 text-gray-500">
-              <div className="h-8 rounded-full flex items-center justify-center text-gray-400">
+            <div className="flex items-center gap-2 mb-4" style={{ color: colors.textMuted }}>
+              <div className="h-8 rounded-full flex items-center justify-center">
                 <i className={`${item.icon} text-sm`}></i>
               </div>
               <p className="text-sm font-medium">
@@ -77,14 +79,14 @@ const Cards_Admin = () => {
               </p>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-700">
+            <h2 className="text-2xl font-bold" style={{ color: colors.text }}>
               {item.value}{" "}
-              <span className="text-lg font-medium text-gray-600">
+              <span className="text-lg font-medium" style={{ color: colors.textMuted }}>
                 {item.suffix}
               </span>
             </h2>
 
-            <p className="text-sm text-gray-400 mt-4">
+            <p className="text-sm mt-4" style={{ color: colors.textMuted }}>
               {item.subtitle}
             </p>
           </div>

@@ -9,6 +9,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import { useGlobalContext } from '../../context/GlobalContext';
+import { useTheme } from '../../context/ThemeContext'; // Import useTheme
 
 ChartJS.register(
   CategoryScale,
@@ -20,23 +21,43 @@ ChartJS.register(
 
 const TimeDropdown = ({ selected, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { colors, theme } = useTheme(); // Access custom colors and theme
   const options = ["Today", "This Week", "This Month", "This Year"];
 
   return (
     <div className="relative">
-      <button onClick={() => setIsOpen(!isOpen)} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border outline-none ${isOpen ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm ring-2 ring-blue-100/50' : 'bg-white border-gray-100 text-gray-600 hover:border-gray-300 hover:bg-gray-50'}`}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border outline-none`}
+        style={{ 
+            backgroundColor: isOpen ? colors.secondary : colors.card, 
+            borderColor: colors.border,
+            color: isOpen ? (theme === 'dark' ? '#fff' : '#1e3a8a') : colors.text 
+        }}
+      >
         <span>{selected}</span>
-        <i className={`fa-solid fa-chevron-down text-[10px] transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-500' : 'text-gray-400'}`}></i>
+        <i className={`fa-solid fa-chevron-down text-[10px] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} style={{ color: isOpen ? (theme === 'dark' ? '#fff' : colors.secondary) : colors.textMuted }}></i>
       </button>
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20 origin-top-right animate-in fade-in zoom-in-95 duration-100">
+          <div 
+            className="absolute right-0 top-full mt-2 w-40 rounded-2xl shadow-xl border overflow-hidden z-20 origin-top-right animate-in fade-in zoom-in-95 duration-100"
+            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+          >
             <div className="p-1.5 space-y-0.5">
               {options.map((option) => (
-                <button key={option} onClick={() => { onSelect(option); setIsOpen(false); }} className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 flex items-center justify-between group ${selected === option ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
+                <button 
+                    key={option} 
+                    onClick={() => { onSelect(option); setIsOpen(false); }} 
+                    className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 flex items-center justify-between group`}
+                    style={{ 
+                        backgroundColor: selected === option ? colors.secondary : 'transparent',
+                        color: selected === option ? (theme === 'dark' ? '#fff' : '#1e3a8a') : colors.text 
+                    }}
+                >
                   {option}
-                  {selected === option && <i className="fa-solid fa-check text-blue-500 text-[10px]"></i>}
+                  {selected === option && <i className="fa-solid fa-check text-[10px]"></i>}
                 </button>
               ))}
             </div>
@@ -49,6 +70,7 @@ const TimeDropdown = ({ selected, onSelect }) => {
 
 const TotalMembersChart_Admin = () => {
   const { api } = useGlobalContext();
+  const { colors } = useTheme(); // Access custom colors
   const [members, setMembers] = useState([]);
   const [timePeriod, setTimePeriod] = useState("This Week");
 
@@ -109,7 +131,6 @@ const TotalMembersChart_Admin = () => {
       });
 
     } else if (timePeriod === "Today") {
-      // 4-hour blocks
       labels = ["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"];
       data = new Array(6).fill(0);
       members.forEach(m => {
@@ -130,8 +151,8 @@ const TotalMembersChart_Admin = () => {
     datasets: [{
       label: "New Members",
       data: chartData.data,
-      backgroundColor: ["#CDE7FE"],
-      hoverBackgroundColor: "#FEEF75",
+      backgroundColor: [colors.secondary], // Soft Blue
+      hoverBackgroundColor: colors.accent, // Yellow
       borderRadius: 8,
       barThickness: 'flex',
       maxBarThickness: 30, 
@@ -144,23 +165,39 @@ const TotalMembersChart_Admin = () => {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: "#fff", titleColor: "#000", bodyColor: "#555", borderColor: "#ddd", borderWidth: 1, padding: 10, displayColors: false,
+        backgroundColor: colors.card,
+        titleColor: colors.text,
+        bodyColor: colors.textMuted,
+        borderColor: colors.border,
+        borderWidth: 1,
+        padding: 10,
+        displayColors: false,
       }
     },
     scales: {
-      y: { beginAtZero: true, grid: { color: "#eee" } },
-      x: { grid: { display: false } },
+      y: { 
+        beginAtZero: true, 
+        grid: { color: colors.border },
+        ticks: { color: colors.textMuted }
+      },
+      x: { 
+        grid: { display: false },
+        ticks: { color: colors.textMuted }
+      },
     },
   };
 
   return (
-    <div className="w-full bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+    <div 
+        className="w-full border rounded-3xl p-6 shadow-sm transition-colors duration-300"
+        style={{ backgroundColor: colors.card, borderColor: colors.border }}
+    >
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ color: colors.textMuted }}>
             <i className="fa-solid fa-users text-sm"></i>
           </div>
-          <h3 className="font-semibold text-gray-800 text-md">Member Growth</h3>
+          <h3 className="font-semibold text-md" style={{ color: colors.text }}>Member Growth</h3>
         </div>
         <TimeDropdown selected={timePeriod} onSelect={setTimePeriod} />
       </div>

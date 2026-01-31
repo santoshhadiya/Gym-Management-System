@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Nav_Admin from "../../components/admin/Nav_Admin";
 import Sidebar_Admin from "../../components/admin/Sidebar_Admin";
-// Fixed import path to include extension and ensure resolution
+import { useTheme } from "../../context/ThemeContext"; // Import Theme Context
 
 const AdminLayout = () => {
   const { pathname } = useLocation();
+  const { colors } = useTheme(); // Consume Theme
 
   // Load Font Awesome dynamically
   useEffect(() => {
@@ -19,26 +20,32 @@ const AdminLayout = () => {
     };
   }, []);
 
-  // Defined icons for each navigation item
-  // using fa-regular (un-filled) where possible
-  
-
   return (
-    <div className="flex min-h-screen bg-white font-sans">
+    <div className="flex min-h-screen font-sans transition-colors duration-300"
+         style={{ backgroundColor: colors.background, color: colors.text }}>
 
       {/* Sidebar */}
       <Sidebar_Admin/>
 
       {/* Main Content */}
-      <main className="flex-1  overflow-y-auto bg-white">
+      <main className="flex-1 overflow-y-auto" style={{ backgroundColor: colors.background }}>
         <div className="p-6">
             <Nav_Admin />
-            <div className="mt-6">
+            <div className="mt-6 animate-fade-in">
                 <Outlet />
             </div>
         </div>
       </main>
 
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 };

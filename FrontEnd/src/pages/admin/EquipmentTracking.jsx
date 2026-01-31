@@ -9,8 +9,9 @@ import {
   Legend
 } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-hot-toast'; // Switched to react-hot-toast
 import { useGlobalContext } from "../../context/GlobalContext";
+import { useTheme } from "../../context/ThemeContext"; // Import useTheme
 
 // Register ChartJS components
 ChartJS.register(
@@ -24,6 +25,7 @@ ChartJS.register(
 
 const EquipmentTracking = () => {
   const { api } = useGlobalContext();
+  const { colors, theme } = useTheme(); // Access custom colors and current theme
 
   // --- STATE ---
   const [equipmentList, setEquipmentList] = useState([]);
@@ -41,18 +43,13 @@ const EquipmentTracking = () => {
 
   // --- STYLE INJECTION ---
   useEffect(() => {
-    const linkToast = document.createElement("link");
-    linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
-    linkToast.rel = "stylesheet";
-    document.head.appendChild(linkToast);
-
+    // Note: react-toastify link removed as it is no longer used
     const linkFA = document.createElement("link");
     linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
     linkFA.rel = "stylesheet";
     document.head.appendChild(linkFA);
 
     return () => {
-      document.head.removeChild(linkToast);
       document.head.removeChild(linkFA);
     };
   }, []);
@@ -64,10 +61,9 @@ const EquipmentTracking = () => {
       const res = await api.get("/equipment");
       setEquipmentList(res.data);
       
-      // Initial Alerts based on fetched data
       const repairNeeded = res.data.filter(e => e.condition === "Repair Needed" || e.condition === "Out of Order").length;
       if (repairNeeded > 0) {
-        toast.warn(`${repairNeeded} Equipment items need attention!`, { autoClose: 5000, toastId: 'repair-alert' });
+        toast(`${repairNeeded} Equipment items need attention!`, { icon: '⚠️' });
       }
 
     } catch (err) {
@@ -84,11 +80,11 @@ const EquipmentTracking = () => {
   // --- HELPERS ---
   const getConditionStyle = (condition) => {
     switch(condition) {
-      case "Good": return "bg-[#D9F17F] text-green-900 border-green-200";
-      case "Repair Needed": return "bg-[#FEEF75] text-yellow-900 border-yellow-200 animate-pulse";
-      case "Out of Order": return "bg-red-50 text-red-600 border-red-200";
-      case "Retired": return "bg-gray-100 text-gray-500 border-gray-200";
-      default: return "bg-gray-50 text-gray-600";
+      case "Good": return { backgroundColor: colors.primary, color: '#111827', borderColor: '#d1e675' };
+      case "Repair Needed": return { backgroundColor: colors.accent, color: theme === 'dark' ? '#fff' : '#854d0e', borderColor: '#fde047' };
+      case "Out of Order": return { backgroundColor: '#fee2e2', color: '#ef4444', borderColor: '#fecaca' };
+      case "Retired": return { backgroundColor: colors.border, color: colors.textMuted, borderColor: colors.border };
+      default: return { backgroundColor: colors.background, color: colors.textMuted, borderColor: colors.border };
     }
   };
 
@@ -97,7 +93,7 @@ const EquipmentTracking = () => {
     if (item) {
       setFormData({ 
          ...item,
-         purchaseDate: item.purchaseDate ? item.purchaseDate.split('T')[0] : "" // Format date for input
+         purchaseDate: item.purchaseDate ? item.purchaseDate.split('T')[0] : "" 
       });
       setIsEditing(true);
     } else {
@@ -123,7 +119,7 @@ const EquipmentTracking = () => {
        quantity: Number(formData.quantity),
        location: formData.location,
        condition: formData.condition,
-       purchaseDate: formData.purchaseDate || null // Send null if empty
+       purchaseDate: formData.purchaseDate || null 
     };
 
     try {
@@ -145,7 +141,7 @@ const EquipmentTracking = () => {
     if(window.confirm("Are you sure you want to delete this equipment? This action cannot be undone.")) {
       try {
          await api.delete(`/equipment/${id}`);
-         toast.info("Equipment deleted.");
+         toast.success("Equipment deleted.");
          fetchEquipment();
       } catch (err) {
          toast.error("Failed to delete equipment.");
@@ -163,7 +159,7 @@ const EquipmentTracking = () => {
         equipmentList.filter(e => e.condition === "Out of Order").length,
         equipmentList.filter(e => e.condition === "Retired").length,
       ],
-      backgroundColor: ["#D9F17F", "#FEEF75", "#ef4444", "#9ca3af"],
+      backgroundColor: [colors.primary, colors.accent, "#ef4444", "#9ca3af"],
       borderWidth: 0
     }]
   };
@@ -177,26 +173,35 @@ const EquipmentTracking = () => {
   });
 
   return (
-    <div className="w-full bg-white rounded-3xl p-8 shadow-sm border border-gray-100 font-sans min-h-screen relative">
-      <ToastContainer position="top-right" autoClose={3000} />
-
+    <div 
+      className="w-full rounded-3xl p-8 shadow-sm border font-sans min-h-screen relative transition-colors duration-300"
+      style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
+    >
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Equipment Tracking</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage gym inventory and track asset condition.</p>
+          <h1 className="text-2xl font-bold" style={{ color: colors.text }}>Equipment Tracking</h1>
+          <p className="text-sm mt-1" style={{ color: colors.textMuted }}>Manage gym inventory and track asset condition.</p>
         </div>
         
-        <div className="flex bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+        <div className="flex p-1.5 rounded-2xl border transition-colors" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
            <button 
              onClick={() => setViewState("list")}
-             className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewState === 'list' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+             className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewState === 'list' ? 'shadow' : 'hover:opacity-80'}`}
+             style={{ 
+               backgroundColor: viewState === 'list' ? colors.background : 'transparent',
+               color: viewState === 'list' ? colors.secondary : colors.textMuted 
+             }}
            >
              Inventory
            </button>
            <button 
              onClick={() => setViewState("analytics")}
-             className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewState === 'analytics' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+             className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewState === 'analytics' ? 'shadow' : 'hover:opacity-80'}`}
+             style={{ 
+               backgroundColor: viewState === 'analytics' ? colors.background : 'transparent',
+               color: viewState === 'analytics' ? colors.secondary : colors.textMuted 
+             }}
            >
              Analytics
            </button>
@@ -205,7 +210,7 @@ const EquipmentTracking = () => {
 
       {isLoading ? (
          <div className="flex justify-center py-20">
-            <i className="fa-solid fa-circle-notch fa-spin text-gray-300 text-3xl"></i>
+            <i className="fa-solid fa-circle-notch fa-spin text-3xl" style={{ color: colors.border }}></i>
          </div>
       ) : (
          <>
@@ -221,14 +226,21 @@ const EquipmentTracking = () => {
                             placeholder="Search equipment..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm w-64"
+                            className="pl-10 pr-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 text-sm w-64 transition-colors"
+                            style={{ 
+                              backgroundColor: colors.card, 
+                              borderColor: colors.border, 
+                              color: colors.text,
+                              '--tw-ring-color': colors.secondary 
+                            }}
                          />
                          <i className="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
                       </div>
                       <select 
                          value={filterCategory} 
                          onChange={(e) => setFilterCategory(e.target.value)}
-                         className="px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] cursor-pointer"
+                         className="px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors"
+                         style={{ backgroundColor: colors.card, color: colors.text, borderColor: colors.border, '--tw-ring-color': colors.secondary }}
                       >
                          <option value="All">All Categories</option>
                          <option value="Cardio">Cardio</option>
@@ -238,49 +250,53 @@ const EquipmentTracking = () => {
                    </div>
                    <button 
                      onClick={() => handleOpenModal()}
-                     className="px-5 py-2.5 bg-[#D9F17F] text-green-900 rounded-full text-xs font-bold shadow-sm hover:bg-green-300 transition-colors flex items-center gap-2 cursor-pointer"
+                     className="px-5 py-2.5 rounded-full text-xs font-bold shadow-sm transition-colors flex items-center gap-2 cursor-pointer"
+                     style={{ backgroundColor: colors.primary, color: '#111827' }}
                    >
                      <i className="fa-solid fa-plus"></i> Add Equipment
                    </button>
                 </div>
 
                 {/* Table */}
-                <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
-                  <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                    <thead className="bg-[#f8f9fa]">
+                <div className="overflow-hidden rounded-2xl border shadow-sm transition-colors" style={{ borderColor: colors.border }}>
+                  <table className="w-full border-collapse text-left text-sm">
+                    <thead style={{ backgroundColor: colors.card }}>
                       <tr>
-                        <th className="px-6 py-4 font-semibold text-gray-900">Equipment</th>
-                        <th className="px-6 py-4 font-semibold text-gray-900">Category & Loc</th>
-                        <th className="px-6 py-4 font-semibold text-gray-900">Purchase Date</th>
-                        <th className="px-6 py-4 font-semibold text-gray-900 text-center">Condition</th>
-                        <th className="px-6 py-4 font-semibold text-gray-900 text-right">Actions</th>
+                        <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Equipment</th>
+                        <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Category & Loc</th>
+                        <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Purchase Date</th>
+                        <th className="px-6 py-4 font-semibold text-center" style={{ color: colors.text }}>Condition</th>
+                        <th className="px-6 py-4 font-semibold text-right" style={{ color: colors.text }}>Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y" style={{ divideColor: colors.border, backgroundColor: colors.background }}>
                       {filteredList.length > 0 ? filteredList.map((eq) => (
-                         <tr key={eq._id} className="hover:bg-gray-50 transition-colors group">
+                         <tr key={eq._id} className="transition-colors hover:opacity-80">
                             <td className="px-6 py-4">
-                               <div className="font-bold text-gray-900">{eq.name}</div>
-                               <div className="text-xs text-gray-400">Qty: {eq.quantity}</div>
+                               <div className="font-bold" style={{ color: colors.text }}>{eq.name}</div>
+                               <div className="text-xs" style={{ color: colors.textMuted }}>Qty: {eq.quantity}</div>
                             </td>
                             <td className="px-6 py-4">
-                               <span className="block text-gray-900 font-medium">{eq.location}</span>
-                               <span className="text-xs text-blue-500 bg-blue-50 px-2 py-0.5 rounded">{eq.category}</span>
+                               <span className="block font-medium" style={{ color: colors.text }}>{eq.location}</span>
+                               <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: colors.secondary, color: theme === 'dark' ? '#fff' : '#1e3a8a' }}>{eq.category}</span>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4" style={{ color: colors.text }}>
                                {eq.purchaseDate ? new Date(eq.purchaseDate).toLocaleDateString() : "N/A"}
                             </td>
                             <td className="px-6 py-4 text-center">
-                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${getConditionStyle(eq.condition)}`}>
+                               <span 
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border transition-colors ${eq.condition === 'Repair Needed' ? 'animate-pulse' : ''}`}
+                                style={getConditionStyle(eq.condition)}
+                               >
                                   {eq.condition}
                                </span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                               <div className="flex justify-end gap-2 opacity-100 group-hover:opacity-100 transition-opacity">
-                                  <button onClick={() => handleOpenModal(eq)} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-100 cursor-pointer" title="Edit">
+                               <div className="flex justify-end gap-2 transition-opacity">
+                                  <button onClick={() => handleOpenModal(eq)} className="w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={{ backgroundColor: colors.secondary, color: colors.text }} title="Edit">
                                      <i className="fa-solid fa-pen text-xs"></i>
                                   </button>
-                                  <button onClick={() => handleDelete(eq._id)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-red-500 hover:bg-red-100 cursor-pointer" title="Delete">
+                                  <button onClick={() => handleDelete(eq._id)} className="w-8 h-8 rounded-full flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors" style={{ backgroundColor: colors.card }} title="Delete">
                                      <i className="fa-solid fa-trash text-xs"></i>
                                   </button>
                                </div>
@@ -288,7 +304,7 @@ const EquipmentTracking = () => {
                          </tr>
                       )) : (
                          <tr>
-                            <td colSpan="5" className="px-6 py-12 text-center text-gray-400">
+                            <td colSpan="5" className="px-6 py-12 text-center" style={{ color: colors.textMuted }}>
                                <p>No equipment found.</p>
                             </td>
                          </tr>
@@ -302,10 +318,21 @@ const EquipmentTracking = () => {
             {/* --- ANALYTICS VIEW --- */}
             {viewState === 'analytics' && (
                <div className="max-w-md mx-auto">
-                  <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col items-center">
-                     <h3 className="font-bold text-gray-900 mb-4 w-full text-center">Condition Overview</h3>
+                  <div className="border rounded-3xl p-6 shadow-sm flex flex-col items-center transition-colors" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+                     <h3 className="font-bold mb-4 w-full text-center" style={{ color: colors.text }}>Condition Overview</h3>
                      <div className="h-64 w-full relative">
-                        <Doughnut data={conditionData} options={{ maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }} />
+                        <Doughnut 
+                            data={conditionData} 
+                            options={{ 
+                                maintainAspectRatio: false, 
+                                plugins: { 
+                                    legend: { 
+                                        position: 'bottom',
+                                        labels: { color: colors.text }
+                                    } 
+                                } 
+                            }} 
+                        />
                      </div>
                   </div>
                </div>
@@ -316,34 +343,35 @@ const EquipmentTracking = () => {
       {/* --- ADD/EDIT MODAL --- */}
       {showModal && (
          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-               <div className="bg-[#f8f9fa] px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                  <h3 className="font-bold text-gray-900">{isEditing ? "Update Details" : "Add New Equipment"}</h3>
-                  <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+            <div className="rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200" style={{ backgroundColor: colors.card }}>
+               <div className="px-6 py-4 border-b flex justify-between items-center" style={{ backgroundColor: colors.sidebar, borderColor: colors.border }}>
+                  <h3 className="font-bold" style={{ color: colors.text }}>{isEditing ? "Update Details" : "Add New Equipment"}</h3>
+                  <button onClick={() => setShowModal(false)} style={{ color: colors.textMuted }}>
                      <i className="fa-solid fa-xmark text-lg"></i>
                   </button>
                </div>
                
                <form onSubmit={handleSave} className="p-6">
-                  
                   <div className="grid grid-cols-2 gap-4 mb-4">
                      <div className="col-span-2">
-                        <label className="block text-xs font-bold text-gray-500 mb-2">Equipment Name</label>
+                        <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Equipment Name</label>
                         <input 
                            type="text" 
                            required 
                            value={formData.name} 
                            onChange={e => setFormData({...formData, name: e.target.value})}
-                           className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm"
+                           className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm transition-colors"
+                           style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                            placeholder="e.g. Treadmill Pro 5000"
                         />
                      </div>
                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-2">Category</label>
+                        <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Category</label>
                         <select 
                            value={formData.category} 
                            onChange={e => setFormData({...formData, category: e.target.value})}
-                           className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white cursor-pointer"
+                           className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm cursor-pointer transition-colors"
+                           style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                         >
                            <option>Cardio</option>
                            <option>Strength</option>
@@ -352,36 +380,39 @@ const EquipmentTracking = () => {
                         </select>
                      </div>
                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-2">Quantity</label>
+                        <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Quantity</label>
                         <input 
                            type="number" 
                            required 
                            min="1"
                            value={formData.quantity} 
                            onChange={e => setFormData({...formData, quantity: e.target.value})}
-                           className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm"
+                           className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm transition-colors"
+                           style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                         />
                      </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-6">
                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-2">Location</label>
+                        <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Location</label>
                         <input 
                            type="text" 
                            required 
                            value={formData.location} 
                            onChange={e => setFormData({...formData, location: e.target.value})}
-                           className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm"
+                           className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm transition-colors"
+                           style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                            placeholder="e.g. Floor 1"
                         />
                      </div>
                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-2">Condition</label>
+                        <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Condition</label>
                         <select 
                            value={formData.condition} 
                            onChange={e => setFormData({...formData, condition: e.target.value})}
-                           className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white cursor-pointer"
+                           className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm cursor-pointer transition-colors"
+                           style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                         >
                            <option>Good</option>
                            <option>Repair Needed</option>
@@ -392,24 +423,27 @@ const EquipmentTracking = () => {
                   </div>
 
                   <div className="mb-6">
-                     <label className="block text-xs font-bold text-gray-500 mb-2">Purchase Date (Optional)</label>
+                     <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Purchase Date (Optional)</label>
                      <input 
                         type="date" 
                         value={formData.purchaseDate} 
                         onChange={e => setFormData({...formData, purchaseDate: e.target.value})}
-                        className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm cursor-pointer"
+                        className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm cursor-pointer transition-colors"
+                        style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                      />
                   </div>
 
-                  <button type="submit" className="w-full py-3 bg-[#FEEF75] text-yellow-900 font-bold rounded-xl hover:bg-yellow-300 shadow-sm transition-colors cursor-pointer">
+                  <button 
+                    type="submit" 
+                    className="w-full py-3 font-bold rounded-xl shadow-sm transition-colors cursor-pointer"
+                    style={{ backgroundColor: colors.accent, color: theme === 'dark' ? '#fff' : '#854d0e' }}
+                  >
                      {isEditing ? "Update Equipment" : "Add to Inventory"}
                   </button>
-
                </form>
             </div>
          </div>
       )}
-
     </div>
   );
 };

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-hot-toast'; // Switched to react-hot-toast
 import { useGlobalContext } from "../../context/GlobalContext";
-
+import { useTheme } from "../../context/ThemeContext"; // Import useTheme
 
 const UpdateSessions = () => {
-   const { api } = useGlobalContext()
+   const { api } = useGlobalContext();
+   const { colors, theme } = useTheme(); // Access custom colors and current theme
+
    // --- STATE ---
    const [sessions, setSessions] = useState([]);
    const [trainers, setTrainers] = useState([]);
@@ -34,18 +36,13 @@ const UpdateSessions = () => {
 
    // --- STYLE INJECTION ---
    useEffect(() => {
-      const linkToast = document.createElement("link");
-      linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
-      linkToast.rel = "stylesheet";
-      document.head.appendChild(linkToast);
-
+      // Note: react-toastify link removed as it is handled by Toaster in ThemeContext
       const linkFA = document.createElement("link");
       linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
       linkFA.rel = "stylesheet";
       document.head.appendChild(linkFA);
 
       return () => {
-         document.head.removeChild(linkToast);
          document.head.removeChild(linkFA);
       };
    }, []);
@@ -75,10 +72,10 @@ const UpdateSessions = () => {
    // --- HELPERS ---
    const getStatusColor = (status) => {
       switch (status) {
-         case "Upcoming": return "bg-[#FEEF75] text-yellow-900 border-yellow-200";
-         case "Completed": return "bg-[#D9F17F] text-green-900 border-green-200";
-         case "Cancelled": return "bg-red-50 text-red-600 border-red-200";
-         default: return "bg-gray-100 text-gray-600";
+         case "Upcoming": return { backgroundColor: colors.accent, color: theme === 'dark' ? '#fff' : '#854d0e', borderColor: colors.accent };
+         case "Completed": return { backgroundColor: colors.primary, color: '#111827', borderColor: colors.primary };
+         case "Cancelled": return { backgroundColor: '#fee2e2', color: '#ef4444', borderColor: '#fecaca' };
+         default: return { backgroundColor: colors.background, color: colors.textMuted, borderColor: colors.border };
       }
    };
 
@@ -95,7 +92,6 @@ const UpdateSessions = () => {
    // --- ACTIONS ---
    const handleOpenModal = (session = null) => {
       if (session) {
-         // Map nested objects back to form IDs for editing
          setFormData({
             ...session,
             trainerId: session.trainer?._id || "",
@@ -121,15 +117,13 @@ const UpdateSessions = () => {
          return;
       }
 
-      // Conflict Check
       if (checkConflict(formData)) {
          toast.error("Schedule Conflict: Trainer is busy at this time!");
          return;
       }
 
-      // Prepare payload for backend (DB fields only)
       const payload = {
-         trainer: formData.trainerId,   // ✅ REQUIRED BY BACKEND
+         trainer: formData.trainerId,
          type: formData.type,
          date: formData.date,
          time: formData.time,
@@ -148,21 +142,10 @@ const UpdateSessions = () => {
             toast.success("New session scheduled.");
          }
          setShowModal(false);
-         fetchData(); // Refresh data from backend
-      } catch (error) {
-         console.error(error);
-         toast.error("Failed to save session.");
-      }
-   };
-
-   const handleBooking = async (sessionId) => {
-      try {
-         await api.post(`/session-bookings/${sessionId}`);
-         toast.success("Booking confirmed!");
          fetchData();
       } catch (error) {
          console.error(error);
-         toast.error("Booking failed");
+         toast.error("Failed to save session.");
       }
    };
 
@@ -172,20 +155,18 @@ const UpdateSessions = () => {
    };
 
    const confirmCancel = async () => {
-      // [UPDATED] Robust validation for reason (no empty spaces)
       if (!cancelReason || !cancelReason.trim()) {
-         toast.warn("Please enter a valid reason.");
+         toast.error("Please enter a valid reason.");
          return;
       }
 
       try {
-         // ✅ FIX: Only send status and reason, not full object
          await api.put(`/sessions/${sessionToCancel}`, {
             status: "Cancelled",
             cancelReason: cancelReason
          });
 
-         toast.error("Session cancelled.");
+         toast.success("Session cancelled.");
          setShowCancelModal(false);
          setCancelReason("");
          setSessionToCancel(null);
@@ -199,9 +180,7 @@ const UpdateSessions = () => {
       if (selectedIds.length === 0) return;
       if (window.confirm(`Mark ${selectedIds.length} sessions as Completed?`)) {
          try {
-            // In real app, this might be a single bulk endpoint or Promise.all
             await Promise.all(selectedIds.map(id => {
-               // ✅ FIX: Only send status update
                return api.put(`/sessions/${id}`, { status: "Completed" });
             }));
 
@@ -218,42 +197,47 @@ const UpdateSessions = () => {
       setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
    };
 
-   // --- FILTERING ---
    const filteredSessions = sessions.filter(s => {
       const matchesSearch = s.trainer?.name?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter = filterStatus === "All" || s.status === filterStatus;
 
-      // View logic
-      // [UPDATED] Active list ('list') now hides Cancelled AND Completed sessions
       if (viewState === 'list') {
          return matchesSearch && matchesFilter && s.status !== 'Cancelled' && s.status !== 'Completed';
       }
-      
-      return matchesSearch && matchesFilter; // History shows all
+      return matchesSearch && matchesFilter;
    });
 
    return (
-      <div className="w-full bg-white rounded-3xl p-8 shadow-sm border border-gray-100 font-sans min-h-screen relative">
-         <ToastContainer position="top-right" autoClose={3000} />
-
+      <div 
+         className="w-full rounded-3xl p-8 shadow-sm border font-sans min-h-screen relative transition-colors duration-300"
+         style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
+      >
          {/* HEADER */}
          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div>
-               <h1 className="text-2xl font-bold text-gray-900">Manage Sessions</h1>
-               <p className="text-sm text-gray-500 mt-1">Schedule, track, and modify training sessions.</p>
+               <h1 className="text-2xl font-bold" style={{ color: colors.text }}>Manage Sessions</h1>
+               <p className="text-sm mt-1" style={{ color: colors.textMuted }}>Schedule, track, and modify training sessions.</p>
             </div>
 
             <div className="flex gap-3">
-               <div className="flex bg-gray-50 p-1 rounded-2xl border border-gray-100">
+               <div className="flex p-1 rounded-2xl border transition-colors" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
                   <button
                      onClick={() => setViewState("list")}
-                     className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewState === 'list' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                     className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewState === 'list' ? 'shadow' : ''}`}
+                     style={{ 
+                        backgroundColor: viewState === 'list' ? colors.background : 'transparent',
+                        color: viewState === 'list' ? colors.secondary : colors.textMuted 
+                     }}
                   >
                      Active
                   </button>
                   <button
                      onClick={() => setViewState("history")}
-                     className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewState === 'history' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                     className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewState === 'history' ? 'shadow' : ''}`}
+                     style={{ 
+                        backgroundColor: viewState === 'history' ? colors.background : 'transparent',
+                        color: viewState === 'history' ? colors.secondary : colors.textMuted 
+                     }}
                   >
                      History
                   </button>
@@ -261,7 +245,8 @@ const UpdateSessions = () => {
 
                <button
                   onClick={() => handleOpenModal()}
-                  className="px-5 py-2.5 bg-[#D9F17F] text-green-900 rounded-full text-xs font-bold shadow-sm hover:bg-green-300 transition-colors flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 rounded-full text-xs font-bold shadow-sm transition-colors flex items-center gap-2 cursor-pointer"
+                  style={{ backgroundColor: colors.primary, color: '#111827' }}
                >
                   <i className="fa-solid fa-plus"></i> New Session
                </button>
@@ -270,12 +255,15 @@ const UpdateSessions = () => {
 
          {isLoading ? (
             <div className="flex justify-center py-20">
-               <i className="fa-solid fa-circle-notch fa-spin text-gray-300 text-3xl"></i>
+               <i className="fa-solid fa-circle-notch fa-spin text-3xl" style={{ color: colors.border }}></i>
             </div>
          ) : (
             <>
                {/* FILTERS & BULK ACTIONS */}
-               <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-gray-50 p-3 rounded-2xl border border-gray-200">
+               <div 
+                  className="flex flex-wrap items-center justify-between gap-4 mb-6 p-3 rounded-2xl border transition-colors"
+                  style={{ backgroundColor: colors.card, borderColor: colors.border }}
+               >
                   <div className="flex items-center gap-3 flex-grow">
                      <div className="relative w-full max-w-xs">
                         <input
@@ -283,7 +271,13 @@ const UpdateSessions = () => {
                            placeholder="Search Trainer..."
                            value={searchTerm}
                            onChange={(e) => setSearchTerm(e.target.value)}
-                           className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm"
+                           className="w-full pl-10 pr-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 text-sm transition-colors"
+                           style={{ 
+                              backgroundColor: colors.background, 
+                              borderColor: colors.border, 
+                              color: colors.text,
+                              '--tw-ring-color': colors.secondary 
+                           }}
                         />
                         <i className="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
                      </div>
@@ -291,7 +285,8 @@ const UpdateSessions = () => {
                      <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] cursor-pointer"
+                        className="px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors"
+                        style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border, '--tw-ring-color': colors.secondary }}
                      >
                         <option value="All">All Status</option>
                         <option value="Upcoming">Upcoming</option>
@@ -302,10 +297,11 @@ const UpdateSessions = () => {
 
                   {selectedIds.length > 0 && (
                      <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-5">
-                        <span className="text-xs font-bold text-gray-500">{selectedIds.length} selected</span>
+                        <span className="text-xs font-bold" style={{ color: colors.textMuted }}>{selectedIds.length} selected</span>
                         <button
                            onClick={handleBulkComplete}
-                           className="px-4 py-2 bg-[#CDE7FE] text-blue-900 rounded-xl text-xs font-bold hover:bg-blue-200 transition-colors shadow-sm cursor-pointer"
+                           className="px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm cursor-pointer"
+                           style={{ backgroundColor: colors.secondary, color: theme === 'dark' ? '#fff' : '#1e3a8a' }}
                         >
                            Mark Completed
                         </button>
@@ -314,9 +310,9 @@ const UpdateSessions = () => {
                </div>
 
                {/* TABLE */}
-               <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
-                  <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                     <thead className="bg-[#f8f9fa]">
+               <div className="overflow-hidden rounded-2xl border shadow-sm transition-colors" style={{ borderColor: colors.border }}>
+                  <table className="w-full border-collapse text-left text-sm">
+                     <thead style={{ backgroundColor: colors.card }}>
                         <tr>
                            <th className="px-6 py-4 w-10">
                               <input
@@ -326,16 +322,15 @@ const UpdateSessions = () => {
                                  className="cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                               />
                            </th>
-                           <th className="px-6 py-4 font-semibold text-gray-900">Session Info</th>
-                           <th className="px-6 py-4 font-semibold text-gray-900">Trainer</th>
-                           <th className="px-6 py-4 font-semibold text-gray-900 text-center">Status</th>
-
-                           <th className="px-6 py-4 font-semibold text-gray-900 text-right">Actions</th>
+                           <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Session Info</th>
+                           <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Trainer</th>
+                           <th className="px-6 py-4 font-semibold text-center" style={{ color: colors.text }}>Status</th>
+                           <th className="px-6 py-4 font-semibold text-right" style={{ color: colors.text }}>Actions</th>
                         </tr>
                      </thead>
-                     <tbody className="divide-y divide-gray-100">
+                     <tbody className="divide-y" style={{ divideColor: colors.border, backgroundColor: colors.background }}>
                         {filteredSessions.length > 0 ? filteredSessions.map((s) => (
-                           <tr key={s._id} className={`hover:bg-gray-50 transition-colors ${selectedIds.includes(s._id) ? 'bg-blue-50/30' : ''}`}>
+                           <tr key={s._id} className={`transition-colors hover:opacity-80 ${selectedIds.includes(s._id) ? (theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50/30') : ''}`}>
                               <td className="px-6 py-4">
                                  <input
                                     type="checkbox"
@@ -346,52 +341,54 @@ const UpdateSessions = () => {
                               </td>
                               <td className="px-6 py-4">
                                  <div className="flex flex-col">
-                                    <span className="font-bold text-gray-900">{s.type}</span>
-                                    <span className="text-xs text-gray-500 flex items-center gap-2 mt-1">
+                                    <span className="font-bold" style={{ color: colors.text }}>{s.type}</span>
+                                    <span className="text-xs flex items-center gap-2 mt-1" style={{ color: colors.textMuted }}>
                                        <i className="fa-regular fa-calendar"></i> {s.date}
-                                       <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                       <span className="w-1 h-1 rounded-full" style={{ backgroundColor: colors.border }}></span>
                                        <i className="fa-regular fa-clock"></i> {s.time} ({s.duration})
-                                       <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                                       <span className="font-bold text-blue-600">Cap: {s.capacity || 10}</span>
+                                       <span className="w-1 h-1 rounded-full" style={{ backgroundColor: colors.border }}></span>
+                                       <span className="font-bold" style={{ color: colors.secondary }}>Cap: {s.capacity || 10}</span>
                                     </span>
-                                    {s.notes && <span className="text-[10px] text-blue-500 mt-1 italic">Note: {s.notes}</span>}
+                                    {s.notes && <span className="text-[10px] mt-1 italic" style={{ color: colors.secondary }}>Note: {s.notes}</span>}
                                  </div>
                               </td>
                               <td className="px-6 py-4">
                                  <div className="flex flex-col gap-1">
                                     <div className="flex items-center gap-2">
-                                       <i className="fa-solid fa-user text-gray-400 text-xs"></i>
-                                       <span className="text-gray-900 font-medium">{s.trainer?.name}</span>
+                                       <i className="fa-solid fa-user text-xs" style={{ color: colors.textMuted }}></i>
+                                       <span className="font-medium" style={{ color: colors.text }}>{s.trainer?.name}</span>
                                     </div>
                                  </div>
                               </td>
                               <td className="px-6 py-4 text-center">
-                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusColor(s.status)}`}>
+                                 <span 
+                                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border"
+                                    style={getStatusColor(s.status)}
+                                 >
                                     {s.status}
                                  </span>
                               </td>
 
                               <td className="px-6 py-4 text-right">
-                                 {/* [UPDATED] Actions only in Active/List view. History is View Only */}
                                  {viewState === 'list' ? (
                                     <div className="flex justify-end gap-2">
-                                       <button onClick={() => handleOpenModal(s)} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer" title="Edit / Note">
+                                       <button onClick={() => handleOpenModal(s)} className="w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer" style={{ backgroundColor: colors.secondary, color: colors.text }} title="Edit / Note">
                                           <i className="fa-solid fa-pen text-xs"></i>
                                        </button>
                                        {s.status === 'Upcoming' && (
-                                          <button onClick={() => initiateCancel(s._id)} className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors cursor-pointer" title="Cancel">
+                                          <button onClick={() => initiateCancel(s._id)} className="w-8 h-8 rounded-full flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors cursor-pointer" style={{ backgroundColor: colors.card }} title="Cancel">
                                              <i className="fa-solid fa-ban text-xs"></i>
                                           </button>
                                        )}
                                     </div>
                                  ) : (
-                                    <span className="text-gray-400 text-xs italic">View Only</span>
+                                    <span className="text-xs italic" style={{ color: colors.textMuted }}>View Only</span>
                                  )}
                               </td>
                            </tr>
                         )) : (
                            <tr>
-                              <td colSpan="6" className="px-6 py-12 text-center text-gray-400">
+                              <td colSpan="6" className="px-6 py-12 text-center" style={{ color: colors.textMuted }}>
                                  <p>No sessions found.</p>
                               </td>
                            </tr>
@@ -405,25 +402,27 @@ const UpdateSessions = () => {
          {/* --- ADD/EDIT MODAL --- */}
          {showModal && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-               <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                  <div className="bg-[#f8f9fa] px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                     <h3 className="font-bold text-gray-900">{isEditing ? "Update Session" : "Schedule Session"}</h3>
-                     <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+               <div 
+                  className="rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                  style={{ backgroundColor: colors.card }}
+               >
+                  <div className="px-6 py-4 border-b flex justify-between items-center" style={{ backgroundColor: colors.sidebar, borderColor: colors.border }}>
+                     <h3 className="font-bold" style={{ color: colors.text }}>{isEditing ? "Update Session" : "Schedule Session"}</h3>
+                     <button onClick={() => setShowModal(false)} style={{ color: colors.textMuted }}>
                         <i className="fa-solid fa-xmark text-lg"></i>
                      </button>
                   </div>
 
                   <form onSubmit={handleSave} className="p-6">
-
-                     {/* Selectors */}
                      <div className="grid grid-cols-1 gap-4 mb-4">
                         <div>
-                           <label className="block text-xs font-bold text-gray-500 mb-2">Trainer</label>
+                           <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Trainer</label>
                            <select
                               required
                               value={formData.trainerId}
                               onChange={e => setFormData({ ...formData, trainerId: e.target.value })}
-                              className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white cursor-pointer"
+                              className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm cursor-pointer transition-colors"
+                              style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                            >
                               <option value="">Select Trainer</option>
                               {trainers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
@@ -431,83 +430,87 @@ const UpdateSessions = () => {
                         </div>
                      </div>
 
-                     {/* Type & Duration */}
                      <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                           <label className="block text-xs font-bold text-gray-500 mb-2">Session Type</label>
+                           <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Session Type</label>
                            <input
                               type="text"
                               value={formData.type}
                               onChange={e => setFormData({ ...formData, type: e.target.value })}
-                              className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm bg-white cursor-pointer"
+                              className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm transition-colors"
+                              style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                               placeholder="Personal Training"
                            />
                         </div>
                         <div>
-                           <label className="block text-xs font-bold text-gray-500 mb-2">Duration</label>
+                           <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Duration</label>
                            <input
                               type="text"
                               value={formData.duration}
                               onChange={e => setFormData({ ...formData, duration: e.target.value })}
-                              className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm"
+                              className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm transition-colors"
+                              style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                               placeholder="e.g. 60 mins"
                            />
                         </div>
                      </div>
 
-                     {/* Capacity */}
                      <div className="mb-4">
-                        <label className="block text-xs font-bold text-gray-500 mb-2">Capacity (Max Participants)</label>
+                        <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Capacity (Max Participants)</label>
                         <input
                            type="number"
                            min="1"
                            value={formData.capacity}
                            onChange={e => setFormData({ ...formData, capacity: e.target.value })}
-                           className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm"
-                           placeholder="10"
+                           className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm transition-colors"
+                           style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                         />
                      </div>
 
-                     {/* Date & Time */}
                      <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                           <label className="block text-xs font-bold text-gray-500 mb-2">Date</label>
+                           <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Date</label>
                            <input
                               type="date"
                               required
                               value={formData.date}
                               onChange={e => setFormData({ ...formData, date: e.target.value })}
-                              className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm cursor-pointer"
+                              className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm cursor-pointer transition-colors"
+                              style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                            />
                         </div>
                         <div>
-                           <label className="block text-xs font-bold text-gray-500 mb-2">Time</label>
+                           <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Time</label>
                            <input
                               type="time"
                               required
                               value={formData.time}
                               onChange={e => setFormData({ ...formData, time: e.target.value })}
-                              className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm cursor-pointer"
+                              className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm cursor-pointer transition-colors"
+                              style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
                            />
                         </div>
                      </div>
 
-                     {/* Notes */}
                      <div className="mb-6">
-                        <label className="block text-xs font-bold text-gray-500 mb-2">Session Notes / Instructions</label>
+                        <label className="block text-xs font-bold mb-2" style={{ color: colors.textMuted }}>Session Notes / Instructions</label>
                         <textarea
                            rows="3"
                            value={formData.notes}
                            onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                           className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#CDE7FE] text-sm resize-none"
-                           placeholder="e.g. Focus on cardio, Leg injury recovery..."
+                           className="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 text-sm resize-none transition-colors"
+                           style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text, '--tw-ring-color': colors.secondary }}
+                           placeholder="e.g. Focus on cardio..."
                         ></textarea>
                      </div>
 
-                     <button type="submit" className="w-full py-3 bg-[#FEEF75] text-yellow-900 font-bold rounded-xl hover:bg-yellow-300 shadow-sm transition-colors cursor-pointer">
+                     <button 
+                        type="submit" 
+                        className="w-full py-3 font-bold rounded-xl shadow-sm transition-colors cursor-pointer"
+                        style={{ backgroundColor: colors.accent, color: theme === 'dark' ? '#fff' : '#854d0e' }}
+                     >
                         {isEditing ? "Update Session" : "Schedule Session"}
                      </button>
-
                   </form>
                </div>
             </div>
@@ -516,13 +519,17 @@ const UpdateSessions = () => {
          {/* --- CANCEL MODAL --- */}
          {showCancelModal && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-               <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Cancel Session?</h3>
-                  <p className="text-sm text-gray-500 mb-4">Please provide a reason for cancellation. This will notify the member.</p>
+               <div 
+                  className="rounded-2xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200 transition-colors"
+                  style={{ backgroundColor: colors.card }}
+               >
+                  <h3 className="text-lg font-bold mb-2" style={{ color: colors.text }}>Cancel Session?</h3>
+                  <p className="text-sm mb-4" style={{ color: colors.textMuted }}>Please provide a reason for cancellation. This will notify the member.</p>
 
                   <textarea
-                     className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-red-300 mb-4 h-24 resize-none"
-                     placeholder="e.g. Trainer unavailable, Emergency..."
+                     className="w-full border rounded-xl p-3 text-sm focus:outline-none mb-4 h-24 resize-none transition-colors"
+                     style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
+                     placeholder="e.g. Trainer unavailable..."
                      value={cancelReason}
                      onChange={(e) => setCancelReason(e.target.value)}
                   ></textarea>
@@ -530,7 +537,8 @@ const UpdateSessions = () => {
                   <div className="flex gap-3">
                      <button
                         onClick={() => { setShowCancelModal(false); setCancelReason(""); }}
-                        className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 cursor-pointer"
+                        className="flex-1 py-2.5 border rounded-xl text-sm font-bold transition-colors cursor-pointer"
+                        style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.textMuted }}
                      >
                         Keep
                      </button>
@@ -544,7 +552,6 @@ const UpdateSessions = () => {
                </div>
             </div>
          )}
-
       </div>
    );
 };
