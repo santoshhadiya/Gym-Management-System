@@ -52,15 +52,19 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
 
       {/* Sidebar Container */}
       <aside 
-        style={{ 
-           backgroundColor: colors.sidebar, // FORCE HEX COLOR
-           borderColor: colors.border 
-        }}
-        className={`
-        fixed lg:sticky top-0 left-0 min-h-screen border-r z-50 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-xl lg:shadow-none
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        ${collapsed ? "lg:w-22 px-2" : "lg:w-64 px-2"}
-      `}>
+  style={{ 
+     backgroundColor: colors.sidebar,
+     borderColor: colors.border 
+  }}
+  className={`
+  fixed lg:sticky top-0 left-0 border-r z-50 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-xl lg:shadow-none
+  
+  /* Apply fixed height and scroll ONLY on small screens */
+  max-lg:h-screen max-lg:overflow-y-auto lg:min-h-screen
+  
+  ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+  ${collapsed ? "lg:w-22 px-2" : "lg:w-64 px-2"}
+`}>
         
         {/* Toggle Button for Desktop */}
         <button 
