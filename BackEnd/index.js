@@ -41,7 +41,7 @@ const io = initSocket(server);
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://songars-gym.onrender.com"],
+    origin: ["http://localhost:5173", "https://songars-gym.onrender.com", "https://songars-gym.vercel.app"],
     credentials: true,
   }),
 );
