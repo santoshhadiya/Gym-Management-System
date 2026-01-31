@@ -1,0 +1,9 @@
+services:
+  - type: static
+    name: my-react-app
+    env: static
+    buildCommand: npm run build
+    publishPath: ./dist # or ./build
+    routes:
+      - source: /*
+        destination: /index.html
