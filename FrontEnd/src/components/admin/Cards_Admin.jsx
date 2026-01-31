@@ -67,7 +67,7 @@ const Cards_Admin = () => {
         {statsData.map((item, index) => (
           <div
             key={index}
-            className="border rounded-3xl p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden lg:w-[200px]"
+            className="border rounded-3xl p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden lg:w-[100%]"
             style={{ backgroundColor: colors.card, borderColor: colors.border }} // Dynamic styling
           >
             <div className="flex items-center gap-2 mb-4" style={{ color: colors.textMuted }}>

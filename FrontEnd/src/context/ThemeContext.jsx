@@ -21,9 +21,9 @@ export const ThemeProvider = ({ children }) => {
       sidebar: '#ffffff'     // Light Sidebar
     },
     dark: {
-      primary: '#D9F17F',    // Keep Lime
-      secondary: '#1e3a8a',  // Darker Blue
-      accent: '#854d0e',     // Darker Yellow
+      primary: '#D9F17F',    // Lime Green
+      secondary: '#CDE7FE',  // Soft Blue
+      accent: '#FEEF75',     // Yellow
       background: '#0B0F19', // Very Dark Blue/Gray
       card: '#111827',       // gray-900
       text: '#f9fafb',       // gray-50
@@ -63,8 +63,8 @@ export const ThemeProvider = ({ children }) => {
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, colors }}>
-      <Toaster 
-        position="top-right" 
+      <Toaster
+        position="top-right"
         toastOptions={{
           style: {
             background: theme === 'dark' ? '#1f2937' : '#fff',
