@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { toast } from 'react-hot-toast'; // Switched to react-hot-toast
 import { useTheme } from "../../context/ThemeContext"; // Import useTheme
+import { useGlobalContext } from "../../context/GlobalContext";
 
-// Use backend URL from env or default to localhost
-const BACKEND_URL = "http://localhost:5000";
+
 
 const Announcements = () => {
+   const {BACKEND_URL}=useGlobalContext();
   const { colors, theme } = useTheme(); // Access custom colors and current theme
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);

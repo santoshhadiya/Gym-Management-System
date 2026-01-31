@@ -13,6 +13,7 @@ import {
   Filler
 } from "chart.js";
 import { Line, Bar } from "react-chartjs-2";
+import { useGlobalContext } from '../../context/GlobalContext';
 
 // Register ChartJS components
 ChartJS.register(
@@ -27,10 +28,8 @@ ChartJS.register(
   Filler
 );
 
-// Use backend URL from env or default to localhost
-const BACKEND_URL = "http://localhost:5000";
-
 const MonitorProgress = () => {
+    const {BACKEND_URL}=useGlobalContext();
   // --- STATE ---
   const [assignedMembers, setAssignedMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);

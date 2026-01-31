@@ -16,6 +16,7 @@ import {
 } from "chart.js";
 import { Line, Doughnut } from "react-chartjs-2";
 import { useTheme } from "../../context/ThemeContext";
+import { useGlobalContext } from "../../context/GlobalContext";
 
 ChartJS.register(
    CategoryScale,
@@ -30,10 +31,9 @@ ChartJS.register(
    ArcElement
 );
 
-// Use backend URL from env or default to localhost
-const BACKEND_URL = "http://localhost:5000";
 
 const Dashboard = () => {
+   const {BACKEND_URL}=useGlobalContext()
    // --- STATE ---
    const [memberData, setMemberData] = useState(null);
    const [loading, setLoading] = useState(true);

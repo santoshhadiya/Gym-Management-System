@@ -4,9 +4,10 @@ import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext"; // Import useTheme
 
 const MediaGallery = () => {
-  const { api } = useGlobalContext();
+  const { api,BACKEND_URL } = useGlobalContext();
   const { colors, theme } = useTheme(); // Access custom colors and current theme
-  const baseURL = "http://localhost:5000/";
+ 
+  const baseURL = BACKEND_URL;
 
   // --- STATE ---
   const [mediaList, setMediaList] = useState([]);

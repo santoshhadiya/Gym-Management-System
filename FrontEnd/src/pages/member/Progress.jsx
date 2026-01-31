@@ -15,6 +15,7 @@ import {
 import { Line, Bar, Doughnut } from "react-chartjs-2";
 import toast from 'react-hot-toast'; // Updated Toast
 import { useTheme } from "../../context/ThemeContext"; // Import Context
+import { useGlobalContext } from "../../context/GlobalContext";
 
 // Register ChartJS components
 ChartJS.register(
@@ -30,10 +31,9 @@ ChartJS.register(
   ArcElement
 );
 
-// Use backend URL from env or default to localhost
-const BACKEND_URL = "http://localhost:5000";
 
 const Progress = () => {
+  const {BACKEND_URL}=useGlobalContext();
   const { colors, theme } = useTheme(); // Consume Theme
 
   // --- STATE ---

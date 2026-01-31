@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast'; // Updated to react-hot-toast
 import { useTheme } from '../../context/ThemeContext'; // Import Context
+import { useGlobalContext } from '../../context/GlobalContext';
 
-// Use backend URL from env or default to localhost
-const BACKEND_URL = "http://localhost:5000";
 
 const Workout = () => {
+    const {BACKEND_URL}=useGlobalContext();
   const { colors, theme } = useTheme(); // Theme Hook
   
   const [activeDay, setActiveDay] = useState("Monday");

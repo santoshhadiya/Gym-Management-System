@@ -4,7 +4,9 @@ import { ToastContainer, toast } from 'react-toastify';
 
 const GalleryMember = () => {
   const { api, user } = useGlobalContext(); // Assuming 'user' object is available in context
-  const baseURL = "http://localhost:5000/"; 
+
+  const {BACKEND_URL}=useGlobalContext();
+  const baseURL = BACKEND_URL; 
 
   // --- STATE ---
   const [media, setMedia] = useState([]);

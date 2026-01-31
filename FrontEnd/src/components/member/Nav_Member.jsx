@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext"; // Import Context
+import { useGlobalContext } from "../../context/GlobalContext";
 
 const Nav_Member = ({ onMenuClick }) => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const Nav_Member = ({ onMenuClick }) => {
   const notificationRef = useRef(null);
 
   // Use backend URL from env or default
-  const BACKEND_URL = "http://localhost:5000";
+  const {BACKEND_URL}=useGlobalContext()
 
   useEffect(() => {
     const fetchData = async () => {

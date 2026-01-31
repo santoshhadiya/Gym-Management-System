@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useGlobalContext } from "../../context/GlobalContext";
 
 const Gallery = () => {
-  const { api } = useGlobalContext();
-  const baseURL = "http://localhost:5000/"; // Adjust if your backend runs on a different port
+  const { api,BACKEND_URL } = useGlobalContext();
+  const baseURL = BACKEND_URL;
 
   // --- STATE ---
   const [media, setMedia] = useState([]);

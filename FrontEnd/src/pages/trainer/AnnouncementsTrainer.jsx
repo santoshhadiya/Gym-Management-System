@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from 'react-toastify';
+import { useGlobalContext } from "../../context/GlobalContext";
 
-// Use backend URL from env or default to localhost
-const BACKEND_URL = "http://localhost:5000";
 
 const AnnouncementsTrainer = () => {
+   const {BACKEND_URL}=useGlobalContext();
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   
