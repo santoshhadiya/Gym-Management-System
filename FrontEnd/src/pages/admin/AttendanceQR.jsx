@@ -1,17 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useGlobalContext } from '../../context/GlobalContext';
-import { io } from "socket.io-client";
 
 const AttendanceQR = () => {
-  const { api, user, BACKEND_URL } = useGlobalContext();
+  const { api, user } = useGlobalContext();
   const [token, setToken] = useState("");
   const [status, setStatus] = useState("Initializing...");
   const [loading, setLoading] = useState(false);
+  const [lastScanId, setLastScanId] = useState(null);
 
-  // Use a ref for the socket to persist it without triggering re-renders
-  const socketRef = useRef(null);
-
+  // 1. Function to generate a new QR Token
   const refreshQR = async () => {
     setLoading(true);
     try {
@@ -24,56 +22,61 @@ const AttendanceQR = () => {
       console.error("API Error:", err);
       setStatus("Connection Failed");
     } finally {
+      // Small delay for smooth UI transition
       setTimeout(() => setLoading(false), 600);
     }
   };
 
-  // 1. Initialize QR on Load
+  // 2. Initialize QR on first mount
   useEffect(() => {
     refreshQR();
   }, []);
 
-// Inside AttendanceQR.jsx
-const [lastScanId, setLastScanId] = useState(null);
+  // 3. Polling Logic: Checks for new database entries to trigger auto-refresh
+  useEffect(() => {
+    let isMounted = true;
 
-useEffect(() => {
-  // 1. Function to check for new activity
-  const checkUpdates = async () => {
-    try {
-      // We use your existing report endpoint
-      const res = await api.get('/attendance/report'); 
-      const latestScan = res.data.recentScans[0];
+    const checkUpdates = async () => {
+      try {
+        // We call the endpoint that returns the latest scan ID
+        const res = await api.get('/attendance/check-status'); 
+        const currentId = res.data.latestId;
 
-      if (latestScan) {
-        // 2. If the ID of the latest scan is different from what we saw last...
-        if (lastScanId && latestScan._id !== lastScanId) {
-          console.log("New scan detected via polling!");
-          refreshQR(); // Trigger the refresh
+        if (isMounted && currentId) {
+          // If we have a previous ID saved and it differs from the current one, 
+          // it means a new member just scanned successfully.
+          if (lastScanId && currentId !== lastScanId) {
+            console.log("New scan detected! Auto-refreshing QR...");
+            refreshQR(); 
+          }
+          // Update the tracker with the current ID
+          setLastScanId(currentId);
         }
-        // 3. Update our record of the last scan
-        setLastScanId(latestScan._id);
+      } catch (err) {
+        console.error("Polling error:", err);
       }
-    } catch (err) {
-      console.error("Polling error:", err);
-    }
-  };
+    };
 
-  // 4. Start polling every 3 seconds
-  const interval = setInterval(checkUpdates, 3000);
+    // Poll every 3 seconds
+    const interval = setInterval(checkUpdates, 3000);
 
-  // 5. Cleanup on unmount
-  return () => clearInterval(interval);
-}, [lastScanId]); 
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [lastScanId, api]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-50">
 
+        {/* Header Section */}
         <div className="bg-gray-900 pt-10 pb-16 px-8 text-center">
           <h2 className="text-white text-2xl font-black tracking-tight mb-2">Member Pass</h2>
           <p className="text-gray-400 text-sm font-medium">Scan this at the front desk to check-in</p>
         </div>
 
+        {/* QR Code Card */}
         <div className="px-8 -mt-10">
           <div className="bg-white p-6 rounded-[2rem] shadow-2xl flex flex-col items-center justify-center relative border border-gray-100">
             <div className={`transition-all duration-500 ${loading ? 'opacity-20 blur-sm scale-95' : 'opacity-100 scale-100'}`}>
@@ -94,6 +97,7 @@ useEffect(() => {
               )}
             </div>
 
+            {/* Spinner Overlay */}
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-12 h-12 border-4 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
@@ -102,6 +106,7 @@ useEffect(() => {
           </div>
         </div>
 
+        {/* Manual Controls & Info */}
         <div className="p-10 pt-8 text-center">
           <button
             onClick={refreshQR}
