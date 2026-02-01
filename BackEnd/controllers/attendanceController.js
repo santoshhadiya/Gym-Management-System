@@ -1,6 +1,6 @@
 const Attendance = require("../models/Attendance");
 const jwt = require("jsonwebtoken");
-const { getIo } = require("../socket"); 
+const { getIo } = require("../socket");
 
 exports.generateQRToken = async (req, res) => {
   const token = jwt.sign(
@@ -18,7 +18,6 @@ exports.markAttendance = async (req, res) => {
   const { token } = req.body;
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const today = new Date().toISOString().split("T")[0];
 
     const existing = await Attendance.findOne({
@@ -27,28 +26,38 @@ exports.markAttendance = async (req, res) => {
     });
 
     if (existing) {
-      return res.status(400).json({ message: "Attendance already marked for today" });
+      return res
+        .status(400)
+        .json({ message: "Attendance already marked for today" });
     }
 
     const record = await Attendance.create({
       member: req.user._id,
       date: today,
-      checkInAt: new Date(), 
+      checkInAt: new Date(),
     });
 
     // --- SOCKET NOTIFICATION ---
     try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const adminId = decoded.adminId;
       const io = getIo();
       // Emit specifically to the room named after the member's ID
-      io.to(req.user._id.toString()).emit("qr-scanned", { success: true });
+      io.to(adminId.toString()).emit("qr-scanned", {
+        message: "Member checked in!",
+        memberName: req.user.name,
+      });
+      res.status(201).json(record);
     } catch (socketErr) {
       console.error("Socket notification failed:", socketErr);
     }
 
     res.status(201).json(record);
   } catch (err) {
-    if (err.name === "JsonWebTokenError") return res.status(401).json({ message: "Invalid format" });
-    if (err.name === "TokenExpiredError") return res.status(401).json({ message: "QR expired" });
+    if (err.name === "JsonWebTokenError")
+      return res.status(401).json({ message: "Invalid format" });
+    if (err.name === "TokenExpiredError")
+      return res.status(401).json({ message: "QR expired" });
     res.status(500).json({ message: "Server error" });
   }
 };
