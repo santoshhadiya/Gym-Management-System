@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useGlobalContext } from '../../context/GlobalContext';
+import { io } from "socket.io-client";
 
 const AttendanceQR = () => {
-  // Destructure socket and user from your global state
-  const { api, socket, user } = useGlobalContext();
+  const { api, user } = useGlobalContext();
   const [token, setToken] = useState("");
   const [status, setStatus] = useState("Initializing...");
   const [loading, setLoading] = useState(false);
+  
+  // Use a ref for the socket to persist it without triggering re-renders
+  const socketRef = useRef(null);
 
   const refreshQR = async () => {
     setLoading(true);
@@ -16,39 +19,50 @@ const AttendanceQR = () => {
       if (res.data?.qrToken) {
         setToken(res.data.qrToken);
         setStatus("Active");
-      } else {
-        setStatus("Server Error");
       }
     } catch (err) {
-      console.error("API Error:", err.response || err);
+      console.error("API Error:", err);
       setStatus("Connection Failed");
     } finally {
       setTimeout(() => setLoading(false), 600);
     }
   };
 
-  // 1. Initial manual refresh on component mount
+  // 1. Initialize QR on Load
   useEffect(() => {
     refreshQR();
   }, []);
 
-  // 2. Socket setup for auto-refresh
+  // 2. Local Socket Implementation
   useEffect(() => {
-    if (!socket || !user?._id) return;
+    if (!user?._id) return;
 
-    // Join the room based on the user's ID
-    socket.emit("join", user._id);
+    // Replace with your actual Backend Server URL
+    const SERVER_URL = "http://localhost:5000"; 
+    
+    // Initialize connection
+    const socket = io(SERVER_URL);
+    socketRef.current = socket;
 
-    // Listen for the specific scan event from the server
-    socket.on("qr-scanned", (data) => {
-      console.log("Scan detected, refreshing QR...");
-      refreshQR(); 
+    socket.on("connect", () => {
+      console.log("Socket connected:", socket.id);
+      // Join the private room so the controller can find this user
+      socket.emit("join", user._id);
     });
 
+    // Listen for the scan event from attendanceController
+    socket.on("qr-scanned", () => {
+      console.log("Success! Refreshing QR...");
+      refreshQR();
+    });
+
+    // Cleanup on unmount
     return () => {
-      socket.off("qr-scanned"); // Clean up listener on unmount
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
     };
-  }, [socket, user]);
+  }, [user?._id]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-4">
@@ -71,8 +85,10 @@ const AttendanceQR = () => {
                   includeMargin={false} 
                 />
               ) : (
-                <div className="h-[200px] w-[200px] flex items-center justify-center">
-                   <div className="animate-pulse text-gray-300 font-bold uppercase tracking-widest text-xs">{status}</div>
+                <div className="h-[200px] w-[200px] flex items-center justify-center text-center">
+                   <div className="animate-pulse text-gray-400 font-bold uppercase tracking-widest text-xs">
+                     {status}
+                   </div>
                 </div>
               )}
             </div>
@@ -102,12 +118,11 @@ const AttendanceQR = () => {
               </svg>
               <span>{loading ? 'Generating...' : 'Refresh Pass'}</span>
             </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
           </button>
 
           <div className="mt-6 flex flex-col gap-1">
              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Security Token</p>
-             <p className="text-xs text-gray-500 italic">Auto-refreshes after scanning</p>
+             <p className="text-xs text-gray-500 italic font-medium">Smart auto-refresh enabled</p>
           </div>
         </div>
       </div>

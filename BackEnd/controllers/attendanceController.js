@@ -1,18 +1,56 @@
 const Attendance = require("../models/Attendance");
 const jwt = require("jsonwebtoken");
 const { getIo } = require("../socket"); 
-// Generate a unique token for the QR code
+
 exports.generateQRToken = async (req, res) => {
   const token = jwt.sign(
     {
       type: "attendance-checkin",
-      id: `qr-${Date.now()}`, 
+      id: `qr-${Date.now()}`,
     },
     process.env.JWT_SECRET,
     { expiresIn: "30s" },
   );
-
   res.json({ qrToken: token });
+};
+
+exports.markAttendance = async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const today = new Date().toISOString().split("T")[0];
+
+    const existing = await Attendance.findOne({
+      member: req.user._id,
+      date: today,
+    });
+
+    if (existing) {
+      return res.status(400).json({ message: "Attendance already marked for today" });
+    }
+
+    const record = await Attendance.create({
+      member: req.user._id,
+      date: today,
+      checkInAt: new Date(), 
+    });
+
+    // --- SOCKET NOTIFICATION ---
+    try {
+      const io = getIo();
+      // Emit specifically to the room named after the member's ID
+      io.to(req.user._id.toString()).emit("qr-scanned", { success: true });
+    } catch (socketErr) {
+      console.error("Socket notification failed:", socketErr);
+    }
+
+    res.status(201).json(record);
+  } catch (err) {
+    if (err.name === "JsonWebTokenError") return res.status(401).json({ message: "Invalid format" });
+    if (err.name === "TokenExpiredError") return res.status(401).json({ message: "QR expired" });
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 // Fetch user's personal attendance history
@@ -48,49 +86,5 @@ exports.getAttendanceReport = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: "Error generating comprehensive report" });
-  }
-};
-
-// Mark attendance and notify the user via Socket
-exports.markAttendance = async (req, res) => {
-  const { token } = req.body;
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const today = new Date().toISOString().split("T")[0];
-
-    const existing = await Attendance.findOne({
-      member: req.user._id,
-      date: today,
-    });
-
-    if (existing) {
-      return res.status(400).json({ message: "Attendance already marked for today" });
-    }
-
-    const now = new Date();
-    const record = await Attendance.create({
-      member: req.user._id,
-      date: today,
-      checkInAt: now, 
-    });
-
-    // --- SOCKET AUTO-REFRESH LOGIC ---
-    // Emit to the specific member's room that their scan was successful
-    try {
-      const io = getIo();
-      io.to(req.user._id.toString()).emit("qr-scanned", { 
-        success: true, 
-        message: "Check-in successful!" 
-      });
-    } catch (socketErr) {
-      console.error("Socket notification failed:", socketErr);
-    }
-
-    res.status(201).json(record);
-  } catch (err) {
-    if (err.name === "JsonWebTokenError") return res.status(401).json({ message: "Invalid format" });
-    if (err.name === "TokenExpiredError") return res.status(401).json({ message: "QR expired" });
-    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
