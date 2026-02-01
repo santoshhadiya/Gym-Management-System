@@ -1,14 +1,12 @@
 const Attendance = require("../models/Attendance");
 const jwt = require("jsonwebtoken");
-
-// attendanceController.js
-
-// Add a unique ID to the token payload
+const { getIo } = require("../socket"); 
+// Generate a unique token for the QR code
 exports.generateQRToken = async (req, res) => {
   const token = jwt.sign(
     {
       type: "attendance-checkin",
-      id: `qr-${Date.now()}`, // Unique ID for this specific QR generation
+      id: `qr-${Date.now()}`, 
     },
     process.env.JWT_SECRET,
     { expiresIn: "30s" },
@@ -17,6 +15,7 @@ exports.generateQRToken = async (req, res) => {
   res.json({ qrToken: token });
 };
 
+// Fetch user's personal attendance history
 exports.getMyAttendance = async (req, res) => {
   const history = await Attendance.find({ member: req.user._id }).sort({
     createdAt: -1,
@@ -24,22 +23,16 @@ exports.getMyAttendance = async (req, res) => {
   res.json(history);
 };
 
-// Get comprehensive report for Admin
+// Admin report generation logic
 exports.getAttendanceReport = async (req, res) => {
   try {
     const today = new Date().toISOString().split("T")[0];
-
-    // 1. Get Summary Counts
     const totalRecords = await Attendance.countDocuments();
     const todayCount = await Attendance.countDocuments({ date: today });
-
-    // 2. Get Today's Detailed List (with Member Names)
-    // We use .populate('member', 'name') to get the user's name from the User model
     const todayList = await Attendance.find({ date: today })
       .populate("member", "name email")
       .sort({ createdAt: -1 });
 
-    // 3. Get Recent Scans (Last 5 overall for a quick activity feed)
     const recentScans = await Attendance.find()
       .populate("member", "name")
       .sort({ createdAt: -1 })
@@ -54,64 +47,50 @@ exports.getAttendanceReport = async (req, res) => {
       reportGeneratedAt: new Date().toLocaleString(),
     });
   } catch (err) {
-    console.error("Report Error:", err);
     res.status(500).json({ message: "Error generating comprehensive report" });
   }
 };
 
+// Mark attendance and notify the user via Socket
 exports.markAttendance = async (req, res) => {
   const { token } = req.body;
-  console.log("--- New Attendance Request ---");
-  console.log("User ID:", req.user?._id);
-  console.log("Received Token:", token ? "Token present" : "Token MISSING");
 
   try {
-    // 1. Verify Token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Decoded Token Data:", decoded);
-
     const today = new Date().toISOString().split("T")[0];
-    console.log("Checking attendance for date:", today);
 
-    // 2. Check for Duplicate
     const existing = await Attendance.findOne({
       member: req.user._id,
       date: today,
     });
+
     if (existing) {
-      console.log("Duplicate found for user on this date.");
-      return res
-        .status(400)
-        .json({ message: "Attendance already marked for today" });
+      return res.status(400).json({ message: "Attendance already marked for today" });
     }
 
     const now = new Date();
-
     const record = await Attendance.create({
       member: req.user._id,
       date: today,
       checkInAt: now, 
     });
 
-    console.log("Record successfully saved to DB:", record);
+    // --- SOCKET AUTO-REFRESH LOGIC ---
+    // Emit to the specific member's room that their scan was successful
+    try {
+      const io = getIo();
+      io.to(req.user._id.toString()).emit("qr-scanned", { 
+        success: true, 
+        message: "Check-in successful!" 
+      });
+    } catch (socketErr) {
+      console.error("Socket notification failed:", socketErr);
+    }
+
     res.status(201).json(record);
   } catch (err) {
-    // Log the specific error name and message
-    console.error("Attendance Error Details:");
-    console.error("Name:", err.name);
-    console.error("Message:", err.message);
-
-    if (err.name === "JsonWebTokenError") {
-      return res.status(401).json({ message: "Invalid QR code format" });
-    }
-    if (err.name === "TokenExpiredError") {
-      return res
-        .status(401)
-        .json({ message: "QR code has expired (30s limit)" });
-    }
-
-    res
-      .status(500)
-      .json({ message: "Server error during saving", error: err.message });
+    if (err.name === "JsonWebTokenError") return res.status(401).json({ message: "Invalid format" });
+    if (err.name === "TokenExpiredError") return res.status(401).json({ message: "QR expired" });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };

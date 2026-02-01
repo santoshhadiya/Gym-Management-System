@@ -3,7 +3,8 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { useGlobalContext } from '../../context/GlobalContext';
 
 const AttendanceQR = () => {
-  const { api } = useGlobalContext();
+  // Destructure socket and user from your global state
+  const { api, socket, user } = useGlobalContext();
   const [token, setToken] = useState("");
   const [status, setStatus] = useState("Initializing...");
   const [loading, setLoading] = useState(false);
@@ -22,26 +23,42 @@ const AttendanceQR = () => {
       console.error("API Error:", err.response || err);
       setStatus("Connection Failed");
     } finally {
-      // Small timeout to make the transition feel smoother
       setTimeout(() => setLoading(false), 600);
     }
   };
 
+  // 1. Initial manual refresh on component mount
   useEffect(() => {
     refreshQR();
   }, []);
+
+  // 2. Socket setup for auto-refresh
+  useEffect(() => {
+    if (!socket || !user?._id) return;
+
+    // Join the room based on the user's ID
+    socket.emit("join", user._id);
+
+    // Listen for the specific scan event from the server
+    socket.on("qr-scanned", (data) => {
+      console.log("Scan detected, refreshing QR...");
+      refreshQR(); 
+    });
+
+    return () => {
+      socket.off("qr-scanned"); // Clean up listener on unmount
+    };
+  }, [socket, user]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-50">
         
-        {/* Header Section */}
         <div className="bg-gray-900 pt-10 pb-16 px-8 text-center">
           <h2 className="text-white text-2xl font-black tracking-tight mb-2">Member Pass</h2>
           <p className="text-gray-400 text-sm font-medium">Scan this at the front desk to check-in</p>
         </div>
 
-        {/* QR Section - Floating Effect */}
         <div className="px-8 -mt-10">
           <div className="bg-white p-6 rounded-[2rem] shadow-2xl flex flex-col items-center justify-center relative border border-gray-100">
             <div className={`transition-all duration-500 ${loading ? 'opacity-20 blur-sm scale-95' : 'opacity-100 scale-100'}`}>
@@ -60,7 +77,6 @@ const AttendanceQR = () => {
               )}
             </div>
 
-            {/* Overlaid Loader */}
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-12 h-12 border-4 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
@@ -69,7 +85,6 @@ const AttendanceQR = () => {
           </div>
         </div>
 
-        {/* Action Section */}
         <div className="p-10 pt-8 text-center">
           <button
             onClick={refreshQR}
@@ -87,16 +102,14 @@ const AttendanceQR = () => {
               </svg>
               <span>{loading ? 'Generating...' : 'Refresh Pass'}</span>
             </div>
-            {/* Subtle glow effect on hover */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
           </button>
 
           <div className="mt-6 flex flex-col gap-1">
              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Security Token</p>
-             <p className="text-xs text-gray-500 italic">Valid for 30 seconds</p>
+             <p className="text-xs text-gray-500 italic">Auto-refreshes after scanning</p>
           </div>
         </div>
-
       </div>
     </div>
   );
