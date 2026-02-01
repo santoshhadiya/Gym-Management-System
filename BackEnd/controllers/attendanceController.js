@@ -98,3 +98,27 @@ exports.getAttendanceReport = async (req, res) => {
     res.status(500).json({ message: "Error generating comprehensive report" });
   }
 };
+
+
+exports.checkLatestScan = async (req, res) => {
+  try {
+    // Find the single most recent attendance record
+    // We populate the member name just in case you want to show a toast/notification
+    const latestRecord = await Attendance.findOne()
+      .populate("member", "name")
+      .sort({ createdAt: -1 });
+
+    if (!latestRecord) {
+      return res.json({ newScan: false });
+    }
+
+    res.json({
+      success: true,
+      latestId: latestRecord._id,
+      memberName: latestRecord.member?.name,
+      timestamp: latestRecord.checkInAt
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Polling error" });
+  }
+};

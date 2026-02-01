@@ -33,28 +33,37 @@ const AttendanceQR = () => {
     refreshQR();
   }, []);
 
-  // 2. Local Socket Implementation
+// Inside AttendanceQR.jsx
+const [lastScanId, setLastScanId] = useState(null);
+
 useEffect(() => {
-  if (!user?._id) return;
+  // 1. Function to check for new activity
+  const checkUpdates = async () => {
+    try {
+      // We use your existing report endpoint
+      const res = await api.get('/attendance/report'); 
+      const latestScan = res.data.recentScans[0];
 
-  const socket = io(BACKEND_URL);
-  socketRef.current = socket;
-
-  socket.on("connect", () => {
-    // Admin joins their own unique room
-    socket.emit("join", user._id.toString());
-  });
-
-  socket.on("qr-scanned", (data) => {
-    console.log("Member scanned successfully:", data);
-    refreshQR(); // This triggers the auto-refresh
-  });
-
-  return () => {
-    socket.off("qr-scanned");
-    socket.disconnect();
+      if (latestScan) {
+        // 2. If the ID of the latest scan is different from what we saw last...
+        if (lastScanId && latestScan._id !== lastScanId) {
+          console.log("New scan detected via polling!");
+          refreshQR(); // Trigger the refresh
+        }
+        // 3. Update our record of the last scan
+        setLastScanId(latestScan._id);
+      }
+    } catch (err) {
+      console.error("Polling error:", err);
+    }
   };
-}, [user?._id, BACKEND_URL]);
+
+  // 4. Start polling every 3 seconds
+  const interval = setInterval(checkUpdates, 3000);
+
+  // 5. Cleanup on unmount
+  return () => clearInterval(interval);
+}, [lastScanId]); 
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-4">
