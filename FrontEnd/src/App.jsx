@@ -77,6 +77,8 @@ import AttendanceQR from './pages/admin/AttendanceQR'
 import ScanAttendance from './pages/member/ScanAttendance'
 import AttendanceHistory from './pages/member/AttendanceHistory'
 import Attendance from './pages/admin/Attendance'
+import ForgotPassword from './components/all/ForgotPassword'
+import ResetPassword from './components/all/ResetPassword'
 
 const App = () => {
   const { user } = useGlobalContext()
@@ -88,6 +90,8 @@ const App = () => {
       <Routes>
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<Registration />} />
+        <Route path="forgot-password" element={<ForgotPassword/>} />
+        <Route path="reset-password/:token" element={<ResetPassword/>} />
 
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="admin" element={<AdminLayout />}>

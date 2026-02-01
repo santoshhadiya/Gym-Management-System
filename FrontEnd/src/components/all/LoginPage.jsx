@@ -184,7 +184,10 @@ const LoginPage = () => {
           </form>
 
           <div className="mt-6 flex flex-col gap-3 text-sm">
-            <button className="font-bold text-gray-400 hover:text-gray-600 transition-colors">
+            <button
+              onClick={() => navigate("/forgot-password")}
+              className="font-bold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+            >
               Forgot Password?
             </button>
             <p className="text-gray-500">

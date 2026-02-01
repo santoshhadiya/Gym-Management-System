@@ -1,6 +1,8 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const Member = require("../models/Member");
+const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail");
 
 // Generate JWT
 const generateToken = (id) => {
@@ -36,7 +38,7 @@ exports.registerUser = async (req, res) => {
     if (user.role === "member") {
       await Member.create({
         user: user._id,
-        status: "Active"
+        status: "Active",
       });
     }
 
@@ -101,7 +103,6 @@ exports.getMe = async (req, res) => {
   }
 };
 
-
 // @desc    Admin onboard a trainer
 // @route   POST /api/auth/register-trainer
 // @access  Private (Admin)
@@ -120,9 +121,9 @@ exports.registerTrainer = async (req, res) => {
       name,
       email,
       phone,
-      password,        // hashed by pre-save hook
+      password, // hashed by pre-save hook
       role: "trainer",
-      trainerDetails,  // specialization, experience, etc.
+      trainerDetails, // specialization, experience, etc.
     });
 
     res.status(201).json({
@@ -165,4 +166,119 @@ exports.changePassword = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+// @desc    Forgot Password
+// @route   POST /api/auth/forgotpassword
+exports.forgotPassword = async (req, res) => {
+  const user = await User.findOne({ email: req.body.email });
+
+  if (!user) {
+    return res
+      .status(404)
+      .json({ message: "There is no user with that email" });
+  }
+
+  const resetToken = user.getResetPasswordToken();
+  await user.save({ validateBeforeSave: false });
+
+  // Create reset URL
+  isHosted=true
+  const resetUrl = !isHosted? `http://localhost:5173/reset-password/${resetToken}`:`https://songars-gym.vercel.app/reset-password/${resetToken}`
+
+  const message = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        .button:hover {
+            background-color: #ffca2b !important;
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f1f5f9;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td align="center" style="padding: 40px 40px 20px 40px;">
+                            <h1 style="margin: 0; color: #1e293b; font-size: 28px; font-weight: 900;">Songar's GYM</h1>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td align="center" style="padding: 0 40px 20px 40px;">
+                            <h2 style="margin: 0; color: #334155; font-size: 20px; font-weight: 700;">Password Reset Request</h2>
+                            <p style="color: #64748b; font-size: 16px; line-height: 24px; margin-top: 15px;">
+                                Hello, we received a request to reset your password. If this was you, please click the button below to set a new one.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td align="center" style="padding: 20px 40px 40px 40px;">
+                            <a href="${resetUrl}" target="_blank" style="background-color: #FEEF75; color: #000000; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 900; font-size: 16px; display: inline-block; box-shadow: 0 4px 10px rgba(254, 239, 117, 0.4);">
+                                RESET PASSWORD
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td align="center" style="padding: 0 40px 30px 40px;">
+                            <p style="margin: 0; color: #94a3b8; font-size: 12px;">
+                                This link is valid for <strong>10 minutes</strong>. If you did not request this, you can safely ignore this email.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+`;
+
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Password Reset Request",
+      html: message, 
+    });
+    res.status(200).json({ success: true, data: "Email sent" });
+  } catch (err) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save({ validateBeforeSave: false });
+    return res.status(500).json({ message: "Email could not be sent" });
+  }
+};
+
+// @desc    Reset Password
+// @route   PUT /api/auth/resetpassword/:resettoken
+exports.resetPassword = async (req, res) => {
+  // Get hashed token
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.resettoken)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return res.status(400).json({ message: "Invalid or expired token" });
+  }
+
+  // Set new password
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+  await user.save();
+
+  res.status(200).json({ success: true, token: generateToken(user._id) });
 };
