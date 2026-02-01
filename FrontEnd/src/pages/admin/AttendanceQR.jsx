@@ -4,7 +4,7 @@ import { useGlobalContext } from '../../context/GlobalContext';
 import { io } from "socket.io-client";
 
 const AttendanceQR = () => {
-  const { api, user } = useGlobalContext();
+  const { api, user,BACKEND_URL } = useGlobalContext();
   const [token, setToken] = useState("");
   const [status, setStatus] = useState("Initializing...");
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ const AttendanceQR = () => {
     if (!user?._id) return;
 
     // Replace with your actual Backend Server URL
-    const SERVER_URL = "http://localhost:5000"; 
+    const SERVER_URL = BACKEND_URL; 
     
     // Initialize connection
     const socket = io(SERVER_URL);
