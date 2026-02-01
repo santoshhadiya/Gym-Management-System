@@ -6,9 +6,10 @@ const AttendanceQR = () => {
   const { api } = useGlobalContext();
   const [token, setToken] = useState("");
   const [status, setStatus] = useState("Initializing...");
+  const [loading, setLoading] = useState(false); // Added for button state
 
-  
   const refreshQR = async () => {
+    setLoading(true); // Indicate refresh is happening
     try {
       const res = await api.get('/attendance/generate-token');
       if (res.data?.qrToken) {
@@ -20,13 +21,14 @@ const AttendanceQR = () => {
     } catch (err) {
       console.error("API Error:", err.response || err);
       setStatus(`Error: ${err.response?.status || "Connection Failed"}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     refreshQR();
-    const interval = setInterval(refreshQR, 5000000); // 5-second refresh
-    return () => clearInterval(interval);
+    // Removed the 5-second interval as we are switching to manual refresh
   }, []);
 
   return (
@@ -44,10 +46,25 @@ const AttendanceQR = () => {
         )}
       </div>
 
-      <div className="mt-6 flex items-center gap-2">
-        <span className={`w-2 h-2 rounded-full ${token ? 'bg-green-500 animate-pulse' : 'bg-red-50'}`}></span>
-        <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
-          {token ? "Refreshes every 5 seconds" : "Checking Backend Connection..."}
+      {/* New Refresh Button Section */}
+      <div className="mt-8 w-full">
+        <button
+          onClick={refreshQR}
+          disabled={loading}
+          className="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          <svg 
+            className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          {loading ? "Refreshing..." : "Refresh QR Code"}
+        </button>
+        <p className="text-center text-gray-400 text-[10px] uppercase mt-4 tracking-widest font-bold">
+          Code expires in 30 seconds
         </p>
       </div>
     </div>
