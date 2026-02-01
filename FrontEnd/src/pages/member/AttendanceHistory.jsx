@@ -33,8 +33,18 @@ const AttendanceHistory = () => {
           <tbody>
             {history.map((record) => (
               <tr key={record._id} className="border-b last:border-0">
-                <td className="py-3 font-medium">{record.date}</td>
-                <td className="py-3 text-gray-600">{record.checkInTime}</td>
+                
+                <td className="py-3 font-medium">
+                   {new Date(record.date).toLocaleDateString()}
+                </td>
+                
+               
+                <td className="py-3 text-gray-600">
+                  {record.checkInAt 
+                    ? new Date(record.checkInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                    : 'N/A'}
+                </td>
+
                 <td className="py-3 text-green-600 font-bold">Present</td>
               </tr>
             ))}

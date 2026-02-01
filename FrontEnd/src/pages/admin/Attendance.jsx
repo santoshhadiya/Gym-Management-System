@@ -34,20 +34,26 @@ const Attendance = () => {
       <h1 className="text-2xl font-bold mb-6">Attendance History</h1>
       {Object.keys(grouped).map(date => (
         <div key={date} className="mb-4 border rounded-2xl overflow-hidden shadow-sm">
-          <button 
+          <button
             onClick={() => toggleDate(date)}
             className="w-full flex justify-between items-center p-4 bg-gray-100 hover:bg-gray-200 transition"
           >
             <span className="font-bold text-lg">{date}</span>
             <span className="text-sm">{expandedDates[date] ? '▲ Collapse' : '▼ Expand'}</span>
           </button>
-          
+
           {expandedDates[date] && (
             <div className="p-4 bg-white">
-              {grouped[date].map(member => (
-                <div key={member._id} className="flex justify-between py-2 border-b last:border-0">
-                  <span className="font-medium">{member.member?.name}</span>
-                  <span className="text-gray-500">{member.checkInTime}</span>
+              {grouped[date].map(record => (
+                <div key={record._id} className="flex justify-between py-2 border-b last:border-0">
+                  <span className="font-medium">{record.member?.name || 'Unknown User'}</span>
+
+                  {/* Change: Use checkInAt and format it */}
+                  <span className="text-gray-500">
+                    {record.checkInAt
+                      ? new Date(record.checkInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                      : 'No time recorded'}
+                  </span>
                 </div>
               ))}
             </div>

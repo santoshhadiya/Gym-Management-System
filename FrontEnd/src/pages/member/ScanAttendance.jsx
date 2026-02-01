@@ -87,7 +87,7 @@ const ScanAttendance = () => {
             <p className="text-2xl font-mono font-bold text-blue-600">{checkinResult.checkInTime || "Now"}</p>
           </div>
           <button
-            onClick={() => navigate('/attendance-history')} // Redirect logic
+            onClick={() => navigate('/member/attendance-history')} 
             className="w-full mt-6 py-3 bg-green-600 text-white rounded-xl font-bold uppercase"
           >
             Done
