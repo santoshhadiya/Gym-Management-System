@@ -2,12 +2,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { toast } from 'react-toastify';
 import { useGlobalContext } from '../../context/GlobalContext';
+import { useNavigate } from 'react-router-dom';
 
 const ScanAttendance = () => {
   const { api } = useGlobalContext();
   const [scanning, setScanning] = useState(true);
   const [checkinResult, setCheckinResult] = useState(null);
-
+  const navigate = useNavigate()
   // Use a reliable, short beep sound
   const beepAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
 
@@ -92,19 +93,6 @@ const ScanAttendance = () => {
             Done
           </button>
         </div>
-      )}
-
-      {!scanning && (
-        <button
-          onClick={() => {
-            setCheckinResult(null);
-            setScanning(true);
-            window.location.reload(); // Simplest way to reset the library state
-          }}
-          className="w-full mt-8 py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
-        >
-          Next Member
-        </button>
       )}
     </div>
   );

@@ -13,38 +13,7 @@ exports.generateQRToken = async (req, res) => {
   res.json({ qrToken: token });
 };
 
-// markAttendance Logic
-exports.markAttendance = async (req, res) => {
-  const { token } = req.body;
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const today = new Date().toISOString().split('T')[0];
 
-    // Check for duplicate scan by SAME user today
-    const existing = await Attendance.findOne({ member: req.user._id, date: today });
-    if (existing) {
-      return res.status(400).json({ message: "You have already checked in today." });
-    }
-
-    
-    // Get user name for the success card
-    const user = await User.findById(req.user._id);
-
-    const record = await Attendance.create({
-      member: req.user._id,
-      date: today,
-      checkInTime: new Date().toLocaleTimeString()
-    });
-
-    // Return record plus name for frontend
-    res.status(201).json({
-      ...record._doc,
-      name: user.name 
-    });
-  } catch (err) {
-    res.status(401).json({ message: "Invalid or expired QR code" });
-  }
-};
 
 exports.getMyAttendance = async (req, res) => {
   const history = await Attendance.find({ member: req.user._id }).sort({ createdAt: -1 });
@@ -133,3 +102,4 @@ exports.markAttendance = async (req, res) => {
     res.status(500).json({ message: "Server error during saving", error: err.message });
   }
 };
+
