@@ -73,12 +73,13 @@ const MediaGallery = () => {
       default: return { backgroundColor: colors.border, color: colors.textMuted };
     }
   };
-
-  const getFullUrl = (url) => {
-    if (!url) return "";
-    if (url.startsWith("http")) return url;
-    return `${baseURL}${url}`;
-  };
+const getFullUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  // Ensure there is exactly one slash between baseURL and url
+  const separator = baseURL.endsWith('/') ? '' : '/';
+  return `${baseURL}${separator}${url}`;
+};
 
   // --- ACTIONS ---
   const handleOpenModal = (media = null) => {

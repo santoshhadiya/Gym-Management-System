@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from 'react-hot-toast'; // Updated to React Hot Toast
 import {
    Chart as ChartJS,
@@ -33,13 +33,14 @@ ChartJS.register(
 
 
 const Dashboard = () => {
-   const {BACKEND_URL}=useGlobalContext()
+   const { BACKEND_URL } = useGlobalContext()
    // --- STATE ---
    const [memberData, setMemberData] = useState(null);
    const [loading, setLoading] = useState(true);
-   
+
    // Access Global Theme Colors
    const { colors, theme } = useTheme();
+   const navigate = useNavigate()
 
    const user = JSON.parse(localStorage.getItem("userInfo"));
 
@@ -148,7 +149,7 @@ const Dashboard = () => {
                dietCompleted: progressLogs.filter(p => p.dietCompleted).length,
                dietMissed: totalTrackedDays - progressLogs.filter(p => p.dietCompleted).length
             });
-setLoading(false)
+            setLoading(false)
          } catch (err) {
             console.error(err);
             toast.error("Failed to load dashboard data"); // React Hot Toast
@@ -165,7 +166,7 @@ setLoading(false)
          Loading Dashboard...
       </div>
    );
-   
+
    if (!memberData) return (
       <div className="p-10 text-center" style={{ color: colors.textMuted }}>
          No data available.
@@ -178,17 +179,17 @@ setLoading(false)
       datasets: [{
          label: "Weight",
          data: memberData.weightData,
-         borderColor: colors.primary, 
+         borderColor: colors.primary,
          backgroundColor: (context) => {
             const ctx = context.chart.ctx;
             const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-            gradient.addColorStop(0, "rgba(217, 241, 127, 0.4)"); 
+            gradient.addColorStop(0, "rgba(217, 241, 127, 0.4)");
             gradient.addColorStop(1, "rgba(217, 241, 127, 0)");
             return gradient;
          },
          tension: 0.4,
          fill: true,
-         pointBackgroundColor: colors.card, 
+         pointBackgroundColor: colors.card,
          pointBorderColor: colors.primary,
       }]
    };
@@ -202,12 +203,18 @@ setLoading(false)
          borderWidth: 0,
       }]
    };
-
+   const navigateMembership = () => {
+      navigate('/member/membership');
+   }
+   const navigateProgress=()=>{
+      navigate('/member/progress')
+   }
    return (
       <div className="w-full max-w-7xl mx-auto space-y-6 pb-10 font-sans px-4 sm:px-0">
-         
+
          {/* 1. WELCOME HEADER - Always Dark Style for contrast */}
-         <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden w-full md:w-fit mx-auto md:mx-0">
+         <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden w-full md:w-fit mx-auto md:mx-0 cursor-pointer"
+            onClick={navigateMembership}>
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#D9F17F] rounded-full filter blur-[80px] opacity-20 translate-x-1/2 -translate-y-1/2"></div>
             <div className="relative z-10 flex gap-6 mt-4 md:mt-0 text-center w-full justify-center md:justify-start md:w-auto">
                <div>
@@ -223,19 +230,21 @@ setLoading(false)
          </div>
 
          {/* 2. KEY STATS GRID */}
-         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 "
+            >
             {[
                { icon: "fa-check-double", label: "Attendance", value: `${memberData.attendance}%`, color: "green" },
                { icon: "fa-weight-scale", label: "Weight Change", value: memberData.weightChange, color: "blue" },
                { icon: "fa-user-ninja", label: "Trainer", value: memberData.trainer, color: "orange" },
                { icon: "fa-calendar-check", label: "Status", value: memberData.status, color: "purple", isBadge: true }
             ].map((stat, i) => (
-               <div 
-                  key={i} 
-                  className="p-5 rounded-3xl border shadow-sm flex flex-col justify-between transition-colors duration-300"
-                  style={{ 
-                     backgroundColor: colors.card, 
-                     borderColor: colors.border 
+               <div
+                  key={i}
+                  onClick={navigateProgress}
+                  className="p-5 rounded-3xl border shadow-sm flex flex-col justify-between transition-colors duration-300 cursor-pointer"
+                  style={{
+                     backgroundColor: colors.card,
+                     borderColor: colors.border
                   }}
                >
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-${stat.color}-50 text-${stat.color}-600`}>
@@ -258,9 +267,9 @@ setLoading(false)
          {/* 3. MAIN DASHBOARD CONTENT */}
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
-               
+
                {/* Weight Chart */}
-               <div 
+               <div
                   className="p-6 rounded-[2.5rem] border shadow-sm transition-colors duration-300"
                   style={{ backgroundColor: colors.card, borderColor: colors.border }}
                >
@@ -268,29 +277,29 @@ setLoading(false)
                      <h3 className="text-lg font-bold" style={{ color: colors.text }}>Progress Tracking</h3>
                   </div>
                   <div className="h-64 w-full">
-                     <Line 
-                        data={weightChartData} 
+                     <Line
+                        data={weightChartData}
                         options={{
-                           responsive: true, 
-                           maintainAspectRatio: false, 
-                           scales: { 
-                              y: { ticks: { color: colors.textMuted }, grid: { display: false } }, 
-                              x: { ticks: { color: colors.textMuted }, grid: { display: false } } 
+                           responsive: true,
+                           maintainAspectRatio: false,
+                           scales: {
+                              y: { ticks: { color: colors.textMuted }, grid: { display: false } },
+                              x: { ticks: { color: colors.textMuted }, grid: { display: false } }
                            },
                            plugins: {
                               legend: { labels: { color: colors.text } }
                            }
-                        }} 
+                        }}
                      />
                   </div>
                </div>
 
                {/* Next Session Card */}
-               <div 
+               <div
                   className="p-6 rounded-[2.5rem] border flex flex-col sm:flex-row justify-between items-center transition-colors duration-300"
-                  style={{ 
-                     backgroundColor: theme === 'dark' ? '#1f2937' : '#f8f9fa', 
-                     borderColor: colors.border 
+                  style={{
+                     backgroundColor: theme === 'dark' ? '#1f2937' : '#f8f9fa',
+                     borderColor: colors.border
                   }}
                >
                   <div className="text-center sm:text-left">
@@ -307,9 +316,9 @@ setLoading(false)
                      )}
                   </div>
                   <Link to="/member/booking">
-                     <button 
+                     <button
                         className="mt-4 sm:mt-0 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-colors border"
-                        style={{ 
+                        style={{
                            backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
                            color: colors.text,
                            borderColor: colors.border
@@ -324,7 +333,7 @@ setLoading(false)
             {/* Right Column */}
             <div className="space-y-6">
                {/* Diet Adherence */}
-               <div 
+               <div
                   className="p-6 rounded-[2.5rem] border shadow-sm text-center relative transition-colors duration-300"
                   style={{ backgroundColor: colors.card, borderColor: colors.border }}
                >
@@ -342,9 +351,9 @@ setLoading(false)
                </div>
 
                {/* Notifications */}
-               <div 
+               <div
                   className="p-6 rounded-[2.5rem] border"
-                  style={{ 
+                  style={{
                      backgroundColor: theme === 'dark' ? 'rgba(30, 58, 138, 0.2)' : '#eff6ff', // blue-900/20 vs blue-50
                      borderColor: theme === 'dark' ? 'rgba(30, 58, 138, 0.4)' : '#dbeafe'
                   }}

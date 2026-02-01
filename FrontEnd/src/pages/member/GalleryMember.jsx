@@ -74,11 +74,13 @@ const GalleryMember = () => {
   };
 
   // --- HELPERS ---
-  const getFullUrl = (url) => {
-    if (!url) return "";
-    if (url.startsWith("http")) return url;
-    return `${baseURL}${url}`;
-  };
+ const getFullUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  // Ensure there is exactly one slash between baseURL and url
+  const separator = baseURL.endsWith('/') ? '' : '/';
+  return `${baseURL}${separator}${url}`;
+};
 
   // Check if current user liked the media
   const checkIsLiked = (mediaItem) => {

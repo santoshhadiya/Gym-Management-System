@@ -12,7 +12,7 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { useGlobalContext } from '../../context/GlobalContext';
-import { useTheme } from '../../context/ThemeContext'; // Import useTheme
+import { useTheme } from '../../context/ThemeContext';
 
 ChartJS.register(
   CategoryScale,
@@ -27,7 +27,7 @@ ChartJS.register(
 
 const TimeDropdown = ({ selected, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { colors, theme } = useTheme(); // Access custom colors and current theme
+  const { colors, theme } = useTheme();
   const options = ["Today", "This Week", "This Month", "This Year"];
 
   return (
@@ -77,7 +77,7 @@ const TimeDropdown = ({ selected, onSelect }) => {
 
 const MonthlyEarningsChart_Admin = () => {
   const { api } = useGlobalContext();
-  const { colors, theme } = useTheme(); // Access custom colors and current theme
+  const { colors, theme } = useTheme();
   const [timePeriod, setTimePeriod] = useState("This Week");
   const [payments, setPayments] = useState([]);
 
@@ -102,12 +102,15 @@ const MonthlyEarningsChart_Admin = () => {
     let labels = [];
     let data = [];
 
+    // Filter payments based on status first to clean up logic
+    const paidPayments = payments.filter(p => p.status === "Paid" || p.status === "Success");
+
     if (timePeriod === "This Year") {
       labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       data = new Array(12).fill(0);
-      payments.forEach(p => {
+      paidPayments.forEach(p => {
         const d = new Date(p.date);
-        if (d.getFullYear() === currentYear && p.status === "Paid") {
+        if (d.getFullYear() === currentYear) {
           data[d.getMonth()] += Number(p.amount);
         }
       });
@@ -117,9 +120,9 @@ const MonthlyEarningsChart_Admin = () => {
       labels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`);
       data = new Array(daysInMonth).fill(0);
       
-      payments.forEach(p => {
+      paidPayments.forEach(p => {
         const d = new Date(p.date);
-        if (d.getFullYear() === currentYear && d.getMonth() === currentMonth && p.status === "Paid") {
+        if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
           data[d.getDate() - 1] += Number(p.amount);
         }
       });
@@ -136,32 +139,34 @@ const MonthlyEarningsChart_Admin = () => {
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       endOfWeek.setHours(23,59,59,999);
 
-      payments.forEach(p => {
+      paidPayments.forEach(p => {
         const d = new Date(p.date);
-        if (d >= startOfWeek && d <= endOfWeek && p.status === "Paid") {
+        if (d >= startOfWeek && d <= endOfWeek) {
           data[d.getDay()] += Number(p.amount);
         }
       });
 
     } else if (timePeriod === "Today") {
-      labels = ["6AM", "9AM", "12PM", "3PM", "6PM", "9PM"];
-      const hourlyData = new Array(24).fill(0);
+      // Robust "Today" labels: Showing blocks of time throughout the day
+      labels = ["Morning", "Noon", "Afternoon", "Evening", "Night", "Late Night"];
+      const hourlyBuckets = new Array(6).fill(0); // 4-hour chunks
       
-      payments.forEach(p => {
+      paidPayments.forEach(p => {
         const d = new Date(p.date);  
-        if (d.getFullYear() === currentYear && d.getMonth() === currentMonth && d.getDate() === currentDate && p.status === "Paid") {
-           hourlyData[d.getHours()] += Number(p.amount);
+        // Use toDateString for robust "same day" comparison ignoring timezones
+        if (d.toDateString() === now.toDateString()) {
+           const hour = d.getHours();
+           // Bucketing logic:
+           if (hour >= 5 && hour < 9) hourlyBuckets[0] += Number(p.amount); // Morning
+           else if (hour >= 9 && hour < 13) hourlyBuckets[1] += Number(p.amount); // Noon
+           else if (hour >= 13 && hour < 17) hourlyBuckets[2] += Number(p.amount); // Afternoon
+           else if (hour >= 17 && hour < 21) hourlyBuckets[3] += Number(p.amount); // Evening
+           else if (hour >= 21 || hour < 1) hourlyBuckets[4] += Number(p.amount); // Night
+           else hourlyBuckets[5] += Number(p.amount); // Late Night
         }
       });
 
-      data = [
-        hourlyData[6] + hourlyData[7] + hourlyData[8],
-        hourlyData[9] + hourlyData[10] + hourlyData[11],
-        hourlyData[12] + hourlyData[13] + hourlyData[14],
-        hourlyData[15] + hourlyData[16] + hourlyData[17],
-        hourlyData[18] + hourlyData[19] + hourlyData[20],
-        hourlyData[21] + hourlyData[22] + hourlyData[23]
-      ];
+      data = hourlyBuckets;
     }
 
     return { labels, data };
@@ -174,14 +179,14 @@ const MonthlyEarningsChart_Admin = () => {
     datasets: [{
       label: "Earnings",
       data: chartData.data,
-      borderColor: colors.primary, // Lime Green
+      borderColor: colors.primary,
       backgroundColor: theme === 'dark' ? 'rgba(217, 241, 127, 0.1)' : 'rgba(217, 241, 127, 0.2)',
       tension: 0.4,
       fill: true,
       pointBackgroundColor: colors.background,
       pointBorderColor: colors.primary,
-      pointRadius: 5,
-      pointHoverRadius: 7,
+      pointRadius: 4,
+      pointHoverRadius: 6,
     }],
   };
 
@@ -193,16 +198,26 @@ const MonthlyEarningsChart_Admin = () => {
         tooltip: {
             backgroundColor: colors.card,
             titleColor: colors.text,
-            bodyColor: colors.textMuted,
+            bodyColor: colors.text,
             borderColor: colors.border,
-            borderWidth: 1
+            borderWidth: 1,
+            padding: 10,
+            displayColors: false,
+            callbacks: {
+                label: function(context) {
+                    return `₹${context.raw.toLocaleString()}`;
+                }
+            }
         }
     },
     scales: {
       y: { 
         beginAtZero: true, 
-        grid: { color: colors.border },
-        ticks: { color: colors.textMuted }
+        grid: { color: colors.border, borderDash: [5, 5] },
+        ticks: { 
+            color: colors.textMuted,
+            callback: (value) => value > 0 ? `₹${value}` : value
+        }
       },
       x: { 
         grid: { display: false },
@@ -219,15 +234,15 @@ const MonthlyEarningsChart_Admin = () => {
       <div className="flex justify-between items-start mb-1">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ color: colors.textMuted }}>
-            <i className="fa-solid fa-indian-rupee-sign text-sm"></i>
+            <i className="fa-solid fa-chart-line text-sm"></i>
           </div>
-          <h3 className="font-semibold text-md" style={{ color: colors.text }}>Earnings Analysis</h3>
+          <h3 className="font-semibold text-md" style={{ color: colors.text }}>Revenue Stream</h3>
         </div>
         <TimeDropdown selected={timePeriod} onSelect={setTimePeriod} />
       </div>
 
       <p className="text-sm mb-6 pl-10" style={{ color: colors.textMuted }}>
-        Total: <span className="font-semibold" style={{ color: colors.text }}>₹{totalEarnings.toLocaleString()}</span>
+        Current Period: <span className="font-semibold" style={{ color: colors.primary }}>₹{totalEarnings.toLocaleString()}</span>
       </p>
       
       <div className="h-[300px] w-full">

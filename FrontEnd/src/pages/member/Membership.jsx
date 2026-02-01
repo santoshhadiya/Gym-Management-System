@@ -76,8 +76,10 @@ const Membership = () => {
       navigate("/member/payment", { state: { plan } });
    };
 
-   const handleDownloadReceipt = () => toast.success("Receipt download coming soon");
-   const handleRenewalRequest = () => toast.success("Renewal request sent to Admin!");
+
+   const handleRenewalRequest = () =>{
+     navigate('/member/renew')
+   }
 
    if (loading) {
       return (
@@ -101,25 +103,14 @@ const Membership = () => {
             </div>
             <div className="flex gap-3 w-full md:w-auto">
                <button 
-                  onClick={handleDownloadReceipt}
-                  className="flex-1 md:flex-none justify-center px-5 py-2.5 border rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition-colors"
-                  style={{ 
-                     backgroundColor: colors.card, 
-                     borderColor: colors.border, 
-                     color: colors.textMuted 
-                  }}
-               >
-                  <i className="fa-solid fa-file-invoice"></i> Receipt
-               </button>
-               <button 
                   onClick={handleRenewalRequest}
-                  className="flex-1 md:flex-none justify-center px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition-colors"
+                  className="flex-1 md:flex-none justify-center px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition-colors cursor-pointer"
                   style={{ 
                      backgroundColor: colors.secondary, 
                      color: theme === 'dark' ? '#fff' : '#1e3a8a' 
                   }}
                >
-                  <i className="fa-solid fa-rotate"></i> Request Renewal
+                  <i className="fa-solid fa-rotate"></i>Renewal
                </button>
             </div>
          </div>
@@ -136,7 +127,7 @@ const Membership = () => {
                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusLabel() === 'Active' ? 'bg-[#D9F17F] text-green-900' : 'bg-red-500 text-white'}`}>
                         {getStatusLabel()}
                      </span>
-                     <span className="text-gray-400 text-sm font-mono">#{member?._id?.slice(-6) || "NA"}</span>
+                     
                   </div>
                   <h2 className="text-3xl md:text-5xl font-black mb-2">{currentPlan?.name || "No Active Plan"}</h2>
                   <p className="text-gray-300 text-base md:text-lg">{currentPlan ? `${totalDays} Days Plan` : "Please select a plan"}</p>
@@ -251,7 +242,7 @@ const Membership = () => {
                      </div>
                      <button 
                         onClick={() => handleUpgrade(p)}
-                        className="px-4 py-2 rounded-xl text-xs font-bold hover:opacity-90 transition-opacity shrink-0"
+                        className="px-4 py-2 rounded-xl text-xs font-bold hover:opacity-90 transition-opacity shrink-0 cursor-pointer"
                         style={{ backgroundColor: colors.text, color: colors.background }} // Inverts text/bg for button
                      >
                         Upgrade

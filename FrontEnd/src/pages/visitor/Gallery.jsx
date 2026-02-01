@@ -43,11 +43,13 @@ const Gallery = () => {
   }, [api]);
 
   // --- HELPERS ---
-  const getFullUrl = (url) => {
-    if (!url) return "";
-    if (url.startsWith("http")) return url;
-    return `${baseURL}${url}`;
-  };
+ const getFullUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  // Ensure there is exactly one slash between baseURL and url
+  const separator = baseURL.endsWith('/') ? '' : '/';
+  return `${baseURL}${separator}${url}`;
+};;
 
   // Extract unique categories from data for the filter buttons
   const uniqueCategories = ["All", ...new Set(media.map(m => m.category))];

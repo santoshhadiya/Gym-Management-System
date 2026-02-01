@@ -113,15 +113,14 @@ const FinancialReports = () => {
     });
   };
 
-  // --- DYNAMIC CHART DATA GENERATION ---
+ // --- DYNAMIC CHART DATA GENERATION ---
   const chartData = useMemo(() => {
-    if (!transactions.length) return { trend: {}, plans: {}, methods: {} };
+    if (!transactions.length) return { trend: { labels: [], data: [] }, plans: { labels: [], data: [] }, methods: { labels: [], data: [] } };
 
+    // Standardize "Now" to local midnight for accurate range comparisons
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-    const currentDate = now.getDate();
-
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    
     let filteredTxns = [];
     let trendLabels = [];
     let trendData = [];
@@ -129,100 +128,97 @@ const FinancialReports = () => {
     // 1. FILTER DATA & SETUP AXIS
     if (graphFilter === "Today") {
       trendLabels = ["6 AM", "10 AM", "2 PM", "6 PM", "10 PM"];
-      trendData = new Array(5).fill(0); 
+      trendData = new Array(5).fill(0);
       
       filteredTxns = transactions.filter(t => {
         const d = new Date(t.date);
-        return d.getDate() === currentDate && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        return d.getFullYear() === now.getFullYear() && 
+               d.getMonth() === now.getMonth() && 
+               d.getDate() === now.getDate();
       });
 
       filteredTxns.forEach(t => {
-        if (t.status !== "Paid" && t.status !== "Success") return;
+        if (!["Paid", "Success"].includes(t.status)) return;
         const h = new Date(t.date).getHours();
-        if (h >= 6 && h < 10) trendData[0] += t.amount;
-        else if (h >= 10 && h < 14) trendData[1] += t.amount;
-        else if (h >= 14 && h < 18) trendData[2] += t.amount;
-        else if (h >= 18 && h < 22) trendData[3] += t.amount;
-        else if (h >= 22 || h < 2) trendData[4] += t.amount; 
+        if (h >= 6 && h < 10) trendData[0] += Number(t.amount);
+        else if (h >= 10 && h < 14) trendData[1] += Number(t.amount);
+        else if (h >= 14 && h < 18) trendData[2] += Number(t.amount);
+        else if (h >= 18 && h < 22) trendData[3] += Number(t.amount);
+        else trendData[4] += Number(t.amount); 
       });
 
     } else if (graphFilter === "This Week") {
       trendLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       trendData = new Array(7).fill(0);
       
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay());
-      startOfWeek.setHours(0,0,0,0);
+      // Calculate start of current week (Sunday)
+      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+      const startOfWeekTime = startOfWeek.getTime();
+
+      filteredTxns = transactions.filter(t => new Date(t.date).getTime() >= startOfWeekTime);
       
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-      endOfWeek.setHours(23,59,59,999);
-
-      filteredTxns = transactions.filter(t => {
-        const d = new Date(t.date);
-        return d >= startOfWeek && d <= endOfWeek;
-      });
-
       filteredTxns.forEach(t => {
-        if (t.status === "Paid" || t.status === "Success") {
-           trendData[new Date(t.date).getDay()] += t.amount;
+        if (["Paid", "Success"].includes(t.status)) {
+           const dayIndex = new Date(t.date).getDay();
+           trendData[dayIndex] += Number(t.amount);
         }
       });
 
     } else if (graphFilter === "This Month") {
       trendLabels = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"];
       trendData = new Array(5).fill(0);
-
+      
       filteredTxns = transactions.filter(t => {
         const d = new Date(t.date);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
       });
 
       filteredTxns.forEach(t => {
-        if (t.status === "Paid" || t.status === "Success") {
-           const d = new Date(t.date).getDate();
-           const week = Math.floor((d - 1) / 7);
-           trendData[week] += t.amount;
+        if (["Paid", "Success"].includes(t.status)) {
+           const dayOfMonth = new Date(t.date).getDate();
+           const weekIdx = Math.min(Math.floor((dayOfMonth - 1) / 7), 4);
+           trendData[weekIdx] += Number(t.amount);
         }
       });
 
     } else if (graphFilter === "This Year") {
       trendLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       trendData = new Array(12).fill(0);
-
-      filteredTxns = transactions.filter(t => new Date(t.date).getFullYear() === currentYear);
-
+      
+      filteredTxns = transactions.filter(t => new Date(t.date).getFullYear() === now.getFullYear());
+      
       filteredTxns.forEach(t => {
-        if (t.status === "Paid" || t.status === "Success") {
-           trendData[new Date(t.date).getMonth()] += t.amount;
+        if (["Paid", "Success"].includes(t.status)) {
+           const monthIdx = new Date(t.date).getMonth();
+           trendData[monthIdx] += Number(t.amount);
         }
       });
 
     } else if (graphFilter === "All Time") {
       const years = [...new Set(transactions.map(t => new Date(t.date).getFullYear()))].sort();
-      trendLabels = years;
+      trendLabels = years.map(String);
       trendData = new Array(years.length).fill(0);
       
       filteredTxns = transactions;
-
+      
       filteredTxns.forEach(t => {
-        if (t.status === "Paid" || t.status === "Success") {
-           const idx = years.indexOf(new Date(t.date).getFullYear());
-           if(idx > -1) trendData[idx] += t.amount;
+        if (["Paid", "Success"].includes(t.status)) {
+           const yr = new Date(t.date).getFullYear();
+           const idx = years.indexOf(yr);
+           if(idx > -1) trendData[idx] += Number(t.amount);
         }
       });
     }
 
+    // 2. AGGREGATE PLANS & METHODS
     const planMap = {};
     const methodMap = {};
-
     filteredTxns.forEach(t => {
-       if (t.status === "Paid" || t.status === "Success") {
-          const plan = t.plan || "Unknown";
-          planMap[plan] = (planMap[plan] || 0) + t.amount;
-          
-          const method = t.method || "Other";
-          methodMap[method] = (methodMap[method] || 0) + 1;
+       if (["Paid", "Success"].includes(t.status)) {
+          const pName = t.plan || "Unknown";
+          const mName = t.method || "Other";
+          planMap[pName] = (planMap[pName] || 0) + Number(t.amount);
+          methodMap[mName] = (methodMap[mName] || 0) + 1;
        }
     });
 
@@ -231,10 +227,8 @@ const FinancialReports = () => {
       plans: { labels: Object.keys(planMap), data: Object.values(planMap) },
       methods: { labels: Object.keys(methodMap), data: Object.values(methodMap) }
     };
-
   }, [transactions, graphFilter]);
-
-
+  
   // --- TRANSACTION LIST FILTERING ---
   const filteredTransactions = transactions.filter(t => {
     if (!historyFrom && !historyTo) return true;
