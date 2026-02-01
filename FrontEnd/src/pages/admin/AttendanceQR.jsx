@@ -34,27 +34,27 @@ const AttendanceQR = () => {
   }, []);
 
   // 2. Local Socket Implementation
-  useEffect(() => {
-    if (!user?._id) return;
+useEffect(() => {
+  if (!user?._id) return;
 
-    const socket = io(BACKEND_URL);
-    socketRef.current = socket;
+  const socket = io(BACKEND_URL);
+  socketRef.current = socket;
 
-    socket.on("connect", () => {
-      // Admin joins their own room
-      socket.emit("join", user._id.toString());
-    });
+  socket.on("connect", () => {
+    // Admin joins their own unique room
+    socket.emit("join", user._id.toString());
+  });
 
-    socket.on("qr-scanned", (data) => {
-      console.log("Member scanned successfully:", data);
-      refreshQR(); // Trigger the refresh!
-    });
+  socket.on("qr-scanned", (data) => {
+    console.log("Member scanned successfully:", data);
+    refreshQR(); // This triggers the auto-refresh
+  });
 
-    return () => {
-      socket.off("qr-scanned");
-      socket.disconnect();
-    };
-  }, [user?._id, BACKEND_URL]);
+  return () => {
+    socket.off("qr-scanned");
+    socket.disconnect();
+  };
+}, [user?._id, BACKEND_URL]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-4">

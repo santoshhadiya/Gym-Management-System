@@ -6,6 +6,7 @@ exports.generateQRToken = async (req, res) => {
   const token = jwt.sign(
     {
       type: "attendance-checkin",
+      adminId: req.user._id, // Capture the ID of the person generating the QR
       id: `qr-${Date.now()}`,
     },
     process.env.JWT_SECRET,
@@ -40,14 +41,14 @@ exports.markAttendance = async (req, res) => {
     // --- SOCKET NOTIFICATION ---
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const adminId = decoded.adminId;
+      const adminId = decoded.adminId; // Extracted from the QR token
       const io = getIo();
-      // Emit specifically to the room named after the member's ID
+
+      // Emit to the Admin's room specifically
       io.to(adminId.toString()).emit("qr-scanned", {
         message: "Member checked in!",
         memberName: req.user.name,
       });
-      res.status(201).json(record);
     } catch (socketErr) {
       console.error("Socket notification failed:", socketErr);
     }
