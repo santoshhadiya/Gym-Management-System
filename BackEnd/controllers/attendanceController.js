@@ -77,7 +77,9 @@ exports.getAttendanceReport = async (req, res) => {
     const today = new Date().toISOString().split("T")[0];
     const totalRecords = await Attendance.countDocuments();
     const todayCount = await Attendance.countDocuments({ date: today });
-    const todayList = await Attendance.find({ date: today })
+    
+    // FETCH ALL instead of just today
+    const allRecords = await Attendance.find()
       .populate("member", "name email")
       .sort({ createdAt: -1 });
 
@@ -90,7 +92,7 @@ exports.getAttendanceReport = async (req, res) => {
       success: true,
       totalAttendance: totalRecords,
       todayCount: todayCount,
-      todayList: todayList,
+      allRecords: allRecords, // Changed from todayList
       recentScans: recentScans,
       reportGeneratedAt: new Date().toLocaleString(),
     });

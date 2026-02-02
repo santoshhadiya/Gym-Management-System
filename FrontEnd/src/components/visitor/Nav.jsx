@@ -164,7 +164,7 @@ const Nav = () => {
                </Link>
                
                <Link to="/login" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-600 font-bold transition-colors">
-                  <i className="fa-solid fa-right-to-bracket"></i> Member Login
+                  <i className="fa-solid fa-right-to-bracket"></i>Login
                </Link>
             </div>
           </div>
