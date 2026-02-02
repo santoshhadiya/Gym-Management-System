@@ -16,7 +16,7 @@ const initSocket = (server) => {
     // Join a room based on user ID for private messaging
     socket.on("join", (userId) => {
       if (userId) {
-        socket.join(userId);
+        socket.join(userId.toString());
         console.log(`User ${userId} joined room ${userId}`);
       }
     });
