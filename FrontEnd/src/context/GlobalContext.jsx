@@ -93,7 +93,7 @@ export const GlobalProvider = ({ children }) => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  const isHosted=false;
+  const isHosted=true;
   const BACKEND_URL = !isHosted ? "http://localhost:5000" : "https://gym-management-system-backend-vive.onrender.com";
 
 
