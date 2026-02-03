@@ -152,7 +152,7 @@ const Plans = () => {
                       )}
                     </ul>
 
-                    <Link to="/visitor/contact" className="block">
+                    <Link to="/contact" className="block">
                       <button className={`w-full py-4 rounded-xl font-bold text-sm shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${style.tag ? 'bg-gray-900 text-white hover:bg-gray-800' : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-900 hover:text-gray-900'}`}>
                         Choose Plan <i className="fa-solid fa-arrow-right"></i>
                       </button>
@@ -246,7 +246,7 @@ const Plans = () => {
               <p className="text-gray-300 text-lg mb-8">
                 Come in for a free trial workout. Experience the vibe, meet the trainers, and see if we're the right fit for you.
               </p>
-              <Link to="/visitor/contact">
+              <Link to="/contact">
                 <button className="px-10 py-4 bg-[#FEEF75] text-yellow-900 rounded-full font-bold text-sm hover:bg-yellow-400 transition-all shadow-lg transform hover:scale-105">
                   Book Free Trial
                 </button>

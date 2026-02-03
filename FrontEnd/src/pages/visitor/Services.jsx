@@ -33,7 +33,7 @@ const Services = () => {
           <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed mb-8">
             From personalized training to holistic nutrition, we provide the tools, guidance, and environment you need to succeed.
           </p>
-          <Link to="/visitor/contact">
+          <Link to="/contact">
             <button className="px-8 py-3 bg-[#FEEF75] text-yellow-900 rounded-full font-bold text-sm hover:bg-yellow-400 transition-all shadow-lg hover:scale-105">
               Book a Free Trial
             </button>
@@ -140,100 +140,20 @@ const Services = () => {
         </div>
       </section>
 
-      {/* 4. MEMBERSHIP PREVIEW */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-black text-gray-900 mb-4">Choose Your Plan</h2>
-            <p className="text-gray-500">Flexible options designed for your lifestyle.</p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Basic */}
-            <div className="p-8 rounded-[2rem] border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all text-center">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Monthly Basic</h3>
-              <p className="text-3xl font-black text-gray-900 mb-6">₹1,500<span className="text-sm text-gray-400 font-normal">/mo</span></p>
-              <ul className="text-sm text-gray-600 space-y-3 mb-8 text-left pl-4">
-                <li><i className="fa-solid fa-check text-green-500 mr-2"></i> Gym Access</li>
-                <li><i className="fa-solid fa-check text-green-500 mr-2"></i> Locker Access</li>
-                <li><i className="fa-solid fa-check text-green-500 mr-2"></i> General Training</li>
-              </ul>
-              <Link to="/visitor/plans">
-                <button className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors">View Details</button>
-              </Link>
-            </div>
-
-            {/* Premium */}
-            <div className="p-8 rounded-[2rem] border-2 border-[#FEEF75] bg-[#fffcf0] hover:shadow-xl transition-all text-center relative transform md:-translate-y-4">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#FEEF75] text-yellow-900 px-4 py-1 rounded-full text-xs font-bold">MOST POPULAR</div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Quarterly Pro</h3>
-              <p className="text-3xl font-black text-gray-900 mb-6">₹4,000<span className="text-sm text-gray-400 font-normal">/3mo</span></p>
-              <ul className="text-sm text-gray-600 space-y-3 mb-8 text-left pl-4">
-                <li><i className="fa-solid fa-check text-green-500 mr-2"></i> All Basic Features</li>
-                <li><i className="fa-solid fa-check text-green-500 mr-2"></i> Group Classes</li>
-                <li><i className="fa-solid fa-check text-green-500 mr-2"></i> Diet Consultation</li>
-              </ul>
-              <Link to="/visitor/plans">
-                <button className="w-full py-3 bg-[#FEEF75] text-yellow-900 rounded-xl font-bold hover:bg-yellow-400 transition-colors shadow-sm">Select Plan</button>
-              </Link>
-            </div>
-
-            {/* Yearly */}
-            <div className="p-8 rounded-[2rem] border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all text-center">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Yearly Elite</h3>
-              <p className="text-3xl font-black text-gray-900 mb-6">₹12,000<span className="text-sm text-gray-400 font-normal">/yr</span></p>
-              <ul className="text-sm text-gray-600 space-y-3 mb-8 text-left pl-4">
-                <li><i className="fa-solid fa-check text-green-500 mr-2"></i> All Pro Features</li>
-                <li><i className="fa-solid fa-check text-green-500 mr-2"></i> Personal Training (2 Sessions)</li>
-                <li><i className="fa-solid fa-check text-green-500 mr-2"></i> Steam & Sauna</li>
-              </ul>
-              <Link to="/visitor/plans">
-                <button className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors">View Details</button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. TRANSFORMATIONS */}
-      <section className="py-20 bg-gray-900 text-white">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-black text-center mb-12">Real Results, Real People</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-             {[
-               { name: "Rahul S.", result: "Lost 15kg in 6 Months", quote: "The diet plan was a game changer." },
-               { name: "Priya M.", result: "Gained Strength & Confidence", quote: "I never thought I could lift heavy until now." },
-               { name: "Amit K.", result: "Marathon Ready", quote: "The cardio endurance training helped me finish my first 21k." },
-             ].map((story, idx) => (
-               <div key={idx} className="bg-gray-800 p-6 rounded-3xl border border-gray-700">
-                  <div className="flex items-center gap-4 mb-4">
-                     <div className="w-12 h-12 bg-[#D9F17F] rounded-full flex items-center justify-center text-green-900 font-bold">
-                        {story.name[0]}
-                     </div>
-                     <div>
-                        <h4 className="font-bold text-lg">{story.name}</h4>
-                        <p className="text-[#D9F17F] text-xs font-bold uppercase">{story.result}</p>
-                     </div>
-                  </div>
-                  <p className="text-gray-400 italic">"{story.quote}"</p>
-               </div>
-             ))}
-          </div>
-        </div>
-      </section>
 
       {/* 6. CTA */}
       <section className="py-20 bg-white text-center">
         <div className="container mx-auto px-6 max-w-3xl">
           <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-6">Start Your Transformation</h2>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/visitor/contact">
+            <Link to="/contact">
               <button className="px-10 py-4 bg-[#D9F17F] text-green-900 rounded-full font-bold text-sm hover:bg-green-400 transition-all shadow-lg transform hover:scale-105">
                 Contact Us
               </button>
             </Link>
-            <Link to="/visitor/plans">
-              <button className="px-10 py-4 bg-transparent border border-gray-300 text-gray-700 rounded-full font-bold text-sm hover:bg-gray-50 transition-all">
+            <Link to="/plans">
+              <button className="px-10 py-4 bg-transparent border border-gray-300 text-gray-700 rounded-full font-bold text-sm hover:bg-gray-50 transition-all cursor-pointer">
                 View Memberships
               </button>
             </Link>

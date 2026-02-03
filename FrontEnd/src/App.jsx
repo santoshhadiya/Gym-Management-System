@@ -2,7 +2,7 @@ import React from 'react'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 import Home from './pages/visitor/Home'
 import About from './pages/visitor/About'
-import Contact from './pages/visitor/Contact'
+import Contact from './pages/visitor/contact'
 import Gallery from './pages/visitor/Gallery'
 import Offers from './pages/visitor/Offers'
 import Services from './pages/visitor/Services'
@@ -79,6 +79,10 @@ import AttendanceHistory from './pages/member/AttendanceHistory'
 import Attendance from './pages/admin/Attendance'
 import ForgotPassword from './components/all/ForgotPassword'
 import ResetPassword from './components/all/ResetPassword'
+import FAQs from './pages/visitor/FAQs'
+import PrivacyPolicy from './pages/visitor/PrivacyPolicy'
+import TermsOfService from './pages/visitor/TermsofService'
+import GymSchedule from './pages/visitor/GymSchedule'
 
 const App = () => {
   const { user } = useGlobalContext()
@@ -175,6 +179,10 @@ const App = () => {
           <Route path="inquiry" element={<Inquiry />} />
           <Route path="policies" element={<Policies />} />
           <Route path="reviews" element={<Reviews />} />
+          <Route path="faq" element={<FAQs/>} />
+          <Route path="privacy-policy" element={<PrivacyPolicy/>} />
+          <Route path="terms-service" element={<TermsOfService/>} />
+          <Route path="schedule" element={<GymSchedule/>} />
         </Route>
       </Routes>
 

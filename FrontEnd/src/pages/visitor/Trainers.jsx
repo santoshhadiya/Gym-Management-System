@@ -204,12 +204,7 @@ const Trainers = () => {
                   </div>
                 </div>
 
-                {/* Action */}
-                <div className="pt-4">
-                  <Link to="/visitor/contact" className="block w-full text-center py-4 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors">
-                    Train with {selectedTrainer.name.split(" ")[0]}
-                  </Link>
-                </div>
+                
               </div>
             </div>
           </div>

@@ -35,7 +35,7 @@ const UserSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ["Pending", "Active", "Inactive", "Blocked"],
-    default: "Active",
+    default: "Inactive",
   },
   profileImage: {
     type: String,

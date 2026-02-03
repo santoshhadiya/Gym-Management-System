@@ -58,19 +58,20 @@ exports.getMyPayments = async (req, res) => {
 // @access Admin
 exports.recordPayment = async (req, res) => {
   try {
-    const { memberId, amount, method, date, ref } = req.body;
+    const { memberId, amount, method, date, ref, planId } = req.body; // planId added
 
     const member = await Member.findById(memberId);
     if (!member) return res.status(404).json({ message: "Member not found" });
 
-    if (!member.plan) return res.status(400).json({ message: "Member has no assigned plan" });
+    // Use passed planId or fallback to member's current plan
+    const finalPlanId = planId || member.plan;
 
     const payment = await Payment.create({
       member: memberId,
-      plan: member.plan,
+      plan: finalPlanId,
       amount,
       method,
-      transactionId: ref || `MANUAL-${Date.now()}`,
+      transactionId: ref || `ADMIN-${Date.now()}`,
       paidAt: date || Date.now(),
       status: "Success"
     });

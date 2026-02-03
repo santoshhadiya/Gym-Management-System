@@ -71,7 +71,8 @@ const RegisterPage = () => {
           email: formData.email,
           phone: formData.phone,
           password: formData.password,
-          role: role // Sending the selected role
+          role: role, // Sending the selected role
+          
         }),
       });
 
@@ -111,7 +112,7 @@ const RegisterPage = () => {
         <div>
           {/* Role Selector */}
           <div className="flex justify-between gap-3 mb-6">
-            {['trainer', 'member', 'admin'].map((r) => (
+            {['trainer', 'member'].map((r) => (
               <button
                 key={r}
                 type="button"

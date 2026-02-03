@@ -23,17 +23,15 @@ const offerRoutes = require("./routes/offerRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const inquiriesRoutes = require("./routes/inquiryRoutes");
 const chatRoutes = require("./routes/chatRoutes");
-const workoutDietRoutes=require("./routes/workoutDietRoutes");
-const announcementRoutes=require("./routes/announcementRoutes");
+const workoutDietRoutes = require("./routes/workoutDietRoutes");
+const announcementRoutes = require("./routes/announcementRoutes");
 const equipmentRoutes = require("./routes/equipmentRoutes");
-const mediaRoutes=require("./routes/mediaRoutes");
-const attendanceRoutes=require("./routes/attendanceRoutes")
+const mediaRoutes = require("./routes/mediaRoutes");
+const attendanceRoutes = require("./routes/attendanceRoutes");
+const publicRoutes = require("./routes/publicRoutes");
 
 dotenv.config();
 connectDB();
-
-
-
 
 const app = express();
 const server = http.createServer(app); // ✅ Create HTTP server
@@ -41,13 +39,16 @@ const io = initSocket(server);
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://songars-gym.onrender.com", "https://songars-gym.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://songars-gym.onrender.com",
+      "https://songars-gym.vercel.app",
+    ],
     credentials: true,
   }),
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
 
 // --- Mount Routes ---
 app.use("/api/auth", authRoutes);
@@ -64,12 +65,13 @@ app.use("/api/offers", offerRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/inquiries", inquiriesRoutes);
 app.use("/api/chat", chatRoutes);
-app.use("/api/workout-diet", workoutDietRoutes)
-app.use("/api/announcements",announcementRoutes)
+app.use("/api/workout-diet", workoutDietRoutes);
+app.use("/api/announcements", announcementRoutes);
 app.use("/api/equipment", equipmentRoutes);
 app.use("/api/media", mediaRoutes);
-app.use("/api/attendance", attendanceRoutes)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/public", publicRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // --- Base Route ---
 app.get("/", (req, res) => {

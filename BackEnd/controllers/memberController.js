@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
  * @desc   Get logged-in member profile
  * @route  GET /api/members/profile
  * @access Private (Member)
+ * 
  */
 exports.getMemberProfile = async (req, res) => {
   try {
@@ -292,6 +293,8 @@ exports.createMember = async (req, res) => {
 // @desc   Admin update member
 // @route  PUT /api/members/:id
 // @access Admin
+// @desc   Admin update member
+// @route   PUT /api/members/:id
 exports.updateMemberByAdmin = async (req, res) => {
   try {
     const member = await Member.findById(req.params.id).populate("user");
@@ -303,17 +306,23 @@ exports.updateMemberByAdmin = async (req, res) => {
     if (member.user) {
         member.user.name = req.body.name || member.user.name;
         member.user.phone = req.body.phone || member.user.phone;
+        // Allow admin to toggle status during update
+        if (req.body.status) member.user.status = req.body.status;
         await member.user.save();
     }
 
+    // Update plan and tracking dates
     member.plan = req.body.plan || member.plan;
     member.height = req.body.height || member.height;
     member.currentWeight = req.body.currentWeight || member.currentWeight;
-    await member.save();
+    
+    // ✅ NEW: Support setting membership dates from admin purchase
+    if (req.body.startDate) member.startDate = req.body.startDate;
+    if (req.body.expiryDate) member.expiryDate = req.body.expiryDate;
 
-    res.json({ message: "Updated successfully" });
+    await member.save();
+    res.json({ message: "Member profile and membership updated" });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ message: err.message });
   }
 };

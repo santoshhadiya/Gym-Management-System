@@ -174,7 +174,7 @@ const About = () => {
                 Take the first step towards a healthier, happier you. Visit us today or get in touch.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/visitor/contact">
+                <Link to="/contact">
                   <button className="px-10 py-4 bg-[#FEEF75] text-yellow-900 rounded-full font-bold text-sm hover:bg-yellow-400 transition-all shadow-lg transform hover:scale-105">
                     Contact Us
                   </button>

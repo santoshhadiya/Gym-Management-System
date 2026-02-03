@@ -31,7 +31,7 @@ exports.registerUser = async (req, res) => {
       password,
       phone,
       role,
-      status: "Active", // Requires Admin Approval
+      status: "Inactive", // Requires Admin Approval
     });
 
     // Create Member profile if role is member
@@ -183,7 +183,7 @@ exports.forgotPassword = async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   // Create reset URL
-  isHosted=true
+  isHosted=false
   const resetUrl = !isHosted? `http://localhost:5173/reset-password/${resetToken}`:`https://songars-gym.vercel.app/reset-password/${resetToken}`
 
   const message = `
