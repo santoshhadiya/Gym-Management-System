@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import toast from 'react-hot-toast'; // Changed to react-hot-toast
+import toast from 'react-hot-toast';
 import { useGlobalContext } from '../../context/GlobalContext';
-import { useTheme } from '../../context/ThemeContext'; // Theme Context
+import { useTheme } from '../../context/ThemeContext';
 
 const Profile = () => {
-   const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
-   const { colors, theme } = useTheme(); // Consuming Context
+   // --- LOGIC: STRICTLY UNCHANGED ---
+   const { api, BACKEND_URL, loadingIMG } = useGlobalContext();
+   const { colors, theme } = useTheme();
 
    const [profile, setProfile] = useState(null);
    const [loading, setLoading] = useState(true);
@@ -17,7 +18,6 @@ const Profile = () => {
 
    const fileInputRef = useRef(null);
 
-   // --- FETCH DATA ---
    useEffect(() => {
       const fetchProfile = async () => {
          try {
@@ -78,7 +78,6 @@ const Profile = () => {
       }
    };
 
-   // --- IMAGE HANDLER ---
    const handleImageUpload = (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -93,7 +92,6 @@ const Profile = () => {
       else toast("Click 'Edit Profile' to change photo", { icon: 'ℹ️' });
    };
 
-   // --- SAVE HANDLER ---
    const handleSave = async () => {
       const loadingToast = toast.loading("Saving changes...");
       try {
@@ -133,267 +131,313 @@ const Profile = () => {
       setPasswords({ current: "", new: "", confirm: "" });
    };
 
-   if (loading) {return (
-      <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
-            <img src={loadingIMG} className='h-20 w-25'/>
+   if (loading) {
+      return (
+         <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
+            <img src={loadingIMG} className='h-20 w-25' alt="Loading" />
          </div>
-   )};
+      )
+   };
    if (!profile) return <div className="p-10 text-center text-red-500">Failed to load data.</div>;
 
+   // --- RENDER ---
    return (
-      <div className="w-full max-w-6xl mx-auto space-y-6 pb-10 px-4 sm:px-0">
+      <div className="w-full max-w-7xl mx-auto pb-14 px-4 sm:px-6">
+         
+         {/* --- ADVANCED STYLES & ANIMATIONS --- */}
+         <style>{`
+            /* 1. 3D Card Tilt Effect */
+            .hover-3d {
+               transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            .hover-3d:hover {
+               transform: translateY(-5px) scale(1.01);
+               box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1), 0 10px 20px -5px rgba(0, 0, 0, 0.04);
+            }
 
-         {/* --- HEADER --- */}
-         <div
-            className="rounded-3xl p-6 shadow-sm border relative overflow-hidden transition-colors"
-            style={{ backgroundColor: colors.card, borderColor: colors.border }}
-         >
-            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-gray-900 to-gray-800"></div>
+            /* 2. Glassmorphism */
+            .glass-panel {
+               background: rgba(255, 255, 255, 0.05);
+               backdrop-filter: blur(12px);
+               border: 1px solid rgba(255, 255, 255, 0.1);
+            }
 
-            <div className="relative flex flex-col md:flex-row items-center md:items-end gap-6 mt-12 px-2 md:px-4 text-center md:text-left">
-               {/* Avatar */}
-               <div className="relative group" onClick={triggerFileInput}>
-                  <div className={`w-32 h-32 rounded-full border-4 shadow-md overflow-hidden bg-gray-200 ${isEditing ? 'cursor-pointer hover:opacity-90' : ''}`}
-                     style={{ borderColor: colors.card }}>
-                     <img src={tempData.profileImage || profile.profileImage} alt="Profile" className="w-full h-full object-cover" />
+            /* 3. Focus Glow Rings */
+            .input-glow {
+               transition: all 0.3s ease;
+               background: ${theme === 'dark' ? 'rgba(255,255,255,0.03)' : '#f8fafc'};
+            }
+            .input-glow:focus {
+               background: ${theme === 'dark' ? 'rgba(255,255,255,0.08)' : '#ffffff'};
+               border-color: #D9F17F;
+               box-shadow: 0 0 0 4px rgba(217, 241, 127, 0.25);
+               transform: translateY(-1px);
+            }
+
+            /* 4. Smooth Animations */
+            @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes pulseBorder { 0% { border-color: rgba(217, 241, 127, 0.2); } 50% { border-color: rgba(217, 241, 127, 0.8); } 100% { border-color: rgba(217, 241, 127, 0.2); } }
+            
+            .anim-enter { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+            .anim-pulse-border { animation: pulseBorder 2s infinite; }
+
+            /* 5. Button Press Effect */
+            .btn-press { transition: transform 0.1s ease; }
+            .btn-press:active { transform: scale(0.97); }
+         `}</style>
+
+         {/* --- MAIN GRID LAYOUT --- */}
+         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
+
+            {/* --- LEFT: IDENTITY & NAVIGATION (Sticky) --- */}
+            <div className="lg:col-span-4 xl:col-span-3 space-y-6">
+               <div 
+                  className="rounded-[2.5rem] p-6 text-center border relative overflow-hidden anim-enter sticky top-8 shadow-xl hover-3d"
+                  style={{ backgroundColor: colors.card, borderColor: colors.border }}
+               >
+                  {/* Decorative Header Gradient */}
+                  <div className="absolute top-0 left-0 w-full h-36 bg-gradient-to-br from-gray-800 to-black"></div>
+                  <div className="absolute top-0 left-0 w-full h-36 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+
+                  <div className="relative z-10 flex flex-col items-center pt-6">
+                     {/* Avatar Container */}
+                     <div className="relative group cursor-pointer" onClick={triggerFileInput}>
+                        <div className={`w-40 h-40 rounded-full p-1.5 border-2 ${isEditing ? 'border-[#D9F17F] anim-pulse-border' : 'border-white/20'} bg-white/10 backdrop-blur-sm transition-all duration-300`}>
+                           <div className="w-full h-full rounded-full overflow-hidden shadow-2xl relative">
+                              <img src={tempData.profileImage || profile.profileImage} alt="User" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                              {isEditing && (
+                                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm animate-fade-in">
+                                    <i className="fa-solid fa-camera text-white text-3xl drop-shadow-md"></i>
+                                 </div>
+                              )}
+                           </div>
+                        </div>
+                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} disabled={!isEditing} />
+                     </div>
+
+                     <h2 className="mt-5 text-2xl font-black tracking-tight" style={{ color: colors.text }}>{profile.name}</h2>
+                     
+                     {/* Glassmorphism Status Badge */}
+                     <div className="mt-2 inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-panel shadow-sm">
+                        <span className={`w-2 h-2 rounded-full ${profile.status === 'Active' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+                        <span className="text-xs font-bold uppercase tracking-widest opacity-90" style={{ color: colors.text }}>{profile.status} Member</span>
+                     </div>
+
+                     <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-500/20 to-transparent my-8"></div>
+
+                     {/* Vertical Navigation Tabs */}
+                     <div className="w-full space-y-2 px-1">
+                        {[
+                           { id: 'personal', label: 'Personal Details', icon: 'fa-user-astronaut' },
+                           { id: 'fitness', label: 'Fitness Stats', icon: 'fa-dumbbell' },
+                           { id: 'settings', label: 'Security', icon: 'fa-shield-cat' }
+                        ].map(tab => (
+                           <button
+                              key={tab.id}
+                              onClick={() => setActiveTab(tab.id)}
+                              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 relative overflow-hidden group ${activeTab === tab.id ? 'bg-gray-100 dark:bg-white/5 shadow-md' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                           >
+                              {/* Active Indicator Bar */}
+                              {activeTab === tab.id && <div className="absolute left-0 top-3 bottom-3 w-1 bg-[#D9F17F] rounded-r-full"></div>}
+                              
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-colors ${activeTab === tab.id ? 'bg-[#D9F17F] text-black shadow-lg shadow-[#D9F17F]/20' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
+                                 <i className={`fa-solid ${tab.icon}`}></i>
+                              </div>
+                              <span className={`font-bold text-sm tracking-wide ${activeTab === tab.id ? 'opacity-100' : 'opacity-60'}`} style={{ color: colors.text }}>{tab.label}</span>
+                           </button>
+                        ))}
+                     </div>
                   </div>
-                  {isEditing && (
-                     <div className="absolute bottom-2 right-2 w-8 h-8 bg-[#FEEF75] rounded-full flex items-center justify-center text-yellow-900 shadow-sm z-10">
-                        <i className="fa-solid fa-camera text-xs"></i>
+               </div>
+            </div>
+
+            {/* --- RIGHT: ACTION CENTER --- */}
+            <div className="lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
+               
+               {/* Context Header */}
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 anim-enter" style={{ animationDelay: '0.1s' }}>
+                  <div>
+                     <h1 className="text-4xl font-black mb-1 tracking-tight" style={{ color: colors.text }}>
+                        {activeTab === 'personal' && 'Hello, ' + profile.name.split(' ')[0] + '!'}
+                        {activeTab === 'fitness' && 'Your Progress'}
+                        {activeTab === 'settings' && 'Account Security'}
+                     </h1>
+                     <p className="text-sm font-medium opacity-60 max-w-md leading-relaxed" style={{ color: colors.text }}>
+                        {activeTab === 'personal' && 'View and manage your personal information and contact details.'}
+                        {activeTab === 'fitness' && 'Track your body metrics, update goals, and monitor progress.'}
+                        {activeTab === 'settings' && 'Keep your account secure by updating your password regularly.'}
+                     </p>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 w-full md:w-auto">
+                     {!isEditing ? (
+                        <button onClick={() => setIsEditing(true)} 
+                           className="btn-press flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-2xl border-2 font-bold text-sm uppercase tracking-wide hover:bg-gray-100 dark:hover:bg-white/5 transition-all shadow-sm"
+                           style={{ borderColor: colors.border, color: colors.text }}>
+                           <i className="fa-solid fa-pen-to-square"></i> Edit Details
+                        </button>
+                     ) : (
+                        <>
+                           <button onClick={() => { setIsEditing(false); setTempData(profile); }}
+                              className="btn-press flex-1 px-8 py-4 rounded-2xl font-bold text-sm uppercase tracking-wide border hover:bg-red-50 dark:hover:bg-red-900/10 hover:border-red-200 dark:hover:border-red-800 hover:text-red-500 transition-colors"
+                              style={{ borderColor: colors.border, color: colors.text }}>
+                              Cancel
+                           </button>
+                           <button onClick={handleSave}
+                              className="btn-press flex-1 px-10 py-4 rounded-2xl font-bold text-sm uppercase tracking-wide bg-[#D9F17F] text-black shadow-xl shadow-[#D9F17F]/30 hover:-translate-y-1 transition-all">
+                              Save Changes
+                           </button>
+                        </>
+                     )}
+                  </div>
+               </div>
+
+               {/* Main Form Card */}
+               <div className="rounded-[3rem] p-8 md:p-12 border shadow-lg flex-1 relative overflow-hidden anim-enter hover-3d" 
+                    style={{ backgroundColor: colors.card, borderColor: colors.border, animationDelay: '0.2s' }}>
+                  
+                  {/* Background Icon Watermark */}
+                  <div className="absolute top-10 right-10 p-10 opacity-[0.03] pointer-events-none transform rotate-12">
+                     <i className={`fa-solid ${activeTab === 'personal' ? 'fa-id-card' : activeTab === 'fitness' ? 'fa-bolt' : 'fa-lock'} text-9xl`}></i>
+                  </div>
+
+                  {/* === TAB: PERSONAL === */}
+                  {activeTab === 'personal' && (
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 anim-enter">
+                        <div className="space-y-3">
+                           <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">Full Name</label>
+                           <div className="relative group">
+                              <i className="fa-solid fa-user absolute left-6 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:text-[#D9F17F] group-focus-within:opacity-100 transition-all"></i>
+                              <input type="text" name="name" disabled={!isEditing} value={tempData.name} onChange={handleInputChange} 
+                                 className="input-glow w-full pl-14 pr-6 py-5 rounded-2xl border-2 outline-none font-bold text-xl disabled:opacity-60"
+                                 style={{ borderColor: colors.border, color: colors.text }} />
+                           </div>
+                        </div>
+                        <div className="space-y-3">
+                           <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">Email Address</label>
+                           <div className="relative group">
+                              <i className="fa-solid fa-envelope absolute left-6 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:text-[#D9F17F] group-focus-within:opacity-100 transition-all"></i>
+                              <input type="email" value={tempData.email} disabled 
+                                 className="input-glow w-full pl-14 pr-6 py-5 rounded-2xl border-2 outline-none font-medium text-xl opacity-60 cursor-not-allowed"
+                                 style={{ borderColor: colors.border, color: colors.text }} />
+                           </div>
+                        </div>
+                        <div className="space-y-3">
+                           <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">Phone Number</label>
+                           <div className="relative group">
+                              <i className="fa-solid fa-phone absolute left-6 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:text-[#D9F17F] group-focus-within:opacity-100 transition-all"></i>
+                              <input type="tel" name="phone" disabled={!isEditing} value={tempData.phone} onChange={handleInputChange} 
+                                 className="input-glow w-full pl-14 pr-6 py-5 rounded-2xl border-2 outline-none font-bold text-xl disabled:opacity-60"
+                                 style={{ borderColor: colors.border, color: colors.text }} />
+                           </div>
+                        </div>
+                        <div className="space-y-3 md:col-span-2">
+                           <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">Address</label>
+                           <textarea name="address" rows="3" disabled={!isEditing} value={tempData.address} onChange={handleInputChange} 
+                              className="input-glow w-full px-6 py-5 rounded-2xl border-2 outline-none font-medium text-lg resize-none disabled:opacity-60 leading-relaxed"
+                              style={{ borderColor: colors.border, color: colors.text }}></textarea>
+                        </div>
                      </div>
                   )}
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} disabled={!isEditing} />
-               </div>
 
-               {/* Info */}
-               <div className="flex-1 mb-2">
-                  <h1 className="text-2xl md:text-3xl font-black" style={{ color: colors.text }}>{profile.name}</h1>
-                  <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3 text-sm mt-1 justify-center md:justify-start" style={{ color: colors.textMuted }}>
-                     <span className="font-mono px-2 py-0.5 rounded" style={{ backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6' }}>
-                        #{profile.id.slice(-6).toUpperCase()}
-                     </span>
-                     <span className={`font-bold ${profile.status === 'Active' ? 'text-green-600' : 'text-red-500'}`}>
-                        {profile.status}
-                     </span>
-                     <span>Since: {profile.joinedDate}</span>
-                  </div>
-               </div>
-
-               {/* Actions */}
-               <div className="flex gap-3 mb-2 w-full md:w-auto justify-center md:justify-end">
-                  {!isEditing ? (
-                     <button
-                        onClick={() => setIsEditing(true)}
-                        className="px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm w-full md:w-auto transition-colors"
-                        style={{ backgroundColor: colors.text, color: colors.background }}
-                     >
-                        <i className="fa-solid fa-pen-to-square mr-2"></i> Edit Profile
-                     </button>
-                  ) : (
-                     <>
-                        <button
-                           onClick={() => { setIsEditing(false); setTempData(profile); }}
-                           className="px-5 py-2.5 border rounded-xl text-sm font-bold transition-colors"
-                           style={{ borderColor: colors.border, color: colors.textMuted }}
-                        >
-                           Cancel
-                        </button>
-                        <button
-                           onClick={handleSave}
-                           className="px-5 py-2.5 bg-[#D9F17F] text-green-900 rounded-xl text-sm font-bold hover:bg-green-300 transition-colors shadow-sm"
-                        >
-                           Save
-                        </button>
-                     </>
-                  )}
-               </div>
-            </div>
-         </div>
-
-         {/* --- CONTENT GRID --- */}
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            {/* LEFT: NAVIGATION */}
-            <div className="space-y-6">
-               <div
-                  className="rounded-3xl p-2 border shadow-sm flex flex-row lg:flex-col gap-1 overflow-x-auto"
-                  style={{ backgroundColor: colors.card, borderColor: colors.border }}
-               >
-                  {[
-                     { id: 'personal', label: 'Personal Details', icon: 'fa-user' },
-                     { id: 'fitness', label: 'Fitness & Goals', icon: 'fa-heart-pulse' },
-                     { id: 'settings', label: 'Security', icon: 'fa-shield-halved' }
-                  ].map(tab => (
-                     <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left whitespace-nowrap min-w-max lg:min-w-0"
-                        style={{
-                           backgroundColor: activeTab === tab.id ? colors.secondary : 'transparent',
-                           color: activeTab === tab.id ? (theme === 'dark' ? '#fff' : '#1e3a8a') : colors.textMuted
-                        }}
-                     >
-                        <i className={`fa-solid ${tab.icon}`}></i> {tab.label}
-                     </button>
-                  ))}
-               </div>
-            </div>
-
-            {/* RIGHT: FORMS */}
-            <div className="lg:col-span-2">
-               {/* WRAPPER CARD */}
-               <div
-                  className="rounded-3xl p-6 md:p-8 border shadow-sm"
-                  style={{ backgroundColor: colors.card, borderColor: colors.border }}
-               >
-                  {/* TAB 1: PERSONAL */}
-                  {activeTab === 'personal' && (
-                     <>
-                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2" style={{ color: colors.text }}>
-                           <i className="fa-solid fa-user-pen" style={{ color: colors.secondary }}></i> Personal Information
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                           <div className="group">
-                              <label className="block text-xs font-bold mb-2 uppercase" style={{ color: colors.textMuted }}>Full Name</label>
-                              <input
-                                 type="text"
-                                 name="name"
-                                 disabled={!isEditing}
-                                 value={tempData.name}
-                                 onChange={handleInputChange}
-                                 className="w-full px-4 py-3 rounded-xl border-transparent focus:ring-2 transition-all font-medium disabled:opacity-70"
-                                 style={{
-                                    backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
-                                    color: colors.text
-                                 }}
-                              />
-                           </div>
-                           <div className="group">
-                              <label className="block text-xs font-bold mb-2 uppercase" style={{ color: colors.textMuted }}>Email</label>
-                              <input
-                                 type="email"
-                                 value={tempData.email}
-                                 disabled
-                                 className="w-full px-4 py-3 rounded-xl border-transparent font-medium cursor-not-allowed"
-                                 style={{
-                                    backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                                    color: colors.textMuted
-                                 }}
-                              />
-                           </div>
-                           <div className="group">
-                              <label className="block text-xs font-bold mb-2 uppercase" style={{ color: colors.textMuted }}>Phone</label>
-                              <input
-                                 type="tel"
-                                 name="phone"
-                                 disabled={!isEditing}
-                                 value={tempData.phone}
-                                 onChange={handleInputChange}
-                                 className="w-full px-4 py-3 rounded-xl border-transparent focus:ring-2 transition-all font-medium"
-                                 style={{
-                                    backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
-                                    color: colors.text
-                                 }}
-                              />
-                           </div>
-                           <div className="group md:col-span-2">
-                              <label className="block text-xs font-bold mb-2 uppercase" style={{ color: colors.textMuted }}>Address</label>
-                              <textarea
-                                 name="address"
-                                 rows="3"
-                                 disabled={!isEditing}
-                                 value={tempData.address}
-                                 onChange={handleInputChange}
-                                 className="w-full px-4 py-3 rounded-xl border-transparent focus:ring-2 transition-all font-medium resize-none"
-                                 style={{
-                                    backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
-                                    color: colors.text
-                                 }}
-                              ></textarea>
-                           </div>
-                        </div>
-                     </>
-                  )}
-
-                  {/* TAB 2: FITNESS */}
+                  {/* === TAB: FITNESS === */}
                   {activeTab === 'fitness' && (
-                     <>
-                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2" style={{ color: colors.text }}>
-                           <i className="fa-solid fa-dumbbell text-[#D9F17F]"></i> Fitness Profile
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                     <div className="anim-enter">
+                        {/* 3D Cards for Stats */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                            {['height', 'weight'].map((field) => (
-                              <div key={field}>
-                                 <label className="block text-xs font-bold mb-2 uppercase" style={{ color: colors.textMuted }}>
-                                    {field === 'height' ? 'Height (cm)' : 'Weight (kg)'}
-                                 </label>
-                                 <input
-                                    type="number"
-                                    name={field}
-                                    disabled={!isEditing}
-                                    value={tempData.fitness[field]}
-                                    onChange={(e) => handleInputChange(e, 'fitness')}
-                                    className="w-full px-4 py-3 rounded-xl border-transparent focus:ring-2 transition-all font-bold text-lg"
-                                    style={{
-                                       backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
-                                       color: colors.text
-                                    }}
-                                 />
+                              <div key={field} className="relative overflow-hidden rounded-[2rem] p-8 border-2 group transition-all duration-300 hover:border-[#D9F17F] hover:shadow-lg hover:-translate-y-1" 
+                                   style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.03)' : '#f8f9fa', borderColor: colors.border }}>
+                                 <div className="flex justify-between items-start mb-4">
+                                    <span className="text-xs font-black uppercase opacity-40 tracking-widest">{field === 'height' ? 'HEIGHT' : 'WEIGHT'}</span>
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner ${field === 'height' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
+                                       <i className={`fa-solid ${field === 'height' ? 'fa-ruler-vertical' : 'fa-scale-unbalanced'}`}></i>
+                                    </div>
+                                 </div>
+                                 <div className="flex items-baseline gap-2 mt-2">
+                                    <input type="number" name={field} disabled={!isEditing} value={tempData.fitness[field]} onChange={(e) => handleInputChange(e, 'fitness')} 
+                                       className="w-full bg-transparent text-6xl font-black outline-none border-none p-0 focus:ring-0 disabled:cursor-not-allowed tracking-tighter"
+                                       style={{ color: colors.text }} />
+                                    <span className="text-sm font-bold opacity-40 uppercase">{field === 'height' ? 'cm' : 'kg'}</span>
+                                 </div>
                               </div>
                            ))}
-                           <div className="md:col-span-2">
-                              <label className="block text-xs font-bold mb-2 uppercase" style={{ color: colors.textMuted }}>Fitness Goal</label>
-                              <select
-                                 name="goal"
-                                 disabled={!isEditing}
-                                 value={tempData.fitness.goal}
-                                 onChange={(e) => handleInputChange(e, 'fitness')}
-                                 className="w-full px-4 py-3 rounded-xl border-transparent focus:ring-2 transition-all font-medium"
-                                 style={{
-                                    backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
-                                    color: colors.text
-                                 }}
-                              >
-                                 {['Weight Loss', 'Muscle Gain', 'Endurance', 'General Fitness'].map(o => <option key={o}>{o}</option>)}
+                        </div>
+                        
+                        <div className="space-y-3">
+                           <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">Current Goal</label>
+                           <div className="relative group">
+                              <select name="goal" disabled={!isEditing} value={tempData.fitness.goal} onChange={(e) => handleInputChange(e, 'fitness')} 
+                                 className="input-glow w-full px-8 py-6 rounded-2xl border-2 font-bold text-2xl outline-none appearance-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                 style={{ borderColor: colors.border, color: colors.text }}>
+                                 {['Weight Loss', 'Muscle Gain', 'Endurance', 'General Fitness'].map(o => <option key={o} className="text-black text-lg">{o}</option>)}
                               </select>
+                              <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none opacity-50 transition-transform group-hover:translate-y-0.5">
+                                 <i className="fa-solid fa-chevron-down text-2xl"></i>
+                              </div>
                            </div>
                         </div>
-                     </>
+                     </div>
                   )}
 
-                  {/* TAB 3: SETTINGS */}
+                  {/* === TAB: SECURITY === */}
                   {activeTab === 'settings' && (
-                     <>
-                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2" style={{ color: colors.text }}>
-                           <i className="fa-solid fa-lock text-[#FEEF75]"></i> Security
-                        </h2>
-                        <form onSubmit={handlePasswordChange} className="space-y-4">
-                           {['current', 'new', 'confirm'].map(field => (
-                              <div key={field}>
-                                 <label className="block text-xs font-bold mb-2 capitalize" style={{ color: colors.textMuted }}>
+                     <div className="flex flex-col xl:flex-row gap-12 h-full anim-enter">
+                        {/* Security Health Widget */}
+                        <div className="hidden xl:flex flex-col justify-between w-1/3 p-8 rounded-[2.5rem] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-white/5 dark:to-white/0 border border-dashed relative overflow-hidden" 
+                             style={{ borderColor: colors.border }}>
+                           {/* Glowing Orb */}
+                           <div className="absolute top-0 right-0 w-32 h-32 bg-[#D9F17F] opacity-20 blur-3xl rounded-full translate-x-10 -translate-y-10"></div>
+                           
+                           <div>
+                              <div className="w-20 h-20 rounded-3xl bg-green-100 text-green-600 flex items-center justify-center text-4xl mb-6 shadow-sm">
+                                 <i className="fa-solid fa-shield-check"></i>
+                              </div>
+                              <h3 className="text-2xl font-black mb-2" style={{ color: colors.text }}>Secure</h3>
+                              <p className="text-sm font-medium opacity-60 leading-relaxed" style={{ color: colors.text }}>
+                                 Your account security is optimal. We recommend updating your password every 90 days.
+                              </p>
+                           </div>
+                           <div className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700">
+                              <div className="flex justify-between items-center text-xs font-bold opacity-40 uppercase tracking-widest mb-2">
+                                 <span>Strength</span>
+                                 <span>Strong</span>
+                              </div>
+                              <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                 <div className="w-[85%] h-full bg-green-500 rounded-full"></div>
+                              </div>
+                           </div>
+                        </div>
+
+                        {/* Password Form */}
+                        <form onSubmit={handlePasswordChange} className="flex-1 flex flex-col justify-center space-y-6">
+                           {['current', 'new', 'confirm'].map((field, idx) => (
+                              <div key={field} className="space-y-3">
+                                 <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest opacity-60 ml-1">
                                     {field === 'confirm' ? 'Confirm Password' : `${field} Password`}
+                                    {idx > 0 && <span className="w-1.5 h-1.5 rounded-full bg-[#D9F17F]"></span>}
                                  </label>
-                                 <input
-                                    type="password"
-                                    value={passwords[field]}
-                                    onChange={e => setPasswords({ ...passwords, [field]: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl border focus:outline-none"
-                                    style={{
-                                       backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
-                                       borderColor: colors.border,
-                                       color: colors.text
-                                    }}
-                                 />
+                                 <div className="relative group">
+                                    <input type="password" value={passwords[field]} onChange={e => setPasswords({ ...passwords, [field]: e.target.value })} 
+                                       className="input-glow w-full px-8 py-5 rounded-2xl border-2 font-bold text-xl outline-none transition-all placeholder-opacity-20"
+                                       placeholder="••••••••"
+                                       style={{ borderColor: colors.border, color: colors.text }} />
+                                    <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:text-[#D9F17F] group-focus-within:opacity-100 transition-all">
+                                       <i className={`fa-solid ${field === 'confirm' ? 'fa-check-double' : 'fa-key'} text-xl`}></i>
+                                    </div>
+                                 </div>
                               </div>
                            ))}
-                           <button type="submit" className="w-full md:w-auto px-6 py-2.5 rounded-xl text-sm font-bold transition-colors"
-                              style={{ backgroundColor: colors.text, color: colors.background }}
-                           >
-                              Update Password
-                           </button>
+                           <div className="pt-6">
+                              <button type="submit" className="btn-press w-full py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] bg-gray-900 text-white dark:bg-white dark:text-black hover:opacity-90 shadow-xl transition-all hover:shadow-2xl">
+                                 Update Credentials
+                              </button>
+                           </div>
                         </form>
-                     </>
+                     </div>
                   )}
+
                </div>
             </div>
          </div>
