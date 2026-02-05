@@ -6,7 +6,7 @@ import logo from "../../assets/logo.png";
 import { useGlobalContext } from '../../context/GlobalContext';
 
 const ResetPassword = () => {
-  const { BACKEND_URL } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { token } = useParams();
   const navigate = useNavigate();
 

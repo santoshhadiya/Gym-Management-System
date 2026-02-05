@@ -4,7 +4,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { toast } from 'react-hot-toast'; 
 
 const MembershipPlans = () => {
-  const { BACKEND_URL } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { colors, theme } = useTheme(); 
   
   const [plans, setPlans] = useState([]);

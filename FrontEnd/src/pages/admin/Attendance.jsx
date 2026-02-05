@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useGlobalContext } from '../../context/GlobalContext';
 
 const Attendance = () => {
-  const { api } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const [report, setReport] = useState(null);
   
   // 1. Get Today's Date String

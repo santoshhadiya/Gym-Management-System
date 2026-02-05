@@ -11,7 +11,7 @@ const MOCK_INQUIRIES = [
 ];
 
 const ViewInquiry = () => {
-  const { BACKEND_URL } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { colors, theme } = useTheme(); // Access custom colors and current theme
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);

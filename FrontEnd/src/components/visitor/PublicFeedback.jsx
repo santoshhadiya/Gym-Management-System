@@ -3,7 +3,7 @@ import { useGlobalContext } from "../../context/GlobalContext";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PublicFeedback = () => {
-  const { BACKEND_URL } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const [homeData, setHomeData] = useState({
     testimonials: []
   });

@@ -97,7 +97,7 @@ const GymInvoicePDF = ({ inv }) => (
 );
 
 const Invoices = () => {
-   const { BACKEND_URL } = useGlobalContext();
+   const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
    const { colors, theme } = useTheme(); // Consume Theme
 
    const [invoices, setInvoices] = useState([]);
@@ -160,7 +160,13 @@ const Invoices = () => {
       window.print();
    };
 
-   if (loading) return <div className="p-10 text-center" style={{ color: colors.textMuted }}>Loading Invoices...</div>;
+ if (loading) {
+      return (
+         <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
+            <img src={loadingIMG} className='h-20 w-25'/>
+         </div>
+      );
+   }
 
    return (
       <div className="w-full max-w-5xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-6">

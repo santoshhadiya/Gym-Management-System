@@ -7,7 +7,7 @@ import { useTheme } from '../../context/ThemeContext'; // Import useTheme
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const TotalPlanBuys_Admin = () => {
-  const { api } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { colors } = useTheme(); //
   const [planStats, setPlanStats] = useState({ labels: [], data: [], percentages: [] });
 

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useGlobalContext } from '../../context/GlobalContext';
 
 const Plans = () => {
-  const { api } = useGlobalContext(); // Access axios instance
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext(); // Access axios instance
   
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);

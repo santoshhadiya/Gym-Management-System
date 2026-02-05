@@ -4,7 +4,7 @@ import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext"; // Import useTheme
 
 const UpdateSessions = () => {
-   const { api } = useGlobalContext();
+   const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
    const { colors, theme } = useTheme(); // Access custom colors and current theme
 
    // --- STATE ---

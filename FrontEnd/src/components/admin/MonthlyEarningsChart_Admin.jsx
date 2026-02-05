@@ -76,7 +76,7 @@ const TimeDropdown = ({ selected, onSelect }) => {
 };
 
 const MonthlyEarningsChart_Admin = () => {
-  const { api } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { colors, theme } = useTheme();
   const [timePeriod, setTimePeriod] = useState("This Week");
   const [payments, setPayments] = useState([]);

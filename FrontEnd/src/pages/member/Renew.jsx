@@ -5,7 +5,7 @@ import { useGlobalContext } from '../../context/GlobalContext';
 import { useTheme } from "../../context/ThemeContext"; // Import Context
 
 const Renew = () => {
-   const { BACKEND_URL } = useGlobalContext();
+   const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
    const { colors, theme } = useTheme(); // Consume Theme
    const navigate = useNavigate();
   

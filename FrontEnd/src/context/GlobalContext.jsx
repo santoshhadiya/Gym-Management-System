@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../utils/api'; // Import the axios instance
+import logo from "../assets/logo.png"
 
 // 1. Create the Context
 const GlobalContext = createContext();
@@ -96,10 +97,12 @@ export const GlobalProvider = ({ children }) => {
   const isHosted=false;
   const BACKEND_URL = !isHosted ? "http://localhost:5000" : "https://gym-management-system-backend-vive.onrender.com";
 
+const loadingIMG=logo;
 
   // --- Context Value ---
   const value = {
     user,
+    loadingIMG,
     setUser,
     isAuthenticated,
     isLoading,

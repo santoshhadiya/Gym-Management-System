@@ -3,7 +3,7 @@ import { useGlobalContext } from '../../context/GlobalContext';
 import { useTheme } from '../../context/ThemeContext'; // Import useTheme
 
 const Cards_Admin = () => {
-  const { api } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { colors } = useTheme(); // Access custom colors
 
   const [stats, setStats] = useState({

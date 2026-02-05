@@ -6,7 +6,7 @@ import PublicFeature from '../../components/visitor/PublicFeature';
 import Footer from '../../components/visitor/Footer';
 
 const Home = () => {
-  const { BACKEND_URL } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const [homeData, setHomeData] = useState({
     stats: { members: "1200", trainers: "50", access: "24/7", rating: "4.9" },
     testimonials: []

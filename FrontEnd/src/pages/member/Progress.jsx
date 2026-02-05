@@ -34,6 +34,7 @@ ChartJS.register(
   ArcElement
 );
 
+
 // --- PDF STYLES ---
 const pdfStyles = StyleSheet.create({
   page: { padding: 40, backgroundColor: '#FFFFFF', fontFamily: 'Helvetica' },
@@ -98,7 +99,7 @@ const ProgressReportPDF = ({ stats, chartImages, dietInfo, dateInfo }) => (
 );
 
 const Progress = () => {
-  const { BACKEND_URL } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { colors, theme } = useTheme();
   const navigate = useNavigate();
 
@@ -274,7 +275,13 @@ const Progress = () => {
   const handleRequestReview = () => navigate('/member/chat');
   const getMonthName = (monthIndex) => new Date(2000, monthIndex, 1).toLocaleString('default', { month: 'long' });
 
-  if (loading) return <div className="p-10 text-center" style={{ color: colors.textMuted }}>Loading Progress...</div>;
+  if (loading) {
+      return (
+         <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
+            <img src={loadingIMG} className='h-20 w-25'/>
+         </div>
+      );
+   }
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-0">

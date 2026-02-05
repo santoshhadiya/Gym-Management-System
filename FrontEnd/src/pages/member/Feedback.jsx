@@ -4,7 +4,7 @@ import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext"; // Import Context
 
 const Feedback = () => {
-   const { BACKEND_URL } = useGlobalContext(); 
+   const { api, BACKEND_URL, loadingIMG} = useGlobalContext(); 
    const { colors, theme } = useTheme(); // Consume Theme
 
   // --- STATE ---

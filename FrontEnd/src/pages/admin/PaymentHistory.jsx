@@ -245,7 +245,7 @@ const PaymentReceiptPDF = ({ txn }) => (
 );
 
 const PaymentHistory = () => {
-   const { BACKEND_URL } = useGlobalContext();
+   const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
    const { colors, theme } = useTheme();
 
    // --- STATE ---

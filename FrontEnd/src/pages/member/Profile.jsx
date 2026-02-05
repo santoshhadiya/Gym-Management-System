@@ -4,7 +4,7 @@ import { useGlobalContext } from '../../context/GlobalContext';
 import { useTheme } from '../../context/ThemeContext'; // Theme Context
 
 const Profile = () => {
-   const { api, BACKEND_URL } = useGlobalContext();
+   const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
    const { colors, theme } = useTheme(); // Consuming Context
 
    const [profile, setProfile] = useState(null);
@@ -24,7 +24,7 @@ const Profile = () => {
             setLoading(true);
             const res = await api.get('/members/profile');
             const member = res.data;
-            
+
             const getImageUrl = (path) => {
                if (!path) return "https://i.pravatar.cc/150?u=101";
                if (path.startsWith("http")) return path;
@@ -104,12 +104,12 @@ const Profile = () => {
          }
 
          try {
-             await api.put('/users/profile', {
-                name: tempData.name,
-                phone: tempData.phone,
-                address: tempData.address,
-             });
-         } catch(e) { console.log("User update warning:", e); }
+            await api.put('/users/profile', {
+               name: tempData.name,
+               phone: tempData.phone,
+               address: tempData.address,
+            });
+         } catch (e) { console.log("User update warning:", e); }
 
          await api.put('/members/profile', {
             height: tempData.fitness.height,
@@ -133,14 +133,18 @@ const Profile = () => {
       setPasswords({ current: "", new: "", confirm: "" });
    };
 
-   if (loading) return <div className="p-10 text-center" style={{ color: colors.textMuted }}>Loading Profile...</div>;
+   if (loading) {return (
+      <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
+            <img src={loadingIMG} className='h-20 w-25'/>
+         </div>
+   )};
    if (!profile) return <div className="p-10 text-center text-red-500">Failed to load data.</div>;
 
    return (
       <div className="w-full max-w-6xl mx-auto space-y-6 pb-10 px-4 sm:px-0">
-         
+
          {/* --- HEADER --- */}
-         <div 
+         <div
             className="rounded-3xl p-6 shadow-sm border relative overflow-hidden transition-colors"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}
          >
@@ -149,8 +153,8 @@ const Profile = () => {
             <div className="relative flex flex-col md:flex-row items-center md:items-end gap-6 mt-12 px-2 md:px-4 text-center md:text-left">
                {/* Avatar */}
                <div className="relative group" onClick={triggerFileInput}>
-                  <div className={`w-32 h-32 rounded-full border-4 shadow-md overflow-hidden bg-gray-200 ${isEditing ? 'cursor-pointer hover:opacity-90' : ''}`} 
-                       style={{ borderColor: colors.card }}>
+                  <div className={`w-32 h-32 rounded-full border-4 shadow-md overflow-hidden bg-gray-200 ${isEditing ? 'cursor-pointer hover:opacity-90' : ''}`}
+                     style={{ borderColor: colors.card }}>
                      <img src={tempData.profileImage || profile.profileImage} alt="Profile" className="w-full h-full object-cover" />
                   </div>
                   {isEditing && (
@@ -211,7 +215,7 @@ const Profile = () => {
 
             {/* LEFT: NAVIGATION */}
             <div className="space-y-6">
-               <div 
+               <div
                   className="rounded-3xl p-2 border shadow-sm flex flex-row lg:flex-col gap-1 overflow-x-auto"
                   style={{ backgroundColor: colors.card, borderColor: colors.border }}
                >
@@ -224,7 +228,7 @@ const Profile = () => {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left whitespace-nowrap min-w-max lg:min-w-0"
-                        style={{ 
+                        style={{
                            backgroundColor: activeTab === tab.id ? colors.secondary : 'transparent',
                            color: activeTab === tab.id ? (theme === 'dark' ? '#fff' : '#1e3a8a') : colors.textMuted
                         }}
@@ -238,7 +242,7 @@ const Profile = () => {
             {/* RIGHT: FORMS */}
             <div className="lg:col-span-2">
                {/* WRAPPER CARD */}
-               <div 
+               <div
                   className="rounded-3xl p-6 md:p-8 border shadow-sm"
                   style={{ backgroundColor: colors.card, borderColor: colors.border }}
                >
@@ -258,7 +262,7 @@ const Profile = () => {
                                  value={tempData.name}
                                  onChange={handleInputChange}
                                  className="w-full px-4 py-3 rounded-xl border-transparent focus:ring-2 transition-all font-medium disabled:opacity-70"
-                                 style={{ 
+                                 style={{
                                     backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
                                     color: colors.text
                                  }}
@@ -271,7 +275,7 @@ const Profile = () => {
                                  value={tempData.email}
                                  disabled
                                  className="w-full px-4 py-3 rounded-xl border-transparent font-medium cursor-not-allowed"
-                                 style={{ 
+                                 style={{
                                     backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
                                     color: colors.textMuted
                                  }}
@@ -286,7 +290,7 @@ const Profile = () => {
                                  value={tempData.phone}
                                  onChange={handleInputChange}
                                  className="w-full px-4 py-3 rounded-xl border-transparent focus:ring-2 transition-all font-medium"
-                                 style={{ 
+                                 style={{
                                     backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
                                     color: colors.text
                                  }}
@@ -301,7 +305,7 @@ const Profile = () => {
                                  value={tempData.address}
                                  onChange={handleInputChange}
                                  className="w-full px-4 py-3 rounded-xl border-transparent focus:ring-2 transition-all font-medium resize-none"
-                                 style={{ 
+                                 style={{
                                     backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
                                     color: colors.text
                                  }}
@@ -330,7 +334,7 @@ const Profile = () => {
                                     value={tempData.fitness[field]}
                                     onChange={(e) => handleInputChange(e, 'fitness')}
                                     className="w-full px-4 py-3 rounded-xl border-transparent focus:ring-2 transition-all font-bold text-lg"
-                                    style={{ 
+                                    style={{
                                        backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
                                        color: colors.text
                                     }}
@@ -345,7 +349,7 @@ const Profile = () => {
                                  value={tempData.fitness.goal}
                                  onChange={(e) => handleInputChange(e, 'fitness')}
                                  className="w-full px-4 py-3 rounded-xl border-transparent focus:ring-2 transition-all font-medium"
-                                 style={{ 
+                                 style={{
                                     backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
                                     color: colors.text
                                  }}
@@ -374,7 +378,7 @@ const Profile = () => {
                                     value={passwords[field]}
                                     onChange={e => setPasswords({ ...passwords, [field]: e.target.value })}
                                     className="w-full px-4 py-3 rounded-xl border focus:outline-none"
-                                    style={{ 
+                                    style={{
                                        backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
                                        borderColor: colors.border,
                                        color: colors.text

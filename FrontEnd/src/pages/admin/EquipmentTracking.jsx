@@ -24,7 +24,7 @@ ChartJS.register(
 );
 
 const EquipmentTracking = () => {
-  const { api } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { colors, theme } = useTheme(); // Access custom colors and current theme
 
   // --- STATE ---

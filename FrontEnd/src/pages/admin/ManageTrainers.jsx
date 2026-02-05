@@ -4,7 +4,7 @@ import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext"; // Import Context
 
 const ManageTrainer = () => {
-  const { api } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { colors, theme } = useTheme(); // Consume Theme
 
   // --- STYLE INJECTION ---

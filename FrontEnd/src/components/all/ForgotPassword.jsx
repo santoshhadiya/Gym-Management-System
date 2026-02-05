@@ -7,7 +7,7 @@ import { useGlobalContext } from '../../context/GlobalContext';
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const { BACKEND_URL } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {

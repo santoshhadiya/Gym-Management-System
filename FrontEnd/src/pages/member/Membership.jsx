@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext'; // Import Theme Context
 import toast from 'react-hot-toast'; // React Hot Toast
 
 const Membership = () => {
-   const { api } = useGlobalContext();
+   const { api,loadingIMG } = useGlobalContext();
    const { colors, theme } = useTheme(); // Consume Theme
    const navigate = useNavigate();
 
@@ -63,7 +63,7 @@ const Membership = () => {
       const percent = (timeElapsed / totalDuration) * 100;
       return Math.min(Math.max(percent, 0), 100);
    };
-  
+
    const getStatusLabel = () => {
       if (!currentPlan) return "Inactive";
       if (daysRemaining <= 0) return "Expired";
@@ -77,20 +77,17 @@ const Membership = () => {
    };
 
 
-   const handleRenewalRequest = () =>{
-     navigate('/member/renew')
+   const handleRenewalRequest = () => {
+      navigate('/member/renew')
    }
 
-   if (loading) {
-      return (
-         <div className="w-full h-screen flex items-center justify-center" style={{ color: colors.textMuted }}>
-            <div className="text-center">
-               <i className="fa-solid fa-circle-notch fa-spin text-4xl mb-4" style={{ color: colors.secondary }}></i>
-               <p className="font-bold">Loading Membership...</p>
-            </div>
-         </div>
-      );
-   }
+  if (loading) {
+   return (
+      <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
+         <img src={loadingIMG} className="h-20 w-25" alt="Loading..." />
+      </div>
+   );
+}
 
    return (
       <div className="w-full max-w-6xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-6 lg:px-8">
@@ -98,11 +95,11 @@ const Membership = () => {
          {/* --- HEADER --- */}
          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             <div>
-               <h1 className="text-2xl md:text-3xl font-black" style={{ color: colors.text }}>My Membership</h1>
+               <h1 className="text-2xl md:text-3xl font-black" style={{ color: colors.text }}>Membership</h1>
                <p className="text-sm md:text-base mt-1" style={{ color: colors.textMuted }}>Manage your plan, payments, and renewals.</p>
             </div>
             <div className="flex gap-3 w-full md:w-auto">
-               <button 
+               {/* <button 
                   onClick={handleRenewalRequest}
                   className="flex-1 md:flex-none justify-center px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition-colors cursor-pointer"
                   style={{ 
@@ -111,7 +108,7 @@ const Membership = () => {
                   }}
                >
                   <i className="fa-solid fa-rotate"></i>Renewal
-               </button>
+               </button> */}
             </div>
          </div>
 
@@ -127,11 +124,11 @@ const Membership = () => {
                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusLabel() === 'Active' ? 'bg-[#D9F17F] text-green-900' : 'bg-red-500 text-white'}`}>
                         {getStatusLabel()}
                      </span>
-                     
+
                   </div>
                   <h2 className="text-3xl md:text-5xl font-black mb-2">{currentPlan?.name || "No Active Plan"}</h2>
-                 {/*  <p className="text-gray-300 text-base md:text-lg">{currentPlan ? `${totalDays} Days Plan` : "Please select a plan"}</p> */}
-                  
+                  {/*  <p className="text-gray-300 text-base md:text-lg">{currentPlan ? `${totalDays} Days Plan` : "Please select a plan"}</p> */}
+
                   <div className="mt-8 flex flex-wrap gap-8">
                      <div>
                         <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Start Date</p>
@@ -151,8 +148,8 @@ const Membership = () => {
                         <span className="text-2xl font-black text-[#D9F17F]">{daysRemaining} <span className="text-sm text-white font-normal">Days Left</span></span>
                      </div>
                      <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
-                        <div 
-                           className={`h-full rounded-full transition-all duration-1000 ${daysRemaining <= 30 ? 'bg-red-500' : 'bg-[#D9F17F]'}`} 
+                        <div
+                           className={`h-full rounded-full transition-all duration-1000 ${daysRemaining <= 30 ? 'bg-red-500' : 'bg-[#D9F17F]'}`}
                            style={{ width: `${100 - calculateProgress()}%` }}
                         ></div>
                      </div>
@@ -166,9 +163,9 @@ const Membership = () => {
 
          {/* --- DETAILS GRID --- */}
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+
             {/* Payment Summary */}
-            <div 
+            <div
                className="rounded-3xl p-6 md:p-8 border shadow-sm transition-colors"
                style={{ backgroundColor: colors.card, borderColor: colors.border }}
             >
@@ -193,7 +190,7 @@ const Membership = () => {
             </div>
 
             {/* Plan Benefits */}
-            <div 
+            <div
                className="rounded-3xl p-6 md:p-8 border shadow-sm transition-colors"
                style={{ backgroundColor: colors.card, borderColor: colors.border }}
             >
@@ -216,22 +213,22 @@ const Membership = () => {
          </div>
 
          {/* --- UPGRADE OPTIONS --- */}
-         <div 
+         <div
             className="rounded-[2.5rem] p-6 md:p-8 border"
-            style={{ 
-               backgroundColor: theme === 'dark' ? '#111827' : '#f8fbff', 
-               borderColor: theme === 'dark' ? '#374151' : '#dbeafe' 
+            style={{
+               backgroundColor: theme === 'dark' ? '#111827' : '#f8fbff',
+               borderColor: theme === 'dark' ? '#374151' : '#dbeafe'
             }}
          >
             <div className="text-center mb-8">
                <h3 className="text-xl md:text-2xl font-black" style={{ color: colors.text }}>Upgrade Your Experience</h3>
                <p className="text-sm md:text-base" style={{ color: colors.textMuted }}>Switch to a premium plan for exclusive features.</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                {plans.filter(p => !currentPlan || p._id !== currentPlan._id).map((p) => (
-                  <div 
-                     key={p._id} 
+                  <div
+                     key={p._id}
                      className="p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4"
                      style={{ backgroundColor: colors.card, borderColor: colors.border }}
                   >
@@ -240,7 +237,7 @@ const Membership = () => {
                         <p className="text-sm mb-2" style={{ color: colors.textMuted }}>{p.description || `${p.durationInDays} days validity`}</p>
                         <p className="font-black text-blue-600 dark:text-blue-400">₹{p.price.toLocaleString()}</p>
                      </div>
-                     <button 
+                     <button
                         onClick={() => handleUpgrade(p)}
                         className="px-4 py-2 rounded-xl text-xs font-bold hover:opacity-90 transition-opacity shrink-0 cursor-pointer"
                         style={{ backgroundColor: colors.text, color: colors.background }} // Inverts text/bg for button

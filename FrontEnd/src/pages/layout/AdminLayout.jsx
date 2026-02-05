@@ -23,7 +23,7 @@ const AdminLayout = () => {
   // Define the background style based on the theme
   const backgroundStyle = {
     background: theme === 'light' 
-      ? 'linear-gradient(135deg, #cde7fe90 0%, #ffffff 100%)' // Lite mode gradient
+      ? 'linear-gradient(135deg, #ffffff 0%, #ffffff 100%)' // Lite mode gradient
       : colors.background, // Fallback to theme context for dark mode
     color: colors.text,
     minHeight: '100vh',

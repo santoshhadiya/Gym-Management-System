@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useGlobalContext } from '../../context/GlobalContext';
 
 const AttendanceHistory = () => {
-  const { api } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const [history, setHistory] = useState([]);
 
   useEffect(() => {

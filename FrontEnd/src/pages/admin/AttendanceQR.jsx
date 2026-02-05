@@ -3,7 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { useGlobalContext } from '../../context/GlobalContext';
 
 const AttendanceQR = () => {
-  const { api } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const [token, setToken] = useState("");
   const [status, setStatus] = useState("Initializing...");
   const [loading, setLoading] = useState(false);

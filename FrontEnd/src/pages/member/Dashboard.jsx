@@ -17,6 +17,7 @@ import {
 import { Line, Doughnut } from "react-chartjs-2";
 import { useTheme } from "../../context/ThemeContext";
 import { useGlobalContext } from "../../context/GlobalContext";
+import Progress from "./Progress";
 
 ChartJS.register(
    CategoryScale,
@@ -33,7 +34,7 @@ ChartJS.register(
 
 
 const Dashboard = () => {
-   const { BACKEND_URL } = useGlobalContext()
+   const { BACKEND_URL, loadingIMG } = useGlobalContext()
    // --- STATE ---
    const [memberData, setMemberData] = useState(null);
    const [loading, setLoading] = useState(true);
@@ -161,11 +162,13 @@ const Dashboard = () => {
       if (user) fetchData();
    }, [user]);
 
-   if (loading) return (
-      <div className="p-10 text-center" style={{ color: colors.textMuted }}>
-         Loading Dashboard...
-      </div>
-   );
+   if (loading) {
+      return (
+         <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
+            <img src={loadingIMG} className="h-20 w-25" alt="Loading..." />
+         </div>
+      );
+   }
 
    if (!memberData) return (
       <div className="p-10 text-center" style={{ color: colors.textMuted }}>
@@ -206,7 +209,7 @@ const Dashboard = () => {
    const navigateMembership = () => {
       navigate('/member/membership');
    }
-   const navigateProgress=()=>{
+   const navigateProgress = () => {
       navigate('/member/progress')
    }
    return (
@@ -230,39 +233,62 @@ const Dashboard = () => {
          </div>
 
          {/* 2. KEY STATS GRID */}
-         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 "
-            >
-            {[
-               { icon: "fa-check-double", label: "Attendance", value: `${memberData.attendance}%`, color: "green" },
-               { icon: "fa-weight-scale", label: "Weight Change", value: memberData.weightChange, color: "blue" },
-               { icon: "fa-user-ninja", label: "Trainer", value: memberData.trainer, color: "orange" },
-               { icon: "fa-calendar-check", label: "Status", value: memberData.status, color: "purple", isBadge: true }
-            ].map((stat, i) => (
-               <div
-                  key={i}
-                  onClick={navigateProgress}
-                  className="p-5 rounded-3xl border shadow-sm flex flex-col justify-between transition-colors duration-300 cursor-pointer"
-                  style={{
-                     backgroundColor: colors.card,
-                     borderColor: colors.border
-                  }}
-               >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-${stat.color}-50 text-${stat.color}-600`}>
-                     <i className={`fa-solid ${stat.icon}`}></i>
-                  </div>
-                  <div>
-                     <p className="text-xs font-bold uppercase" style={{ color: colors.textMuted }}>{stat.label}</p>
-                     {stat.isBadge ? (
-                        <span className={`text-xs font-bold px-2 py-1 rounded-lg ${stat.value === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                           {stat.value}
-                        </span>
-                     ) : (
-                        <h3 className="text-2xl font-black" style={{ color: colors.text }}>{stat.value}</h3>
-                     )}
-                  </div>
-               </div>
-            ))}
-         </div>
+         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  {[
+    { icon: "fa-check-double", label: "Attendance", value: `${memberData.attendance}%` },
+    { icon: "fa-weight-scale", label: "Weight Change", value: memberData.weightChange },
+    { icon: "fa-user-ninja", label: "Trainer", value: memberData.trainer },
+    { icon: "fa-calendar-check", label: "Status", value: memberData.status, isBadge: true }
+  ].map((stat, i) => {
+    const bgColors = ["#FEEF75", "#D9F17F", "#CDE7FE", "#FEEF75"];
+    const cardBg = bgColors[i % bgColors.length];
+
+    return (
+      <div
+        key={i}
+        onClick={navigateProgress}
+        className="relative overflow-hidden p-6 rounded-[2rem] border shadow-sm flex flex-col justify-between transition-all duration-500 cursor-pointer group hover:-translate-y-1 hover:shadow-xl"
+        style={{
+          backgroundColor: cardBg,
+          borderColor: 'rgba(255,255,255,0.4)'
+        }}
+      >
+        {/* DESIGN LAYER 1: Mesh Gradient Glow */}
+        <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-white opacity-40 rounded-full blur-3xl transition-transform duration-700 group-hover:scale-150" />
+        
+        {/* DESIGN LAYER 2: Geometric Glass Ring */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 border-[15px] border-white/10 rounded-full pointer-events-none" />
+
+        {/* DESIGN LAYER 3: Noise/Grain Overlay (Optional CSS Pattern) */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Ffilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/feTurbulence%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 bg-white/40 text-gray-800 shadow-inner backdrop-blur-md border border-white/20 transition-transform duration-300 group-hover:rotate-6">
+            <i className={`fa-solid ${stat.icon} text-xl`}></i>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-[11px] font-extrabold uppercase tracking-widest opacity-60" style={{ color: '#000' }}>
+              {stat.label}
+            </p>
+            {stat.isBadge ? (
+              <div className="flex">
+                <span className="text-xs font-bold px-4 py-1.5 rounded-full bg-white/50 text-black border border-white/40 backdrop-blur-sm">
+                  {stat.value}
+                </span>
+              </div>
+            ) : (
+              <h3 className="text-3xl font-black text-black tracking-tighter">
+                {stat.value}
+              </h3>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>
 
          {/* 3. MAIN DASHBOARD CONTENT */}
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -372,6 +398,7 @@ const Dashboard = () => {
                </div>
             </div>
          </div>
+         <Progress />
       </div>
    );
 };

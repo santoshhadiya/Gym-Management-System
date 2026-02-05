@@ -5,7 +5,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const ManageMember = () => {
-  const { api, BACKEND_URL } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { colors, theme } = useTheme();
 
   const [members, setMembers] = useState([]);

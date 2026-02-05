@@ -4,7 +4,7 @@ import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext"; // Import Context
 
 const Booking = () => {
-   const { api } = useGlobalContext();
+   const { api, BACKEND_URL, loadingIMG } = useGlobalContext();
    const { colors, theme } = useTheme(); // Consume Theme
    const activeApi = api;
 
@@ -50,23 +50,23 @@ const Booking = () => {
             toast.error("Session is full!");
             return;
          }
-         
+
          const tempBooking = { _id: "temp_" + Date.now(), session: session, bookingStatus: "Confirmed" };
          setMyBookings(prev => [...prev, tempBooking]);
 
          await activeApi.post(`/session-bookings/${session._id}`);
          toast.success("Session booked successfully!");
-         
+
          fetchMyBookings();
-         fetchSessions(); 
+         fetchSessions();
       } catch (err) {
          toast.error(err.response?.data?.message || "Booking failed");
-         fetchMyBookings(); 
+         fetchMyBookings();
       }
    };
 
    const handleCancelSession = async (sessionId) => {
-      if(!window.confirm("Are you sure you want to cancel this booking?")) return;
+      if (!window.confirm("Are you sure you want to cancel this booking?")) return;
 
       try {
          setMyBookings(prev => prev.filter(b => b.session?._id !== sessionId));
@@ -93,25 +93,26 @@ const Booking = () => {
 
             <div className="flex border rounded-xl p-1 shadow-sm w-full md:w-auto" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
                {['upcoming', 'history'].map(v => (
-                   <button
+                  <button
                      key={v}
                      onClick={() => setViewState(v)}
                      className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-bold transition-all text-center capitalize`}
-                     style={{ 
-                         backgroundColor: viewState === v ? colors.secondary : 'transparent',
-                         color: viewState === v ? (theme === 'dark' ? '#fff' : '#1e3a8a') : colors.textMuted
+                     style={{
+                        backgroundColor: viewState === v ? colors.secondary : 'transparent',
+                        color: viewState === v ? (theme === 'dark' ? '#fff' : '#1e3a8a') : colors.textMuted
                      }}
-                   >
-                      {v === 'history' ? 'My Bookings' : v}
-                   </button>
+                  >
+                     {v === 'history' ? 'My Bookings' : v}
+                  </button>
                ))}
             </div>
          </div>
 
          {/* --- CONTENT AREA --- */}
          {isLoading ? (
-            <div className="flex justify-center py-20">
-               <i className="fa-solid fa-circle-notch fa-spin text-3xl" style={{ color: colors.textMuted }}></i>
+
+            <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
+               <img src={loadingIMG} className='h-20 w-25'/>
             </div>
          ) : (
             <div className="space-y-4">
@@ -131,12 +132,12 @@ const Booking = () => {
                            const cancelReason = existingBooking?.cancelReason;
 
                            return (
-                              <div key={session._id} 
-                                   className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:shadow-md ${isFull && !isActive ? 'opacity-75' : ''}`}
-                                   style={{ 
-                                       backgroundColor: colors.card, 
-                                       borderColor: colors.border 
-                                   }}
+                              <div key={session._id}
+                                 className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:shadow-md ${isFull && !isActive ? 'opacity-75' : ''}`}
+                                 style={{
+                                    backgroundColor: colors.card,
+                                    borderColor: colors.border
+                                 }}
                               >
 
                                  <div className="flex-1 w-full">
@@ -144,13 +145,13 @@ const Booking = () => {
                                        <h3 className="text-xl font-bold" style={{ color: colors.text }}>{session.type}</h3>
                                        <div className="flex flex-wrap gap-2">
                                           <span className="px-3 py-1 rounded-full text-xs font-bold border w-fit"
-                                                style={{ backgroundColor: theme === 'dark' ? '#1e3a8a' : '#eff6ff', color: theme === 'dark' ? '#bfdbfe' : '#2563eb', borderColor: theme === 'dark' ? '#1e40af' : '#dbeafe' }}>
+                                             style={{ backgroundColor: theme === 'dark' ? '#1e3a8a' : '#eff6ff', color: theme === 'dark' ? '#bfdbfe' : '#2563eb', borderColor: theme === 'dark' ? '#1e40af' : '#dbeafe' }}>
                                              {session.duration}
                                           </span>
-                                          
+
                                           {isCancelled && (
                                              <div className="flex items-center gap-2 px-3 py-1 rounded-full border"
-                                                  style={{ backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', borderColor: theme === 'dark' ? '#991b1b' : '#fee2e2' }}>
+                                                style={{ backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', borderColor: theme === 'dark' ? '#991b1b' : '#fee2e2' }}>
                                                 <span className="text-xs font-bold text-red-600 dark:text-red-400">You Cancelled</span>
                                                 {cancelReason && (
                                                    <span className="text-xs pl-2 border-l border-red-200 dark:border-red-800 text-red-500 dark:text-red-300">
@@ -179,10 +180,10 @@ const Booking = () => {
                                     disabled={(!isActive && isFull) || isCancelled}
                                     className={`px-8 py-3 rounded-xl font-bold shadow-sm transition-colors flex items-center gap-2 min-w-[160px] justify-center w-full md:w-auto cursor-pointer`}
                                     style={
-                                        isCancelled ? { backgroundColor: colors.border, color: colors.textMuted, cursor: 'not-allowed' } :
-                                        isActive ? { backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', color: '#dc2626', borderColor: '#fee2e2', border: '1px solid' } :
-                                        isFull ? { backgroundColor: colors.border, color: colors.textMuted, cursor: 'not-allowed' } :
-                                        { backgroundColor: colors.primary, color: '#14532d' }
+                                       isCancelled ? { backgroundColor: colors.border, color: colors.textMuted, cursor: 'not-allowed' } :
+                                          isActive ? { backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', color: '#dc2626', borderColor: '#fee2e2', border: '1px solid' } :
+                                             isFull ? { backgroundColor: colors.border, color: colors.textMuted, cursor: 'not-allowed' } :
+                                                { backgroundColor: colors.primary, color: '#14532d' }
                                     }
                                  >
                                     {isCancelled ? (
@@ -200,7 +201,7 @@ const Booking = () => {
                         })
                   ) : (
                      <div className="text-center py-16 rounded-[2.5rem] border border-dashed"
-                          style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+                        style={{ backgroundColor: colors.card, borderColor: colors.border }}>
                         <i className="fa-regular fa-calendar-xmark text-4xl mb-3" style={{ color: colors.textMuted }}></i>
                         <p style={{ color: colors.textMuted }}>No upcoming sessions available.</p>
                      </div>
@@ -216,80 +217,80 @@ const Booking = () => {
                         const isUserCancelled = b.bookingStatus === 'Cancelled';
 
                         return (
-                        <div key={b._id} 
-                             className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isUserCancelled || isSessionCancelled ? 'opacity-75' : ''}`}
-                             style={{ backgroundColor: colors.card, borderColor: colors.border }}
-                        >
-                           <div className="flex-1 w-full">
-                              <h3 className="text-lg font-bold mb-1" style={{ color: colors.text }}>{b.session?.type || "Session"}</h3>
-                              <p className="text-sm" style={{ color: colors.textMuted }}>
-                                 {b.session?.date} • {b.session?.time}
-                              </p>
-                              
-                              {isUserCancelled && (
-                                 <div className="mt-2 flex items-start gap-2">
-                                    <i className="fa-solid fa-circle-info text-red-500 mt-0.5 text-xs"></i>
-                                    <p className="text-xs text-red-600 font-bold bg-red-50 px-2 py-1 rounded">
-                                       You Cancelled: {b.cancelReason || "No reason provided"}
-                                    </p>
-                                 </div>
-                              )}
+                           <div key={b._id}
+                              className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isUserCancelled || isSessionCancelled ? 'opacity-75' : ''}`}
+                              style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                           >
+                              <div className="flex-1 w-full">
+                                 <h3 className="text-lg font-bold mb-1" style={{ color: colors.text }}>{b.session?.type || "Session"}</h3>
+                                 <p className="text-sm" style={{ color: colors.textMuted }}>
+                                    {b.session?.date} • {b.session?.time}
+                                 </p>
 
-                              {isSessionCancelled && !isUserCancelled && (
-                                 <div className="mt-2 flex items-start gap-2">
-                                    <i className="fa-solid fa-triangle-exclamation text-orange-500 mt-0.5 text-xs"></i>
-                                    <p className="text-xs text-orange-700 font-bold bg-orange-50 px-2 py-1 rounded">
-                                       Session Cancelled: {b.session?.cancelReason || b.session?.notes || "Administrative Action"}
-                                    </p>
-                                 </div>
-                              )}
-                              
-                              {isSessionCompleted && (
-                                 <div className="mt-2 flex items-start gap-2">
-                                    <i className="fa-solid fa-check-circle text-green-500 mt-0.5 text-xs"></i>
-                                    <p className="text-xs text-green-700 font-bold bg-green-50 px-2 py-1 rounded">
-                                       Session Completed
-                                    </p>
-                                 </div>
-                              )}
-                           </div>
+                                 {isUserCancelled && (
+                                    <div className="mt-2 flex items-start gap-2">
+                                       <i className="fa-solid fa-circle-info text-red-500 mt-0.5 text-xs"></i>
+                                       <p className="text-xs text-red-600 font-bold bg-red-50 px-2 py-1 rounded">
+                                          You Cancelled: {b.cancelReason || "No reason provided"}
+                                       </p>
+                                    </div>
+                                 )}
 
-                           <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
-                              <div className={`px-4 py-2 rounded-xl text-sm font-bold border ${
-                                 isUserCancelled 
-                                    ? 'bg-red-50 text-red-600 border-red-100' 
-                                    : isSessionCancelled
-                                       ? 'bg-orange-50 text-orange-600 border-orange-100'
-                                       : isSessionCompleted
-                                          ? 'bg-gray-100 text-gray-600 border-gray-200'
-                                          : 'bg-green-50 text-green-700 border-green-100'
-                              }`}>
-                                 {isUserCancelled 
-                                    ? "Cancelled" 
-                                    : isSessionCancelled 
-                                       ? "Session Cancelled"
-                                       : isSessionCompleted 
-                                          ? "Completed"
-                                          : b.bookingStatus || "Confirmed"
-                                 }
+                                 {isSessionCancelled && !isUserCancelled && (
+                                    <div className="mt-2 flex items-start gap-2">
+                                       <i className="fa-solid fa-triangle-exclamation text-orange-500 mt-0.5 text-xs"></i>
+                                       <p className="text-xs text-orange-700 font-bold bg-orange-50 px-2 py-1 rounded">
+                                          Session Cancelled: {b.session?.cancelReason || b.session?.notes || "Administrative Action"}
+                                       </p>
+                                    </div>
+                                 )}
+
+                                 {isSessionCompleted && (
+                                    <div className="mt-2 flex items-start gap-2">
+                                       <i className="fa-solid fa-check-circle text-green-500 mt-0.5 text-xs"></i>
+                                       <p className="text-xs text-green-700 font-bold bg-green-50 px-2 py-1 rounded">
+                                          Session Completed
+                                       </p>
+                                    </div>
+                                 )}
                               </div>
-                              
-                              {!isUserCancelled && !isSessionCancelled && !isSessionCompleted && (
-                                 <button 
-                                    onClick={() => handleCancelSession(b.session?._id)}
-                                    className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
-                                    style={{ backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', color: '#dc2626' }}
-                                    title="Cancel Booking"
-                                 >
-                                    <i className="fa-solid fa-trash-can"></i>
-                                 </button>
-                              )}
+
+                              <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                                 <div className={`px-4 py-2 rounded-xl text-sm font-bold border ${isUserCancelled
+                                       ? 'bg-red-50 text-red-600 border-red-100'
+                                       : isSessionCancelled
+                                          ? 'bg-orange-50 text-orange-600 border-orange-100'
+                                          : isSessionCompleted
+                                             ? 'bg-gray-100 text-gray-600 border-gray-200'
+                                             : 'bg-green-50 text-green-700 border-green-100'
+                                    }`}>
+                                    {isUserCancelled
+                                       ? "Cancelled"
+                                       : isSessionCancelled
+                                          ? "Session Cancelled"
+                                          : isSessionCompleted
+                                             ? "Completed"
+                                             : b.bookingStatus || "Confirmed"
+                                    }
+                                 </div>
+
+                                 {!isUserCancelled && !isSessionCancelled && !isSessionCompleted && (
+                                    <button
+                                       onClick={() => handleCancelSession(b.session?._id)}
+                                       className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
+                                       style={{ backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', color: '#dc2626' }}
+                                       title="Cancel Booking"
+                                    >
+                                       <i className="fa-solid fa-trash-can"></i>
+                                    </button>
+                                 )}
+                              </div>
                            </div>
-                        </div>
-                     )})
+                        )
+                     })
                   ) : (
                      <div className="text-center py-16 rounded-[2.5rem] border border-dashed"
-                          style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+                        style={{ backgroundColor: colors.card, borderColor: colors.border }}>
                         <i className="fa-solid fa-ticket text-4xl mb-3" style={{ color: colors.textMuted }}></i>
                         <p style={{ color: colors.textMuted }}>You haven't booked any sessions yet.</p>
                      </div>

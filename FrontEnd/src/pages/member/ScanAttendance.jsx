@@ -5,7 +5,7 @@ import { useGlobalContext } from '../../context/GlobalContext';
 import { useNavigate } from 'react-router-dom';
 
 const ScanAttendance = () => {
-  const { api } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const navigate = useNavigate();
   
   // State Management

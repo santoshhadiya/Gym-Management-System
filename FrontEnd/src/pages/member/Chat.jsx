@@ -5,7 +5,7 @@ import { useGlobalContext } from '../../context/GlobalContext';
 import { useTheme } from "../../context/ThemeContext"; // Theme Context
 
 const Chat = () => {
-  const { BACKEND_URL } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { colors, theme } = useTheme(); // Consume Theme
 
   // --- STATE ---
@@ -214,13 +214,13 @@ const Chat = () => {
     if (e.key === 'Enter') sendMessage();
   };
 
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center h-[85vh] gap-3" style={{ color: colors.textMuted }}>
-        <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin"
-             style={{ borderColor: colors.primary, borderTopColor: 'transparent' }}></div>
-        <p className="font-medium">Loading Messages...</p>
-    </div>
-  );
+   if (loading) {
+      return (
+         <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
+            <img src={loadingIMG} className='h-20 w-25'/>
+         </div>
+      );
+   }
 
   return (
     <div className="flex flex-col md:flex-row h-[92vh] md:h-[88vh] md:rounded-3xl overflow-hidden shadow-2xl border font-sans mx-auto max-w-7xl md:mt-4 relative"

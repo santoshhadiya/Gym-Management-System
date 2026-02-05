@@ -5,7 +5,7 @@ import { ToastContainer, toast } from 'react-toastify';
 const GalleryMember = () => {
   const { api, user } = useGlobalContext(); // Assuming 'user' object is available in context
 
-  const {BACKEND_URL}=useGlobalContext();
+  const {BACKEND_URL, loadingIMG}=useGlobalContext();
   const baseURL = BACKEND_URL; 
 
   // --- STATE ---
@@ -129,10 +129,10 @@ const GalleryMember = () => {
       {/* Changed: Adjusted padding and grid gap */}
       <div className="container mx-auto px-4 sm:px-6">
         {isLoading ? (
-           <div className="flex justify-center py-20">
-              <i className="fa-solid fa-circle-notch fa-spin text-3xl text-gray-300"></i>
-           </div>
-        ) : (
+         <div className="fixed inset-0 flex items-center justify-center h-screen">
+            <img src={loadingIMG} className='h-20 w-25'/>
+         </div>
+         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {filteredMedia.map((item) => {

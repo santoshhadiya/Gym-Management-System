@@ -69,7 +69,7 @@ const TimeDropdown = ({ selected, onSelect }) => {
 };
 
 const TotalMembersChart_Admin = () => {
-  const { api } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
   const { colors } = useTheme(); // Access custom colors
   const [members, setMembers] = useState([]);
   const [timePeriod, setTimePeriod] = useState("This Week");

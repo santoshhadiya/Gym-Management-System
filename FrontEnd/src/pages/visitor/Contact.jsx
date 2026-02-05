@@ -4,7 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { useGlobalContext } from "../../context/GlobalContext";
 
 const Contact = () => {
-  const { BACKEND_URL } = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
 
   // Color Palette Constants for easy reference in classes
   const colors = {

@@ -35,7 +35,7 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
-   const { api } = useGlobalContext();
+   const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
    const { colors, theme } = useTheme();
    const [dashboardData, setDashboardData] = useState(null);
    const [isLoading, setIsLoading] = useState(true);
