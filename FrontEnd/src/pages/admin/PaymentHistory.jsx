@@ -15,233 +15,233 @@ import {
 } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontSize: 10,
-    color: '#1a1a1a',
-    fontFamily: 'Helvetica',
-    backgroundColor: '#ffffff',
-  },
-  brandBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 8,
-    backgroundColor: '#D9F17F', // Updated to your Lime Green
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 30,
-    paddingBottom: 20,
-    borderBottom: '1 solid #e5e7eb',
-  },
-  logo: {
-    width: 80,
-    height: 'auto',
-  },
-  companyName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#000000',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  addressText: {
-    fontSize: 8,
-    color: '#666',
-    width: 180,
-    marginTop: 4,
-    lineHeight: 1.4,
-  },
-  receiptTitleBox: {
-    textAlign: 'right',
-  },
-  receiptTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  infoGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 40,
-  },
-  infoSection: {
-    width: '45%',
-  },
-  sectionLabel: {
-    fontSize: 8,
-    fontWeight: 'bold',
-    color: '#111827',
-    textTransform: 'uppercase',
-    marginBottom: 6,
-    borderBottom: '1 solid #f4f4f5',
-    paddingBottom: 2,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  label: { color: '#666', fontSize: 9 },
-  value: { fontWeight: 'bold', fontSize: 9 },
-  table: {
-    marginTop: 10,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#1a1a1a',
-    padding: 8,
-    borderRadius: 2,
-  },
-  tableHeaderText: {
-    color: '#ffffff',
-    fontSize: 9,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    padding: 12,
-    borderBottom: '1 solid #f1f5f9',
-    alignItems: 'center',
-  },
-  colDesc: { flex: 3 },
-  colQty: { flex: 1, textAlign: 'center' },
-  colPrice: { flex: 1, textAlign: 'right' },
-  summaryContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  paymentStatus: {
-    marginTop: 10,
-    padding: 10,
-    border: '2 solid #D9F17F',
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-  },
-  statusText: {
-    color: '#111827',
-    fontWeight: 'bold',
-    fontSize: 14,
-    textTransform: 'uppercase',
-  },
-  totalBox: {
-    width: '40%',
-    backgroundColor: '#f8fafc',
-    padding: 15,
-    borderRadius: 4,
-  },
-  totalAmount: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
-    textAlign: 'right',
-    marginTop: 5,
-    borderTop: '1 solid #cbd5e1',
-    paddingTop: 5,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 40,
-    left: 40,
-    right: 40,
-    borderTop: '1 solid #e5e7eb',
-    paddingTop: 20,
-  },
-  ownerNote: {
-    textAlign: 'center',
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-  },
-  disclaimer: {
-    textAlign: 'center',
-    fontSize: 7,
-    color: '#94a3b8',
-    marginTop: 10,
-  }
+   page: {
+      padding: 40,
+      fontSize: 10,
+      color: '#1a1a1a',
+      fontFamily: 'Helvetica',
+      backgroundColor: '#ffffff',
+   },
+   brandBar: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 8,
+      backgroundColor: '#D9F17F', // Updated to your Lime Green
+   },
+   header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 10,
+      marginBottom: 30,
+      paddingBottom: 20,
+      borderBottom: '1 solid #e5e7eb',
+   },
+   logo: {
+      width: 80,
+      height: 'auto',
+   },
+   companyName: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: '#000000',
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+   },
+   addressText: {
+      fontSize: 8,
+      color: '#666',
+      width: 180,
+      marginTop: 4,
+      lineHeight: 1.4,
+   },
+   receiptTitleBox: {
+      textAlign: 'right',
+   },
+   receiptTitle: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: '#111827',
+   },
+   infoGrid: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 40,
+   },
+   infoSection: {
+      width: '45%',
+   },
+   sectionLabel: {
+      fontSize: 8,
+      fontWeight: 'bold',
+      color: '#111827',
+      textTransform: 'uppercase',
+      marginBottom: 6,
+      borderBottom: '1 solid #f4f4f5',
+      paddingBottom: 2,
+   },
+   detailRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 4,
+   },
+   label: { color: '#666', fontSize: 9 },
+   value: { fontWeight: 'bold', fontSize: 9 },
+   table: {
+      marginTop: 10,
+   },
+   tableHeader: {
+      flexDirection: 'row',
+      backgroundColor: '#1a1a1a',
+      padding: 8,
+      borderRadius: 2,
+   },
+   tableHeaderText: {
+      color: '#ffffff',
+      fontSize: 9,
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+   },
+   tableRow: {
+      flexDirection: 'row',
+      padding: 12,
+      borderBottom: '1 solid #f1f5f9',
+      alignItems: 'center',
+   },
+   colDesc: { flex: 3 },
+   colQty: { flex: 1, textAlign: 'center' },
+   colPrice: { flex: 1, textAlign: 'right' },
+   summaryContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 20,
+   },
+   paymentStatus: {
+      marginTop: 10,
+      padding: 10,
+      border: '2 solid #D9F17F',
+      borderRadius: 4,
+      alignSelf: 'flex-start',
+   },
+   statusText: {
+      color: '#111827',
+      fontWeight: 'bold',
+      fontSize: 14,
+      textTransform: 'uppercase',
+   },
+   totalBox: {
+      width: '40%',
+      backgroundColor: '#f8fafc',
+      padding: 15,
+      borderRadius: 4,
+   },
+   totalAmount: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#000000',
+      textAlign: 'right',
+      marginTop: 5,
+      borderTop: '1 solid #cbd5e1',
+      paddingTop: 5,
+   },
+   footer: {
+      position: 'absolute',
+      bottom: 40,
+      left: 40,
+      right: 40,
+      borderTop: '1 solid #e5e7eb',
+      paddingTop: 20,
+   },
+   ownerNote: {
+      textAlign: 'center',
+      fontSize: 9,
+      fontWeight: 'bold',
+      color: '#1a1a1a',
+   },
+   disclaimer: {
+      textAlign: 'center',
+      fontSize: 7,
+      color: '#94a3b8',
+      marginTop: 10,
+   }
 });
 
 const PaymentReceiptPDF = ({ txn }) => (
-  <Document title={`SongarsGym_Receipt_${txn.id}`}>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.brandBar} />
-      <View style={styles.header}>
-        <View>
-          <Image src={logo} style={styles.logo} />
-          <Text style={styles.companyName}>Songar's Gym</Text>
-          <Text style={styles.addressText}>
-            B-409,410 Shivalik Yash Complex, Shastrinagar Cross Road, 
-            132 Feet Ring Rd, Naranpura, Ahmedabad, Gujarat 380013
-          </Text>
-        </View>
-        <View style={styles.receiptTitleBox}>
-          <Text style={styles.receiptTitle}>RECEIPT</Text>
-          <Text style={{ fontSize: 10, marginTop: 5 }}>No: #{txn.id.slice(-6).toUpperCase()}</Text>
-          <Text style={{ fontSize: 10, color: '#666' }}>Date: {txn.date}</Text>
-        </View>
-      </View>
-      <View style={styles.infoGrid}>
-        <View style={styles.infoSection}>
-          <Text style={styles.sectionLabel}>Member Information</Text>
-          <View style={styles.detailRow}><Text style={styles.label}>Name:</Text><Text style={styles.value}>{txn.member}</Text></View>
-          <View style={styles.detailRow}><Text style={styles.label}>Member ID:</Text><Text style={styles.value}>{txn.memberId || 'N/A'}</Text></View>
-        </View>
-        <View style={styles.infoSection}>
-          <Text style={styles.sectionLabel}>Transaction Details</Text>
-          <View style={styles.detailRow}><Text style={styles.label}>Payment Method:</Text><Text style={styles.value}>{txn.method}</Text></View>
-          <View style={styles.detailRow}><Text style={styles.label}>Invoice Ref:</Text><Text style={styles.value}>{txn.invoiceId || 'N/A'}</Text></View>
-        </View>
-      </View>
-      <View style={styles.table}>
-        <View style={styles.tableHeader}>
-          <Text style={[styles.tableHeaderText, styles.colDesc]}>Membership Plan</Text>
-          <Text style={[styles.tableHeaderText, styles.colQty]}>Duration</Text>
-          <Text style={[styles.tableHeaderText, styles.colPrice]}>Amount</Text>
-        </View>
-        <View style={styles.tableRow}>
-          <View style={styles.colDesc}>
-            <Text style={{ fontWeight: 'bold' }}>{txn.plan}</Text>
-            <Text style={{ fontSize: 8, color: '#666', marginTop: 2 }}>Access to all gym facilities & trainers</Text>
-          </View>
-          <Text style={styles.colQty}>1 Unit</Text>
-          <Text style={styles.colPrice}>rs.{txn.amount.toLocaleString()}</Text>
-        </View>
-      </View>
-      <View style={styles.summaryContainer}>
-        <View style={styles.paymentStatus}>
-          <Text style={styles.statusText}>{txn.status}</Text>
-        </View>
-        <View style={styles.totalBox}>
-          <View style={styles.detailRow}>
-            <Text style={styles.label}>Subtotal</Text>
-            <Text style={styles.value}>rs.{txn.amount.toLocaleString()}</Text>
-          </View>
-          <Text style={styles.totalAmount}>Total: rs.{txn.amount.toLocaleString()}</Text>
-        </View>
-      </View>
-      <View style={styles.footer}>
-        <View style={{ flexDirection: 'row', justifyBetween: 'space-between', alignItems: 'flex-end' }}>
-          <View>
-            <Text style={{ fontSize: 9, marginBottom: 2 }}>Authorized By:</Text>
-            <Text style={styles.ownerNote}>{txn.recordedBy || 'Manthan Prajapati'}</Text>
-          </View>
-          <View style={{ textAlign: 'right' }}>
-             <Text style={{ fontSize: 8, fontStyle: 'italic' }}>Owner: Manthan Prajapati</Text>
-          </View>
-        </View>
-        <Text style={styles.disclaimer}>
-          1. Membership fees are non-refundable. | 2. Please carry your digital ID at all times. | 3. This is a computer-generated receipt.
-        </Text>
-      </View>
-    </Page>
-  </Document>
+   <Document title={`SongarsGym_Receipt_${txn.id}`}>
+      <Page size="A4" style={styles.page}>
+         <View style={styles.brandBar} />
+         <View style={styles.header}>
+            <View>
+               <Image src={logo} style={styles.logo} />
+               <Text style={styles.companyName}>Songar's Gym</Text>
+               <Text style={styles.addressText}>
+                  B-409,410 Shivalik Yash Complex, Shastrinagar Cross Road,
+                  132 Feet Ring Rd, Naranpura, Ahmedabad, Gujarat 380013
+               </Text>
+            </View>
+            <View style={styles.receiptTitleBox}>
+               <Text style={styles.receiptTitle}>RECEIPT</Text>
+               <Text style={{ fontSize: 10, marginTop: 5 }}>No: #{txn.id.slice(-6).toUpperCase()}</Text>
+               <Text style={{ fontSize: 10, color: '#666' }}>Date: {txn.date}</Text>
+            </View>
+         </View>
+         <View style={styles.infoGrid}>
+            <View style={styles.infoSection}>
+               <Text style={styles.sectionLabel}>Member Information</Text>
+               <View style={styles.detailRow}><Text style={styles.label}>Name:</Text><Text style={styles.value}>{txn.member}</Text></View>
+               <View style={styles.detailRow}><Text style={styles.label}>Member ID:</Text><Text style={styles.value}>{txn.memberId || 'N/A'}</Text></View>
+            </View>
+            <View style={styles.infoSection}>
+               <Text style={styles.sectionLabel}>Transaction Details</Text>
+               <View style={styles.detailRow}><Text style={styles.label}>Payment Method:</Text><Text style={styles.value}>{txn.method}</Text></View>
+               <View style={styles.detailRow}><Text style={styles.label}>Invoice Ref:</Text><Text style={styles.value}>{txn.invoiceId || 'N/A'}</Text></View>
+            </View>
+         </View>
+         <View style={styles.table}>
+            <View style={styles.tableHeader}>
+               <Text style={[styles.tableHeaderText, styles.colDesc]}>Membership Plan</Text>
+               <Text style={[styles.tableHeaderText, styles.colQty]}>Duration</Text>
+               <Text style={[styles.tableHeaderText, styles.colPrice]}>Amount</Text>
+            </View>
+            <View style={styles.tableRow}>
+               <View style={styles.colDesc}>
+                  <Text style={{ fontWeight: 'bold' }}>{txn.plan}</Text>
+                  <Text style={{ fontSize: 8, color: '#666', marginTop: 2 }}>Access to all gym facilities & trainers</Text>
+               </View>
+               <Text style={styles.colQty}>1 Unit</Text>
+               <Text style={styles.colPrice}>rs.{txn.amount.toLocaleString()}</Text>
+            </View>
+         </View>
+         <View style={styles.summaryContainer}>
+            <View style={styles.paymentStatus}>
+               <Text style={styles.statusText}>{txn.status}</Text>
+            </View>
+            <View style={styles.totalBox}>
+               <View style={styles.detailRow}>
+                  <Text style={styles.label}>Subtotal</Text>
+                  <Text style={styles.value}>rs.{txn.amount.toLocaleString()}</Text>
+               </View>
+               <Text style={styles.totalAmount}>Total: rs.{txn.amount.toLocaleString()}</Text>
+            </View>
+         </View>
+         <View style={styles.footer}>
+            <View style={{ flexDirection: 'row', justifyBetween: 'space-between', alignItems: 'flex-end' }}>
+               <View>
+                  <Text style={{ fontSize: 9, marginBottom: 2 }}>Authorized By:</Text>
+                  <Text style={styles.ownerNote}>{txn.recordedBy || 'Manthan Prajapati'}</Text>
+               </View>
+               <View style={{ textAlign: 'right' }}>
+                  <Text style={{ fontSize: 8, fontStyle: 'italic' }}>Owner: Manthan Prajapati</Text>
+               </View>
+            </View>
+            <Text style={styles.disclaimer}>
+               1. Membership fees are non-refundable. | 2. Please carry your digital ID at all times. | 3. This is a computer-generated receipt.
+            </Text>
+         </View>
+      </Page>
+   </Document>
 );
 
 const PaymentHistory = () => {
@@ -331,10 +331,18 @@ const PaymentHistory = () => {
 
    if (loading) return <div className="p-10 text-center" style={{ color: colors.textMuted }}>Loading History...</div>;
 
+   const getTransparentColor = (hex, opacity) => {
+      if (!hex) return `rgba(255, 255, 255, ${opacity})`;
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+   };
+
    return (
-      <div 
-         className="w-full rounded-3xl p-8 shadow-sm border font-sans min-h-screen relative transition-colors duration-300"
-         style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
+      <div
+         className="w-full rounded-3xl p-4 font-sans min-h-screen relative transition-colors duration-300"
+         style={{ color: colors.text }}
       >
          {/* HEADER */}
          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -345,7 +353,12 @@ const PaymentHistory = () => {
             <button
                onClick={handleExportCSV}
                className="px-5 py-2.5 rounded-full text-sm font-semibold transition-colors shadow-sm flex items-center gap-2"
-               style={{ backgroundColor: colors.secondary, color: theme === 'dark' ? '#fff' : '#1e3a8a' }}
+               style={{
+                  backgroundColor: getTransparentColor(colors.sidebar, 0.4), // 40% opacity
+                  borderColor: getTransparentColor(colors.border, 0.2),
+                  backdropFilter: 'blur(16px)', // Blur effect
+                  WebkitBackdropFilter: 'blur(16px)'
+               }}
             >
                <i className="fa-solid fa-download"></i> Export Data
             </button>
@@ -353,13 +366,18 @@ const PaymentHistory = () => {
 
          {/* SUMMARY CARDS */}
          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div 
+            <div
                className="p-5 rounded-3xl border transition-colors"
                style={{ backgroundColor: theme === 'dark' ? colors.card : '#f0fdf4', borderColor: theme === 'dark' ? colors.border : '#dcfce7' }}
             >
                <div className="flex justify-between items-start">
                   <div>
-                     <p className="text-xs font-bold uppercase tracking-wider" style={{ color: colors.primary }}>Net Collection</p>
+                     <p className="text-xs font-bold uppercase tracking-wider" style={{
+                        backgroundColor: getTransparentColor(colors.sidebar, 0.4), // 40% opacity
+                        borderColor: getTransparentColor(colors.border, 0.2),
+                        backdropFilter: 'blur(16px)', // Blur effect
+                        WebkitBackdropFilter: 'blur(16px)'
+                     }}>Net Collection</p>
                      <p className="text-2xl font-bold mt-1" style={{ color: colors.text }}>₹{totalCollected.toLocaleString()}</p>
                   </div>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.secondary, color: colors.text }}>
@@ -370,9 +388,14 @@ const PaymentHistory = () => {
          </div>
 
          {/* FILTERS TOOLBAR */}
-         <div 
+         <div
             className="flex flex-wrap gap-3 mb-6 p-3 rounded-2xl border transition-colors"
-            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+            style={{
+               backgroundColor: getTransparentColor(colors.sidebar, 0.4), // 40% opacity
+               borderColor: getTransparentColor(colors.border, 0.2),
+               backdropFilter: 'blur(16px)', // Blur effect
+               WebkitBackdropFilter: 'blur(16px)'
+            }}
          >
             <div className="relative flex-grow md:flex-grow-0 md:w-64">
                <input
@@ -458,7 +481,7 @@ const PaymentHistory = () => {
                            <div className="text-[10px] uppercase font-bold inline-block px-1.5 rounded mt-1" style={{ backgroundColor: colors.border, color: colors.textMuted }}>{p.method}</div>
                         </td>
                         <td className="px-6 py-4 text-center">
-                           <span 
+                           <span
                               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
                               style={getStatusStyle(p.status)}
                            >
@@ -490,9 +513,15 @@ const PaymentHistory = () => {
 
          {/* --- DETAILS MODAL --- */}
          {showModal && selectedTxn && (
-            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-               <div 
-                  className="rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            <div className="fixed inset-0  flex items-center justify-center z-50 p-4"
+               style={{
+                  backgroundColor: getTransparentColor(colors.sidebar, 0.4), // 40% opacity
+                  borderColor: getTransparentColor(colors.border, 0.2),
+                  backdropFilter: 'blur(2px)', // Blur effect
+                  WebkitBackdropFilter: 'blur(2px)'
+               }}>
+               <div
+                  className="rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 "
                   style={{ backgroundColor: colors.card }}
                >
                   {/* Modal Header */}
@@ -511,7 +540,7 @@ const PaymentHistory = () => {
                         </div>
                         <div className="text-right">
                            <p className="text-2xl font-bold" style={{ color: colors.text }}>₹{selectedTxn.amount.toLocaleString()}</p>
-                           <span 
+                           <span
                               className="inline-block px-2 py-0.5 rounded text-xs font-bold border"
                               style={getStatusStyle(selectedTxn.status)}
                            >

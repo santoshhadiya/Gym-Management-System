@@ -225,15 +225,26 @@ const MonthlyEarningsChart_Admin = () => {
       },
     },
   };
-
+ const getTransparentColor = (hex, opacity) => {
+    if (!hex) return `rgba(255, 255, 255, ${opacity})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
   return (
     <div 
         className="w-full border rounded-3xl p-6 shadow-sm transition-colors duration-300"
-        style={{ backgroundColor: colors.card, borderColor: colors.border }}
+       style={{
+              backgroundColor: getTransparentColor(colors.sidebar, 0.4), // 40% opacity
+              borderColor: getTransparentColor(colors.border, 0.2),
+              backdropFilter: 'blur(16px)', // Blur effect
+              WebkitBackdropFilter: 'blur(16px)'
+            }}
     >
-      <div className="flex justify-between items-start mb-1">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ color: colors.textMuted }}>
+      <div className="flex justify-between items-start mb-1" >
+        <div className="flex items-center gap-2" >
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ color: colors.textMuted }} >
             <i className="fa-solid fa-chart-line text-sm"></i>
           </div>
           <h3 className="font-semibold text-md" style={{ color: colors.text }}>Revenue Stream</h3>
@@ -245,7 +256,7 @@ const MonthlyEarningsChart_Admin = () => {
         Current Period: <span className="font-semibold" style={{ color: colors.primary }}>₹{totalEarnings.toLocaleString()}</span>
       </p>
       
-      <div className="h-[300px] w-full">
+      <div className="h-[300px] w-full" >
         <Line data={data} options={options} />
       </div>
     </div>

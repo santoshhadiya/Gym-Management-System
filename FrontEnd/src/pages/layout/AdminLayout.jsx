@@ -2,11 +2,11 @@ import React, { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Nav_Admin from "../../components/admin/Nav_Admin";
 import Sidebar_Admin from "../../components/admin/Sidebar_Admin";
-import { useTheme } from "../../context/ThemeContext"; // Import Theme Context
+import { useTheme } from "../../context/ThemeContext"; 
 
 const AdminLayout = () => {
   const { pathname } = useLocation();
-  const { colors } = useTheme(); // Consume Theme
+  const { colors, theme } = useTheme(); // Consume theme to check for light/dark mode
 
   // Load Font Awesome dynamically
   useEffect(() => {
@@ -20,15 +20,26 @@ const AdminLayout = () => {
     };
   }, []);
 
-  return (
-    <div className="flex min-h-screen font-sans transition-colors duration-300"
-         style={{ backgroundColor: colors.background, color: colors.text }}>
+  // Define the background style based on the theme
+  const backgroundStyle = {
+    background: theme === 'light' 
+      ? 'linear-gradient(135deg, #cde7fe90 0%, #ffffff 100%)' // Lite mode gradient
+      : colors.background, // Fallback to theme context for dark mode
+    color: colors.text,
+    minHeight: '100vh',
+    transition: 'all 0.3s ease'
+  };
 
+  return (
+    <div 
+      className="flex min-h-screen font-sans transition-colors duration-300"
+      style={backgroundStyle}
+    >
       {/* Sidebar */}
       <Sidebar_Admin/>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto" style={{ backgroundColor: colors.background }}>
+      {/* Main Content - Transparent background to show the parent gradient */}
+      <main className="flex-1 overflow-y-auto bg-transparent">
         <div className="p-6">
             <Nav_Admin />
             <div className="mt-6 animate-fade-in">

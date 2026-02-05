@@ -113,14 +113,20 @@ const ManageOffers = () => {
       toast.error("Failed to deactivate");
     }
   };
+  
+  const getTransparentColor = (hex, opacity) => {
+    if (!hex) return `rgba(255, 255, 255, ${opacity})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
 
   return (
-    <div 
-      className="w-full rounded-3xl p-8 shadow-sm border font-sans min-h-screen relative transition-colors duration-300"
-      style={{ 
-        backgroundColor: colors.background, 
-        borderColor: colors.border,
-        color: colors.text 
+    <div
+      className="w-full rounded-3xl p-4 font-sans min-h-screen relative transition-colors duration-300"
+      style={{
+        color: colors.text
       }}
     >
       {/* Toaster is managed globally in ThemeContext.jsx */}
@@ -156,19 +162,21 @@ const ManageOffers = () => {
       {viewState === 'list' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {offers.length > 0 ? offers.map(offer => (
-            <div 
-              key={offer._id} 
+            <div
+              key={offer._id}
               className={`relative border rounded-3xl p-6 shadow-sm transition-opacity ${!offer.isActive && 'opacity-70'}`}
-              style={{ 
-                backgroundColor: colors.card, 
-                borderColor: offer.isActive ? colors.accent : colors.border 
+              style={{
+                backgroundColor: getTransparentColor(colors.sidebar, 0.4), // 40% opacity
+                borderColor: getTransparentColor(colors.border, 0.2),
+                backdropFilter: 'blur(16px)', // Blur effect
+                WebkitBackdropFilter: 'blur(16px)'
               }}
             >
               <div className="flex justify-between items-start mb-4">
-                <span 
+                <span
                   className="px-2.5 py-1 rounded-lg text-[10px] font-bold border"
-                  style={{ 
-                    backgroundColor: offer.isActive ? colors.accent : colors.background, 
+                  style={{
+                    backgroundColor: offer.isActive ? colors.accent : colors.background,
                     color: offer.isActive ? (theme === 'dark' ? '#fff' : '#854d0e') : colors.textMuted,
                     borderColor: offer.isActive ? colors.accent : colors.border
                   }}
@@ -206,7 +214,7 @@ const ManageOffers = () => {
 
       {/* --- FORM VIEW --- */}
       {viewState === 'form' && (
-        <div 
+        <div
           className="max-w-xl mx-auto p-8 rounded-3xl border transition-colors"
           style={{ backgroundColor: colors.card, borderColor: colors.border }}
         >
@@ -285,16 +293,16 @@ const ManageOffers = () => {
             </div>
 
             <div className="pt-4 border-t flex gap-4" style={{ borderColor: colors.border }}>
-              <button 
-                type="button" 
-                onClick={() => setViewState("list")} 
+              <button
+                type="button"
+                onClick={() => setViewState("list")}
                 className="flex-1 py-3 border rounded-xl font-bold transition-colors"
                 style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border }}
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="flex-1 py-3 rounded-xl font-bold shadow-sm transition-colors"
                 style={{ backgroundColor: colors.accent, color: theme === 'dark' ? '#fff' : '#854d0e' }}
               >

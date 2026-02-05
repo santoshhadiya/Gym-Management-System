@@ -38,11 +38,23 @@ const RecentActivity_Admin = () => {
       icon: "fa-solid fa-person-running",
     },
   ];
+ const getTransparentColor = (hex, opacity) => {
+    if (!hex) return `rgba(255, 255, 255, ${opacity})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
 
   return (
     <div 
       className="w-full border rounded-3xl p-6 shadow-sm transition-colors duration-300"
-      style={{ backgroundColor: colors.card, borderColor: colors.border }}
+      style={{
+              backgroundColor: getTransparentColor(colors.sidebar, 0.4), // 40% opacity
+              borderColor: getTransparentColor(colors.border, 0.2),
+              backdropFilter: 'blur(16px)', // Blur effect
+              WebkitBackdropFilter: 'blur(16px)'
+            }}
     >
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">

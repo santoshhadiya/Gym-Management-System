@@ -130,7 +130,7 @@ const Membership = () => {
                      
                   </div>
                   <h2 className="text-3xl md:text-5xl font-black mb-2">{currentPlan?.name || "No Active Plan"}</h2>
-                  <p className="text-gray-300 text-base md:text-lg">{currentPlan ? `${totalDays} Days Plan` : "Please select a plan"}</p>
+                 {/*  <p className="text-gray-300 text-base md:text-lg">{currentPlan ? `${totalDays} Days Plan` : "Please select a plan"}</p> */}
                   
                   <div className="mt-8 flex flex-wrap gap-8">
                      <div>

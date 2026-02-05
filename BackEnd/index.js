@@ -71,6 +71,7 @@ app.use("/api/equipment", equipmentRoutes);
 app.use("/api/media", mediaRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/public", publicRoutes);
+app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // --- Base Route ---

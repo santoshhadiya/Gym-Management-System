@@ -2,19 +2,28 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png"
 import { useGlobalContext } from "../../context/GlobalContext";
-import { useTheme } from "../../context/ThemeContext"; // Import Theme Context
+import { useTheme } from "../../context/ThemeContext"; 
 
 const Sidebar_Admin = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { setUser } = useGlobalContext();
-  const { theme, toggleTheme, colors } = useTheme(); // Theme Hook
+  const { theme, toggleTheme, colors } = useTheme(); 
 
   const logOutAdmin = () => {
     setUser(null);
     localStorage.removeItem("userInfo");
     navigate("/login", { replace: true });
+  };
+
+  // Helper to convert hex to RGBA for transparency
+  const getTransparentColor = (hex, opacity) => {
+    if (!hex) return `rgba(255, 255, 255, ${opacity})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
 
  const navItems = [
@@ -48,7 +57,12 @@ const Sidebar_Admin = () => {
         ${collapsed ? "w-20 px-2" : "w-60 px-4"}
         min-h-screen border-r flex flex-col py-8 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-xl relative z-50
       `}
-      style={{ backgroundColor: colors.sidebar, borderColor: colors.border }}
+      style={{ 
+        backgroundColor: getTransparentColor(colors.sidebar, 0.4), // 40% opacity
+        borderColor: getTransparentColor(colors.border, 0.2),
+        backdropFilter: 'blur(16px)', // Blur effect
+        WebkitBackdropFilter: 'blur(16px)'
+      }}
     >
       {/* Sidebar Toggle Button */}
       <button 
@@ -62,7 +76,7 @@ const Sidebar_Admin = () => {
       {/* Header / Brand */}
       <div className={`flex items-center mb-10 overflow-hidden transition-all duration-500 ${collapsed ? "justify-center" : "px-2"}`}>
         <div className="shrink-0 w-12 h-12 p-1.5 rounded-2xl flex items-center justify-center border shadow-sm"
-             style={{ backgroundColor: colors.background, borderColor: colors.border }}>
+             style={{ backgroundColor: getTransparentColor(colors.background, 0.5), borderColor: colors.border }}>
           <img src={logo} className="w-full h-full object-contain" alt="logo" />
         </div>
         
@@ -102,20 +116,12 @@ const Sidebar_Admin = () => {
               `}>
                 {item.name}
               </span>
-
-              {/* Tooltip for Collapsed state */}
-              {collapsed && (
-                <div className="fixed left-20 px-3 py-2 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-[100] shadow-xl text-[10px] font-bold"
-                     style={{ backgroundColor: colors.card, color: colors.text, border: `1px solid ${colors.border}` }}>
-                  {item.name}
-                </div>
-              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer: Theme & Sign Out */}
+      {/* Footer */}
       <div className={`mt-4 pt-6 border-t flex flex-col gap-3 ${collapsed ? "items-center" : "px-2"}`} style={{ borderColor: colors.border }}>
         
         {/* Theme Toggle */}
@@ -125,7 +131,7 @@ const Sidebar_Admin = () => {
              ${collapsed ? "w-12 justify-center" : "px-4 w-full font-bold text-xs uppercase tracking-widest"}
            `}
              style={{ 
-                backgroundColor: theme === 'light' ? '#f3f4f6' : '#1f2937', 
+                backgroundColor: theme === 'light' ? 'rgba(243, 244, 246, 0.5)' : 'rgba(31, 41, 55, 0.5)', 
                 color: colors.text 
              }}
           >

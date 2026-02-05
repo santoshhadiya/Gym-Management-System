@@ -344,8 +344,8 @@ const FinancialReports = () => {
 
   return (
     <div 
-      className="w-full rounded-3xl p-8 shadow-sm border font-sans min-h-screen relative transition-colors duration-300"
-      style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
+      className="w-full rounded-3xl p-4 font-sans min-h-screen relative transition-colors duration-300"
+      style={{  color: colors.text }}
     >
       {/* HEADER & TOP STATS */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6">

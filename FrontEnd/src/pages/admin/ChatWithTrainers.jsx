@@ -203,7 +203,7 @@ const ChatWithTrainer = () => {
   });
 
   return (
-    <div className="flex h-[88vh] bg-slate-100 rounded-3xl overflow-hidden shadow-2xl border border-white font-sans mx-auto max-w-7xl mt-4 relative">
+    <div className="flex h-[88vh] bg-slate-100 rounded-3xl overflow-hidden border border-white font-sans mx-auto max-w-7xl mt-4 relative">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar theme="colored" />
 
       {/* Sidebar - Theme colors integrated */}

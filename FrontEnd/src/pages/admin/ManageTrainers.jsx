@@ -48,6 +48,12 @@ const ManageTrainer = () => {
       setIsLoading(true);
       const res = await api.get("/trainers/data");
       setTrainers(res.data);
+      
+      // Update selected trainer if viewing details to reflect status changes
+      if (selectedTrainer) {
+        const updated = res.data.find(t => t._id === selectedTrainer._id);
+        if (updated) setSelectedTrainer(updated);
+      }
     } catch (error) {
       console.error("Error fetching trainers:", error);
       toast.error("Failed to load trainers.");
@@ -84,6 +90,10 @@ const ManageTrainer = () => {
         return theme === 'dark' 
           ? "bg-yellow-900/30 text-yellow-400 border-yellow-800" 
           : "bg-[#FEEF75] text-yellow-800 border-yellow-200";
+      case "Inactive":
+        return theme === 'dark'
+          ? "bg-red-900/30 text-red-400 border-red-800"
+          : "bg-red-100 text-red-800 border-red-200";
       default: 
         return theme === 'dark'
           ? "bg-gray-800 text-gray-400 border-gray-700"
@@ -102,6 +112,18 @@ const ManageTrainer = () => {
     link.download = "trainers_list.csv";
     link.click();
     toast.success("CSV Exported");
+  };
+
+  // --- STATUS TOGGLE ---
+  const handleToggleStatus = async (trainerId, currentStatus) => {
+    const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
+    try {
+      await api.put(`/trainers/${trainerId}`, { status: newStatus });
+      toast.success(`Account status set to ${newStatus}`);
+      fetchTrainers();
+    } catch (error) {
+      toast.error("Failed to update status.");
+    }
   };
 
   // --- CRUD OPERATIONS ---
@@ -190,8 +212,8 @@ const ManageTrainer = () => {
   });
 
   return (
-    <div className="w-full rounded-3xl p-8 shadow-sm border font-sans min-h-screen transition-colors duration-300"
-         style={{ backgroundColor: colors.background, borderColor: colors.border }}>
+    <div className="w-full p-4   font-sans min-h-screen transition-colors duration-300"
+         >
       
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -319,6 +341,9 @@ const ManageTrainer = () => {
                             </button>
                             <button onClick={() => handleEditClick(trainer)} className="p-2 transition-colors" style={{ color: colors.textMuted }} title="Edit">
                               <i className="fa-solid fa-pen-to-square hover:text-green-500"></i>
+                            </button>
+                            <button onClick={() => handleToggleStatus(trainer._id, trainer.status)} className="p-2 transition-colors" style={{ color: colors.textMuted }} title={trainer.status === "Active" ? "Deactivate" : "Activate"}>
+                                <i className={`fa-solid ${trainer.status === "Active" ? "fa-toggle-on text-green-500" : "fa-toggle-off text-red-500"} text-lg`}></i>
                             </button>
                           </div>
                         </td>
@@ -489,6 +514,18 @@ const ManageTrainer = () => {
                     <div className={`mt-3 inline-block px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(selectedTrainer.status)}`}>
                       {selectedTrainer.status}
                     </div>
+
+                    <button 
+                        onClick={() => handleToggleStatus(selectedTrainer._id, selectedTrainer.status)}
+                        className={`w-full mt-5 py-2.5 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
+                          selectedTrainer.status === "Active" 
+                          ? "bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white" 
+                          : "bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white"
+                        }`}
+                      >
+                        <i className={`fa-solid ${selectedTrainer.status === "Active" ? "fa-user-slash" : "fa-user-check"}`}></i>
+                        {selectedTrainer.status === "Active" ? "DEACTIVATE ACCOUNT" : "ACTIVATE ACCOUNT"}
+                    </button>
                   </div>
 
                   <div className="space-y-4 text-sm border-t pt-6" style={{ borderColor: colors.border }}>

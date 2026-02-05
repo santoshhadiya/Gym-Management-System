@@ -152,7 +152,7 @@ const Plans = () => {
                       )}
                     </ul>
 
-                    <Link to="/contact" className="block">
+                    <Link to="/login" className="block">
                       <button className={`w-full py-4 rounded-xl font-bold text-sm shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${style.tag ? 'bg-gray-900 text-white hover:bg-gray-800' : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-900 hover:text-gray-900'}`}>
                         Choose Plan <i className="fa-solid fa-arrow-right"></i>
                       </button>

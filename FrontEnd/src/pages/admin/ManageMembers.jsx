@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import toast from 'react-hot-toast';
 import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext";
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const ManageMember = () => {
   const { api, BACKEND_URL } = useGlobalContext();
@@ -40,7 +41,7 @@ const ManageMember = () => {
       ]);
       setMembers(membersRes.data);
       setPlans(plansRes.data);
-      
+
       // Update selectedMember if currently viewing details
       if (selectedMember) {
         const updated = membersRes.data.find(m => m._id === selectedMember._id);
@@ -109,13 +110,13 @@ const ManageMember = () => {
       const expiryDate = new Date();
       expiryDate.setDate(startDate.getDate() + selectedPlan.duration);
 
-      await api.put(`/members/${selectedMember._id}`, { 
+      await api.put(`/members/${selectedMember._id}`, {
         plan: purchaseData.planId,
         startDate: startDate,
         expiryDate: expiryDate,
-        status: "Active" 
+        status: "Active"
       });
-      
+
       await api.post("/payments/record", {
         memberId: selectedMember._id,
         amount: purchaseData.amount,
@@ -136,14 +137,21 @@ const ManageMember = () => {
     const matchesStatus = filterStatus === "All" || m.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
+  const getTransparentColor = (hex, opacity) => {
+    if (!hex) return `rgba(255, 255, 255, ${opacity})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
 
   return (
-    <div className="w-full rounded-3xl p-6 md:p-10 font-sans min-h-screen transition-colors duration-300" style={{ backgroundColor: colors.background }}>
-      
+    <div className="w-full rounded-3xl p-4 md:p-4 font-sans min-h-screen transition-colors duration-300" >
+
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
         <div>
-          <h1 className="text-3xl font-extrabold" style={{ color: colors.text }}>Manage Members</h1>
+          <h1 className="text-2xl font-bold" style={{ color: colors.text }}>Manage Members</h1>
           <p className="text-sm mt-1" style={{ color: colors.textMuted }}>{members.length} total members enrolled</p>
         </div>
         <button onClick={() => { setIsEditing(false); setViewState("form"); }} className="px-6 py-2.5 rounded-2xl text-sm font-bold bg-[#111827] text-white shadow-lg hover:bg-black transition-all">
@@ -152,20 +160,33 @@ const ManageMember = () => {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-20 font-bold" style={{ color: colors.text }}>Loading member data...</div>
+        <div className="text-center py-20 font-bold" style={{ color: colors.text }}>
+          <DotLottieReact
+            src="path/to/animation.lottie"
+            loop
+            autoplay
+          />
+
+        </div>
       ) : (
         <>
           {viewState === "list" && (
-            <div className="space-y-8">
+            <div className="space-y-8 ">
               <div className="flex flex-wrap gap-4">
-                <input 
-                  type="text" placeholder="Search members..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} 
-                  className="flex-grow min-w-[300px] px-6 py-3 rounded-2xl border text-sm outline-none" 
+                <input
+                  type="text" placeholder="Search members..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-grow min-w-[300px] px-6 py-3 rounded-2xl border text-sm outline-none"
                   style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.text }}
                 />
               </div>
 
-              <div className="rounded-[2rem] border shadow-xl overflow-hidden" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+              <div className="rounded-[1rem] border shadow-xl overflow-hidden"
+                style={{
+                  backgroundColor: getTransparentColor(colors.sidebar, 0.4), // 40% opacity
+                  borderColor: getTransparentColor(colors.border, 0.2),
+                  backdropFilter: 'blur(16px)', // Blur effect
+                  WebkitBackdropFilter: 'blur(16px)'
+                }}>
                 <table className="w-full text-left text-sm">
                   <thead style={{ backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb' }}>
                     <tr>
@@ -232,7 +253,7 @@ const ManageMember = () => {
               <button onClick={() => setViewState("list")} className="mb-8 font-black flex items-center gap-2" style={{ color: colors.textMuted }}>
                 <i className="fa-solid fa-arrow-left"></i> Back to Dashboard
               </button>
-              
+
               <div className="grid lg:grid-cols-12 gap-8">
                 {/* Member Identity Sidebar */}
                 <div className="lg:col-span-4 space-y-6">
@@ -243,15 +264,14 @@ const ManageMember = () => {
                       </div>
                       <h3 className="font-black text-2xl text-gray-800">{selectedMember.name}</h3>
                       <p className="text-xs font-bold text-gray-400 mb-6">{selectedMember.email}</p>
-                      
+
                       {/* --- NEW: STATUS TOGGLE BUTTON --- */}
-                      <button 
+                      <button
                         onClick={() => handleToggleStatus(selectedMember._id)}
-                        className={`w-full py-3 mb-6 rounded-xl text-xs font-black transition-all border ${
-                          selectedMember.status === "Active" 
-                          ? "bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white" 
-                          : "bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white"
-                        }`}
+                        className={`w-full py-3 mb-6 rounded-xl text-xs font-black transition-all border ${selectedMember.status === "Active"
+                            ? "bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white"
+                            : "bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white"
+                          }`}
                       >
                         {selectedMember.status === "Active" ? "DEACTIVATE ACCOUNT" : "ACTIVATE ACCOUNT"}
                       </button>
@@ -287,7 +307,7 @@ const ManageMember = () => {
                     <div className="grid md:grid-cols-3 gap-6 mb-8">
                       <div className="space-y-1">
                         <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Select Plan</label>
-                        <select 
+                        <select
                           className="w-full p-3 rounded-xl border bg-slate-50 text-xs font-bold outline-none"
                           value={purchaseData.planId}
                           onChange={(e) => {

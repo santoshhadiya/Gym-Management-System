@@ -31,7 +31,7 @@ exports.registerUser = async (req, res) => {
       password,
       phone,
       role,
-      status: "Inactive", // Requires Admin Approval
+      status: role=="member"? "Active":"Inactive", // Requires Admin Approval
     });
 
     // Create Member profile if role is member

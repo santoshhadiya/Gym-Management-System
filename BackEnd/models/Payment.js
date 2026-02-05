@@ -21,7 +21,7 @@ const paymentSchema = new mongoose.Schema(
 
     method: {
       type: String,
-      enum: ["UPI", "Card", "Net Banking", "Cash"],
+      enum: ["UPI", "Card", "Net Banking", "Cash", "Razorpay", "razorpay"],
       required: true,
     },
 

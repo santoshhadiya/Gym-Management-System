@@ -110,22 +110,8 @@ const RegisterPage = () => {
 
         </div>
         <div>
-          {/* Role Selector */}
-          <div className="flex justify-between gap-3 mb-6">
-            {['trainer', 'member'].map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRole(r)}
-                className={`flex-1 py-2.5 rounded-full text-sm font-semibold border transition-all duration-200 capitalize cursor-pointer ${role === r
-                  ? 'bg-[#FEEF75] border-[#FEEF75] text-gray-900 shadow-sm'
-                  : ' border-slate-200 text-slate-500 hover:border-slate-300'
-                  }`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
+          
+          
 
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
