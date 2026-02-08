@@ -11,7 +11,7 @@ const Booking = () => {
    // --- STATE ---
    const [sessions, setSessions] = useState([]);
    const [myBookings, setMyBookings] = useState([]);
-   const [viewState, setViewState] = useState("upcoming");
+   const [viewState, setViewState] = useState("history");
    const [isLoading, setIsLoading] = useState(false);
 
    // --- FETCH DATA ---
@@ -118,7 +118,7 @@ const Booking = () => {
             </div>
 
             <div className="flex border rounded-xl p-1 shadow-sm w-full md:w-auto" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
-               {['upcoming', 'history'].map(v => (
+               {['history','upcoming'].map(v => (
                   <button
                      key={v}
                      onClick={() => setViewState(v)}

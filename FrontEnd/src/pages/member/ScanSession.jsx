@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from "react-router-dom"; // Added for redirection
 import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext";
 
 const ScanSession = () => {
    const { api } = useGlobalContext();
    const { colors, theme } = useTheme();
+   const navigate = useNavigate(); // Hook for redirection
 
    const [scanner, setScanner] = useState(null);
    const [isScanning, setIsScanning] = useState(false);
@@ -41,9 +43,22 @@ const ScanSession = () => {
       setIsScanning(true);
    };
 
+   // Helper to stop camera and redirect
+   const stopAndRedirect = async () => {
+      if (scanner) {
+         try {
+            await scanner.clear(); // Stop the camera hardware
+         } catch (error) {
+            console.error("Failed to stop scanner", error);
+         }
+      }
+      // Redirect to the booking page
+      navigate("/member/booking");
+   };
+
    const onScanSuccess = async (decodedText) => {
       try {
-         // Temporarily pause scanning to prevent duplicate scans
+         // Temporarily pause scanning state
          setIsScanning(false);
          
          // Parse QR code data
@@ -56,10 +71,10 @@ const ScanSession = () => {
             return;
          }
 
-         // Check if already scanned recently (prevent duplicate scans)
+         // Check if already scanned recently in this session state (UI level preventer)
          const isDuplicate = recentScans.some(scan => 
             scan.sessionId === qrData.sessionId && 
-            Date.now() - scan.timestamp < 5000 // 5 second cooldown
+            Date.now() - scan.timestamp < 5000 
          );
 
          if (isDuplicate) {
@@ -77,31 +92,34 @@ const ScanSession = () => {
 
          toast.success(res.data.message || "Attendance marked successfully!");
          
-         // Add to recent scans
-         setRecentScans(prev => [...prev, {
-            sessionId: qrData.sessionId,
-            sessionType: qrData.sessionType,
-            timestamp: Date.now()
-         }]);
-
-         // Resume scanning after 2 seconds
+         // Stop camera and redirect on success
          setTimeout(() => {
-            setIsScanning(true);
-         }, 2000);
+            stopAndRedirect();
+         }, 1500); // Small delay so user can read the success toast
 
       } catch (err) {
          if (err instanceof SyntaxError) {
             toast.error("Invalid QR code data");
+            setIsScanning(true);
          } else {
-            toast.error(err.response?.data?.message || "Failed to mark attendance");
+            const errorMessage = err.response?.data?.message || "Failed to mark attendance";
+            toast.error(errorMessage);
+
+            // If the error indicates attendance already exists, redirect anyway
+            if (errorMessage.toLowerCase().includes("already") || err.response?.status === 409) {
+               setTimeout(() => {
+                  stopAndRedirect();
+               }, 1500);
+            } else {
+               setIsScanning(true);
+            }
          }
          console.error(err);
-         setIsScanning(true);
       }
    };
 
    const onScanError = (error) => {
-      // Silently ignore scan errors (they happen frequently during scanning)
+      // Silently ignore scan errors
    };
 
    const clearRecentScans = () => {
@@ -134,9 +152,8 @@ const ScanSession = () => {
                   <p className="font-bold mb-1" style={{ color: colors.text }}>How to mark attendance:</p>
                   <ul className="list-disc list-inside space-y-1">
                      <li>Position your camera to scan the QR code shown by your trainer</li>
-                     <li>Make sure you have booked the session beforehand</li>
+                     <li>Upon successful scan, you will be redirected to your bookings</li>
                      <li>QR codes are only valid on the scheduled session date</li>
-                     <li>Attendance will be marked automatically upon successful scan</li>
                   </ul>
                </div>
             </div>
@@ -166,7 +183,7 @@ const ScanSession = () => {
             <div id="qr-reader" className="rounded-xl overflow-hidden"></div>
          </div>
 
-         {/* Recent Scans */}
+         {/* Recent Scans Footer */}
          {recentScans.length > 0 && (
             <div 
                className="rounded-2xl border p-6"
@@ -175,18 +192,8 @@ const ScanSession = () => {
                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold" style={{ color: colors.text }}>
                      <i className="fa-solid fa-check-circle mr-2"></i>
-                     Recent Attendance
+                     Session Status
                   </h2>
-                  <button
-                     onClick={clearRecentScans}
-                     className="text-xs font-bold px-3 py-1 rounded-lg transition-all"
-                     style={{ 
-                        backgroundColor: colors.background,
-                        color: colors.textMuted 
-                     }}
-                  >
-                     Clear
-                  </button>
                </div>
 
                <div className="space-y-2">
@@ -202,9 +209,6 @@ const ScanSession = () => {
                               <p className="font-bold text-sm" style={{ color: colors.text }}>
                                  {scan.sessionType}
                               </p>
-                              <p className="text-xs" style={{ color: colors.textMuted }}>
-                                 {new Date(scan.timestamp).toLocaleTimeString()}
-                              </p>
                            </div>
                         </div>
                         <span className="px-3 py-1 rounded-full text-xs font-bold"
@@ -213,7 +217,7 @@ const ScanSession = () => {
                               color: '#14532d'
                            }}
                         >
-                           Marked
+                           Processed
                         </span>
                      </div>
                   ))}
