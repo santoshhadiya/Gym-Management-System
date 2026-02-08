@@ -14,6 +14,7 @@ const Contact = () => {
     matBlack: "#121212"
   };
 
+
   // Inject Font Awesome & Toast Styles
   useEffect(() => {
     const linkFA = document.createElement("link");
@@ -229,7 +230,7 @@ const Contact = () => {
                      name="subject"
                      value={formData.subject}
                      onChange={handleChange}
-                     className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:outline-none focus:border-[#CDE7FE] focus:bg-white transition-all bg-white text-sm font-medium"
+                     className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50  focus:outline-none focus:border-[#CDE7FE] focus:bg-white transition-all bg-white text-sm font-medium"
                   >
                      <option>General Inquiry</option>
                      <option>Membership Plans</option>

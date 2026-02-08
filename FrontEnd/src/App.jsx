@@ -2,7 +2,6 @@ import React from 'react'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 import Home from './pages/visitor/Home'
 import About from './pages/visitor/About'
-import Contact from './pages/visitor/contact'
 import Gallery from './pages/visitor/Gallery'
 import Offers from './pages/visitor/Offers'
 import Services from './pages/visitor/Services'
@@ -90,6 +89,7 @@ import BotVisitor from './pages/visitor/BotVisitor'
 import ManageGymSchedule from './pages/admin/ManageGymSchedule'
 import ScanSession from './pages/member/ScanSession'
 import SessionQR from './pages/admin/Sessionqr'
+import Contact from './pages/visitor/Contact'
 
 
 const App = () => {
