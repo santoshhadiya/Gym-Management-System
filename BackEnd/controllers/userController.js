@@ -65,3 +65,15 @@ exports.updateUserProfile = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Get all admin users
+// @route   GET /api/users/admins
+// @access  Private (Admin)
+exports.getAllAdmins = async (req, res) => {
+  try {
+    const admins = await User.find({ role: "admin" }).select("name email createdAt"); //
+    res.status(200).json(admins);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

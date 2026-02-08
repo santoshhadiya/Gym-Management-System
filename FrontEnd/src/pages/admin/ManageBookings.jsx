@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { toast } from 'react-hot-toast'; // Switched to react-hot-toast
+import { toast } from 'react-hot-toast';
 import { useGlobalContext } from "../../context/GlobalContext";
-import { useTheme } from "../../context/ThemeContext"; // Import useTheme
+import { useTheme } from "../../context/ThemeContext";
 
 const ManageBookings = () => {
    const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
-   const { colors, theme } = useTheme(); // Access custom colors and current theme
+   const { colors, theme } = useTheme();
 
    // --- STATE ---
    const [bookings, setBookings] = useState([]);
    const [isLoading, setIsLoading] = useState(true);
    
    // View State for Tabs
-   const [viewState, setViewState] = useState("active"); // 'active' | 'history'
+   const [viewState, setViewState] = useState("active");
 
    // Cancellation Modal State
    const [showCancelModal, setShowCancelModal] = useState(false);
@@ -47,6 +47,32 @@ const ManageBookings = () => {
    useEffect(() => {
       fetchBookings();
    }, []);
+
+   // --- HELPER FUNCTIONS ---
+   const getTrainerDisplay = (session) => {
+      const trainers = [];
+      
+      // Primary trainer
+      if (session.trainer?.name) {
+         trainers.push({ name: session.trainer.name, isPrimary: true, type: 'internal' });
+      }
+      
+      // Additional internal trainers
+      if (session.additionalTrainers && session.additionalTrainers.length > 0) {
+         session.additionalTrainers.forEach(t => {
+            if (t.name) trainers.push({ name: t.name, isPrimary: false, type: 'internal' });
+         });
+      }
+      
+      // External trainers
+      if (session.externalTrainers && session.externalTrainers.length > 0) {
+         session.externalTrainers.forEach(name => {
+            trainers.push({ name: name, isPrimary: false, type: 'external' });
+         });
+      }
+      
+      return trainers;
+   };
 
    // --- GROUPING & SORTING LOGIC ---
    const processBookings = () => {
@@ -160,28 +186,25 @@ const ManageBookings = () => {
             </div>
          </div>
 
+         {/* CONTENT */}
          {isLoading ? (
-            <div className="flex justify-center py-20">
-               <i className="fa-solid fa-circle-notch fa-spin text-3xl" style={{ color: colors.border }}></i>
+            <div className="flex items-center justify-center h-64">
+               <img src={loadingIMG} className='h-20 w-25' alt="Loading"/>
             </div>
          ) : (
-            <div className="space-y-8">
+            <div className="space-y-4">
                {visibleGroups.length > 0 ? (
                   visibleGroups.map((group) => (
                      <div 
-                        key={group.session._id} 
-                        className="border rounded-2xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2 transition-colors"
-                        style={{ 
-                           backgroundColor: colors.card, 
-                           borderColor: group.session.status === 'Cancelled' ? '#fecaca' : colors.border 
-                        }}
+                        key={group.session._id}
+                        className="rounded-[2.5rem] border overflow-hidden transition-colors shadow-sm"
+                        style={{ backgroundColor: colors.card, borderColor: colors.border }}
                      >
-
                         {/* Session Header */}
                         <div 
-                           className="px-6 py-4 border-b flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2"
+                           className="p-6 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
                            style={{ 
-                              backgroundColor: group.session.status === 'Cancelled' ? (theme === 'dark' ? '#450a0a' : '#fef2f2') : (theme === 'dark' ? colors.sidebar : '#f8f9fa'), 
+                              backgroundColor: colors.sidebar, 
                               borderColor: colors.border 
                            }}
                         >
@@ -205,10 +228,46 @@ const ManageBookings = () => {
                                  <span className="flex items-center gap-1 px-2 py-1 rounded border" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
                                     <i className="fa-regular fa-clock" style={{ color: colors.secondary }}></i> {group.session.time}
                                  </span>
-                                 <span className="flex items-center gap-1">
-                                    <i className="fa-solid fa-user-ninja"></i> Trainer: {group.session.trainer?.name}
-                                 </span>
                               </div>
+
+                              {/* ENHANCED TRAINERS DISPLAY */}
+                              {(() => {
+                                 const trainers = getTrainerDisplay(group.session);
+                                 return trainers.length > 0 && (
+                                    <div className="flex flex-wrap items-center gap-1 mt-2">
+                                       <span className="text-xs" style={{ color: colors.textMuted }}>
+                                          <i className="fa-solid fa-user-ninja mr-1"></i>
+                                       </span>
+                                       {trainers.map((trainer, idx) => (
+                                          <span 
+                                             key={idx}
+                                             className="px-2 py-0.5 rounded-full text-xs font-bold border"
+                                             style={{
+                                                backgroundColor: trainer.isPrimary 
+                                                   ? colors.secondary 
+                                                   : trainer.type === 'external'
+                                                      ? colors.accent
+                                                      : colors.background,
+                                                color: trainer.isPrimary 
+                                                   ? (theme === 'dark' ? '#fff' : '#1e3a8a')
+                                                   : trainer.type === 'external'
+                                                      ? (theme === 'dark' ? '#fff' : '#854d0e')
+                                                      : colors.text,
+                                                borderColor: trainer.isPrimary 
+                                                   ? colors.secondary
+                                                   : trainer.type === 'external'
+                                                      ? colors.accent
+                                                      : colors.border
+                                             }}
+                                          >
+                                             {trainer.isPrimary && <i className="fa-solid fa-star text-xs mr-1"></i>}
+                                             {trainer.type === 'external' && <i className="fa-solid fa-user-tie text-xs mr-1"></i>}
+                                             {trainer.name}
+                                          </span>
+                                       ))}
+                                    </div>
+                                 );
+                              })()}
                            </div>
                            <div 
                               className="text-xs font-bold px-3 py-1 rounded-full border shadow-sm self-start sm:self-center"

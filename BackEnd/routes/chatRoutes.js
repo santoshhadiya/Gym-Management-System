@@ -6,10 +6,12 @@ const {
   sendMessage,
   startConversation,
 } = require("../controllers/chatController");
+const {chatWithGemini}=require("../controllers/geminiController");
+
 const { protect } = require("../middlewares/authMiddleware");
 
+router.post("/gemini", chatWithGemini);
 router.use(protect);
-
 router.get("/conversations", getConversations);
 router.get("/messages/:conversationId", getMessages);
 router.post("/conversation", startConversation);

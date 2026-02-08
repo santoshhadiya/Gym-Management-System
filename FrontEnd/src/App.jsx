@@ -83,6 +83,14 @@ import FAQs from './pages/visitor/FAQs'
 import PrivacyPolicy from './pages/visitor/PrivacyPolicy'
 import TermsOfService from './pages/visitor/TermsofService'
 import GymSchedule from './pages/visitor/GymSchedule'
+import AdminProfile from './pages/admin/AdminProfile'
+import CreateAdmin from './pages/admin/CreateAdmin'
+import GymChatbot from './pages/visitor/GymChatbot'
+import BotVisitor from './pages/visitor/BotVisitor'
+import ManageGymSchedule from './pages/admin/ManageGymSchedule'
+import ScanSession from './pages/member/ScanSession'
+import SessionQR from './pages/admin/Sessionqr'
+
 
 const App = () => {
   const { user } = useGlobalContext()
@@ -90,12 +98,12 @@ const App = () => {
 
     <BrowserRouter>
       {/* <div>hello</div> */}
-     <ScrollToTop/>
+      <ScrollToTop />
       <Routes>
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<Registration />} />
-        <Route path="forgot-password" element={<ForgotPassword/>} />
-        <Route path="reset-password/:token" element={<ResetPassword/>} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password/:token" element={<ResetPassword />} />
 
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="admin" element={<AdminLayout />}>
@@ -119,11 +127,15 @@ const App = () => {
             <Route path="monitor-progress" element={<MonitorProgress_admin />} />
             <Route path="chat-members" element={<ChatWithMember_admin />} />
             <Route path="chat-trainers" element={<ChatWithTrainer />} />
-            <Route path="view-inquiry" element={<ViewInquiry/>} />
+            <Route path="view-inquiry" element={<ViewInquiry />} />
             <Route path="feedbacks" element={<Feedbacks_admin />} />
             <Route path="update-session" element={<UpdateSessions />} />
-            <Route path="attendance-qr" element={<AttendanceQR/>} />
-            <Route path="attendance" element={<Attendance/>} />
+            <Route path="attendance-qr" element={<AttendanceQR />} />
+            <Route path="attendance" element={<Attendance />} />
+            <Route path="profile" element={<AdminProfile />} />
+            <Route path="create-admin" element={<CreateAdmin />} />
+            <Route path="session-qr" element={<SessionQR/>} />
+            <Route path="manage-gym-schedule" element={<ManageGymSchedule/>} />
           </Route>
         </Route>
 
@@ -141,7 +153,7 @@ const App = () => {
             <Route path="payments" element={<MemberPayments />} />
             <Route path="chat/member" element={<ChatWithMember />} />
             <Route path="chat/owner" element={<ChatWithOwner />} />
-            <Route path="announcements" element={<AnnouncementsTrainer/>} />
+            <Route path="announcements" element={<AnnouncementsTrainer />} />
           </Route>
         </Route>
 
@@ -160,10 +172,11 @@ const App = () => {
             <Route path="renew" element={<Renew />} />
             <Route path="workout" element={<Workout />} />
             <Route path="dietPlans" element={<DietPlans />} />
-            <Route path="announcements" element={<AnnouncementsMember/>} />
-            <Route path="gallery" element={<GalleryMember/>} />
-            <Route path="scan-attendance" element={<ScanAttendance/>} />
-            <Route path="attendance-history" element={<AttendanceHistory/>} />
+            <Route path="scan-session" element={<ScanSession/>} />
+            <Route path="announcements" element={<AnnouncementsMember />} />
+            <Route path="gallery" element={<GalleryMember />} />
+            <Route path="scan-attendance" element={<ScanAttendance />} />
+            <Route path="attendance-history" element={<AttendanceHistory />} />
           </Route>
         </Route>
 
@@ -176,13 +189,15 @@ const App = () => {
           <Route path="services" element={<Services />} />
           <Route path="trainers" element={<Trainers />} />
           <Route path="plans" element={<Plans />} />
+          <Route path="chatbot" element={<GymChatbot />} />
           <Route path="inquiry" element={<Inquiry />} />
           <Route path="policies" element={<Policies />} />
           <Route path="reviews" element={<Reviews />} />
-          <Route path="faq" element={<FAQs/>} />
-          <Route path="privacy-policy" element={<PrivacyPolicy/>} />
-          <Route path="terms-service" element={<TermsOfService/>} />
-          <Route path="schedule" element={<GymSchedule/>} />
+          <Route path="faq" element={<FAQs />} />
+          <Route path="bot" element={<BotVisitor />} />
+          <Route path="privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="terms-service" element={<TermsOfService />} />
+          <Route path="schedule" element={<GymSchedule />} />
         </Route>
       </Routes>
 

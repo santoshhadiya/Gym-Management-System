@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext'; // Import Theme Context
 import toast from 'react-hot-toast'; // React Hot Toast
 
 const Membership = () => {
-   const { api,loadingIMG } = useGlobalContext();
+   const { api, loadingIMG } = useGlobalContext();
    const { colors, theme } = useTheme(); // Consume Theme
    const navigate = useNavigate();
 
@@ -45,6 +45,14 @@ const Membership = () => {
    const expiryDate = member?.expiryDate ? new Date(member.expiryDate) : null;
    const totalDays = currentPlan?.durationInDays || 365;
 
+   const formatDate = (date) => {
+      if (!date) return "-";
+
+      return new Date(date)
+         .toLocaleDateString("en-GB")
+         .replaceAll("/", "-");
+   };
+
    const daysRemaining = expiryDate
       ? Math.max(0, Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
       : 0;
@@ -54,7 +62,7 @@ const Membership = () => {
       .filter(p => p.status === 'Approved' || p.status === 'Success')
       .reduce((acc, curr) => acc + curr.amount, 0);
    const pendingAmount = Math.max(0, planPrice - amountPaid);
-   const lastPaymentDate = payments.length > 0 ? new Date(payments[0].paidAt).toLocaleDateString() : "N/A";
+   const lastPaymentDate = payments.length > 0 ? formatDate(new Date(payments[0].paidAt)) : "N/A";
 
    const calculateProgress = () => {
       if (!startDate || !expiryDate) return 0;
@@ -63,6 +71,8 @@ const Membership = () => {
       const percent = (timeElapsed / totalDuration) * 100;
       return Math.min(Math.max(percent, 0), 100);
    };
+
+
 
    const getStatusLabel = () => {
       if (!currentPlan) return "Inactive";
@@ -81,13 +91,13 @@ const Membership = () => {
       navigate('/member/renew')
    }
 
-  if (loading) {
-   return (
-      <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
-         <img src={loadingIMG} className="h-20 w-25" alt="Loading..." />
-      </div>
-   );
-}
+   if (loading) {
+      return (
+         <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
+            <img src={loadingIMG} className="h-20 w-25" alt="Loading..." />
+         </div>
+      );
+   }
 
    return (
       <div className="w-full max-w-6xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-6 lg:px-8">
@@ -132,11 +142,11 @@ const Membership = () => {
                   <div className="mt-8 flex flex-wrap gap-8">
                      <div>
                         <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Start Date</p>
-                        <p className="font-bold text-lg">{startDate?.toLocaleDateString() || "-"}</p>
+                        <p className="font-bold text-lg">{formatDate(startDate) || "-"}</p>
                      </div>
                      <div>
                         <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Expiry Date</p>
-                        <p className="font-bold text-lg text-[#FEEF75]">{expiryDate?.toLocaleDateString() || "-"}</p>
+                        <p className="font-bold text-lg text-[#FEEF75]">{formatDate(expiryDate) || "-"}</p>
                      </div>
                   </div>
                </div>
@@ -154,7 +164,7 @@ const Membership = () => {
                         ></div>
                      </div>
                      <p className="text-xs text-gray-400 mt-3 text-center">
-                        Plan expires on {expiryDate?.toLocaleDateString()}.
+                        Plan expires on {formatDate(expiryDate)}.
                      </p>
                   </div>
                )}

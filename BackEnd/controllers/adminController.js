@@ -86,3 +86,89 @@ exports.getAdminContact = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+/**
+ * @desc   Get admin profile information
+ * @route  GET /api/admin/profile
+ * @access Private (Admin)
+ */
+exports.getAdminProfile = async (req, res) => {
+  try {
+    // Fetch admin details, excluding password
+    const admin = await User.findById(req.user.id).select("-password");
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    res.json(admin);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @desc   Update admin profile text data
+ * @route  PUT /api/admin/profile
+ * @access Private (Admin)
+ */
+exports.updateAdminProfile = async (req, res) => {
+  try {
+    const admin = await User.findById(req.user.id);
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // Update basic fields
+    admin.name = req.body.name || admin.name;
+    admin.phone = req.body.phone || admin.phone;
+    admin.address = req.body.address || admin.address;
+
+    // Handle password update if provided
+    if (req.body.password) {
+      admin.password = req.body.password;
+    }
+
+    const updatedAdmin = await admin.save();
+    res.json({
+      _id: updatedAdmin._id,
+      name: updatedAdmin.name,
+      email: updatedAdmin.email,
+      phone: updatedAdmin.phone,
+      address: updatedAdmin.address,
+      profileImage: updatedAdmin.profileImage
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @desc   Upload Admin Local Profile Image
+ * @route  POST /api/admin/profile/image
+ * @access Private (Admin)
+ */
+exports.uploadAdminImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Store relative path for the local file
+    const url = `uploads/${req.file.filename}`;
+
+    const updatedAdmin = await User.findByIdAndUpdate(
+      req.user.id,
+      { profileImage: url },
+      { new: true }
+    ).select("-password");
+
+    res.json({ 
+      message: "Admin profile image updated", 
+      profileImage: updatedAdmin.profileImage 
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Image upload failed" });
+  }
+};

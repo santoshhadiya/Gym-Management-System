@@ -13,10 +13,10 @@ const {
 const { protect, authorize } = require("../middlewares/authMiddleware");
 
 // Member routes
+router.post("/verify",protect, verifyRazorpayPayment);
 router.post("/", protect, authorize("member"), createPayment);
 router.get("/my", protect, authorize("member"), getMyPayments);
-router.post("/razorpay-order", protect, authorize("member"), createRazorpayOrder);
-router.post("/verify", protect, authorize("member"), verifyRazorpayPayment);
+router.post("/razorpay-order", protect, authorize("member","admin"), createRazorpayOrder);
 
 // Admin routes
 router.post("/record", protect, authorize("admin"), recordPayment);

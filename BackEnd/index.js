@@ -29,6 +29,8 @@ const equipmentRoutes = require("./routes/equipmentRoutes");
 const mediaRoutes = require("./routes/mediaRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const publicRoutes = require("./routes/publicRoutes");
+const companyRoutes=require("./routes/companyRoutes");
+const scheduleRoutes=require("./routes/scheduleRoutes");
 
 dotenv.config();
 connectDB();
@@ -71,6 +73,8 @@ app.use("/api/equipment", equipmentRoutes);
 app.use("/api/media", mediaRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/public", publicRoutes);
+app.use("/api/company", companyRoutes)
+app.use("/api/schedule", scheduleRoutes)
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -89,39 +93,51 @@ app.use((err, req, res, next) => {
   });
 });
 
-// --- Cron Job: Check Expired Offers Daily ---
-setInterval(
-  async () => {
-    try {
-      const today = new Date();
-      const expiredOffers = await Offer.find({
-        isActive: true,
-        endDate: { $lt: today },
-      });
+// --- Cron Job: Check for Expiring AND Starting offers ---
+setInterval(async () => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-      if (expiredOffers.length > 0) {
-        console.log(
-          `Found ${expiredOffers.length} expired offers. Deactivating...`,
-        );
-
-        for (const offer of expiredOffers) {
-          offer.isActive = false;
-          await offer.save();
-
-          const plan = await Plan.findById(offer.plan);
-          if (plan) {
-            plan.price = plan.originalPrice; // Revert price
-            plan.offer = null;
-            await plan.save();
-          }
-        }
+    // 1. Handle EXPIRED offers (Existing logic)
+    const expiredOffers = await Offer.find({ isActive: true, endDate: { $lt: today } });
+    for (const offer of expiredOffers) {
+      offer.isActive = false;
+      await offer.save();
+      const plan = await Plan.findById(offer.plan);
+      if (plan) {
+        plan.price = plan.originalPrice;
+        plan.offer = null;
+        await plan.save();
       }
-    } catch (error) {
-      console.error("Error in offer expiration check:", error);
     }
-  },
-  24 * 60 * 60 * 1000,
-); // Run every 24 hours
+
+    // 2. Handle STARTING offers (New logic to fix your bug)
+    // Find active offers where the startDate is today and the plan price is still the originalPrice
+    const startingToday = await Offer.find({ 
+      isActive: true, 
+      startDate: { $lte: today }, 
+      endDate: { $gte: today } 
+    });
+
+    for (const offer of startingToday) {
+      const plan = await Plan.findById(offer.plan);
+      if (plan && plan.price === plan.originalPrice) {
+        let newPrice = plan.originalPrice;
+        if (offer.discountType === "percentage") {
+          newPrice = plan.originalPrice - (plan.originalPrice * offer.discountValue) / 100;
+        } else {
+          newPrice = plan.originalPrice - offer.discountValue;
+        }
+        plan.price = Math.max(newPrice, 0);
+        await plan.save();
+        console.log(`Applied scheduled offer for plan: ${plan.name}`);
+      }
+    }
+  } catch (error) {
+    console.error("Error in offer cron check:", error);
+  }
+}, 24 * 60 * 60 * 1000);// Run every 24 hours
 
 const PORT = process.env.PORT || 5000;
 

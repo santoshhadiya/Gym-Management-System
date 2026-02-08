@@ -19,7 +19,7 @@ const Nav_Trainer = ({ onMenuClick, trainerStatus }) => {
 
           <div>
             <h1 className="text-lg md:text-2xl font-black text-[#121212] flex items-center gap-2 md:gap-3 tracking-tight">
-              Hello, Coach! 
+              Hello, Coach!
               {trainerStatus === "Inactive" ? (
                 <span className="text-[10px] bg-red-500 text-white px-2 py-1 rounded-lg ml-2 animate-pulse uppercase tracking-widest">Account Inactive</span>
               ) : (
@@ -82,10 +82,10 @@ const Sidebar_Trainer = ({ isOpen, onClose, trainerStatus }) => {
 
   return (
     <>
-      <div className={`fixed inset-0 bg-[#121212]/40 backdrop-blur-sm z-[60] lg:hidden transition-opacity duration-500 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={onClose}></div>
+      <div className={`fixed inset-0 bg-[#121212]/40 backdrop-blur-sm z-[60] lg:hidden transition-opacity duration-500 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'} `} onClick={onClose}></div>
 
-      <aside className={`fixed lg:sticky top-0 left-0 lg:min-h-screen bg-white border-r border-gray-100 z-[70] flex flex-col transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-2xl lg:shadow-none ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${collapsed ? "lg:w-24 px-3" : "lg:w-72 px-6"} w-72`}>
-        
+      <aside className={`fixed lg:sticky top-0 left-0 lg:min-h-screen bg-white border-r border-gray-100 z-[70] flex flex-col transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-2xl lg:shadow-none ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${collapsed ? "lg:w-24 px-3" : "lg:w-72 px-6"} w-72 h-screen`}>
+
         <button onClick={() => setCollapsed(prev => !prev)} className="absolute -right-3.5 top-10 w-8 h-8 bg-[#121212] rounded-full hidden lg:flex items-center justify-center text-[#FEEF75] shadow-lg hover:scale-110 transition-transform z-[80] cursor-pointer">
           <i className={`fa-solid fa-chevron-left text-[10px] transition-transform duration-500 ${collapsed ? "rotate-180" : ""}`}></i>
         </button>
@@ -99,7 +99,7 @@ const Sidebar_Trainer = ({ isOpen, onClose, trainerStatus }) => {
           </div>
         </div>
 
-        <div className="flex-1 px-2 space-y-1.5 pt-4 overflow-y-auto">
+        <div className="flex-1 px-2 space-y-1.5 pt-4 overflow-y-auto no-scrollbar">
           {navItems.map((item, idx) => {
             const isActive = pathname === item.path;
             const isDisabled = isInactive && item.restricted;
@@ -130,26 +130,18 @@ const Sidebar_Trainer = ({ isOpen, onClose, trainerStatus }) => {
               </NavLink>
             );
           })}
+          <div className={`mt-auto p-4 border-t border-gray-50 flex flex-col ${collapsed ? "items-center" : ""}`}>
+            <button className={`flex items-center h-12 rounded-2xl transition-all duration-300 group overflow-hidden ${collapsed ? "w-12 justify-center" : "px-4 w-full hover:bg-red-50 text-gray-400 hover:text-red-500 font-black"}`} onClick={logOutTrainer}>
+              <div className="shrink-0 flex justify-center w-14 transition-colors"><i className="fa-solid fa-right-from-bracket text-lg"></i></div>
+              <span className={`text-[12px] font-black transition-all duration-500 uppercase tracking-widest whitespace-nowrap ${collapsed ? "opacity-0 -translate-x-4 pointer-events-none w-0" : "opacity-100 translate-x-0 w-auto delay-150"}`}>Logout</span>
+            </button>
+          </div>
         </div>
 
         {/* Hide Session Tracker if Inactive */}
-        {!isInactive && (
-          <div className={`mt-8 px-4 transition-all duration-500 ${collapsed ? "opacity-0 scale-90 pointer-events-none h-0" : "opacity-100 scale-100 h-auto"}`}>
-            <div className="bg-gradient-to-br from-[#FEEF75] to-[#D9F17F]/40 rounded-[2rem] p-5 border border-white shadow-xl shadow-yellow-50/50 relative overflow-hidden group/promo">
-              <h4 className="text-sm font-black text-[#121212] relative z-10 leading-tight">Session <br/>Tracker</h4>
-              <button className="mt-4 w-full py-3 bg-[#121212] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg flex items-center justify-center gap-2 group cursor-pointer relative z-10">
-                Log Entry
-              </button>
-            </div>
-          </div>
-        )}
 
-        <div className={`mt-auto p-4 border-t border-gray-50 flex flex-col ${collapsed ? "items-center" : ""}`}>
-          <button className={`flex items-center h-12 rounded-2xl transition-all duration-300 group overflow-hidden ${collapsed ? "w-12 justify-center" : "px-4 w-full hover:bg-red-50 text-gray-400 hover:text-red-500 font-black"}`} onClick={logOutTrainer}>
-            <div className="shrink-0 flex justify-center w-14 transition-colors"><i className="fa-solid fa-right-from-bracket text-lg"></i></div>
-            <span className={`text-[12px] font-black transition-all duration-500 uppercase tracking-widest whitespace-nowrap ${collapsed ? "opacity-0 -translate-x-4 pointer-events-none w-0" : "opacity-100 translate-x-0 w-auto delay-150"}`}>Logout</span>
-          </button>
-        </div>
+
+
       </aside>
     </>
   );
@@ -176,20 +168,20 @@ const TrainerLayout = () => {
         const response = await fetch(`${BACKEND_URL}/api/trainers/profile`, {
           headers: { Authorization: `Bearer ${userInfo.token}` }
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           setTrainerStatus(data.status || "Active");
-          
+
           // Immediate force-logout if the protect middleware fails or status is Inactive
           if (data.status === "Inactive") {
-             // We allow viewing the dashboard/profile, but block others via guard
+            // We allow viewing the dashboard/profile, but block others via guard
           }
         } else if (response.status === 401) {
-            // Token expired or deactivated at middleware level
-            setUser(null);
-            localStorage.removeItem("userInfo");
-            navigate("/login");
+          // Token expired or deactivated at middleware level
+          setUser(null);
+          localStorage.removeItem("userInfo");
+          navigate("/login");
         }
       } catch (err) {
         console.error("Status check failed", err);
@@ -203,15 +195,15 @@ const TrainerLayout = () => {
 
   // NAVIGATION GUARD: Redirect Inactive trainers trying to access restricted pages
   const restrictedPaths = ['/trainer/members', '/trainer/workout-diet', '/trainer/monitor-progress', '/trainer/feedbacks', '/trainer/chat/member', '/trainer/chat/owner'];
-  
+
   if (!loading && trainerStatus === "Inactive" && restrictedPaths.some(path => location.pathname.startsWith(path))) {
     return <Navigate to="/trainer" replace />;
   }
 
   return (
-    <div className="flex min-h-screen bg-[#fafafa] font-sans text-gray-800 overflow-x-hidden">
+    <div className="flex min-h-screen bg-[#fafafa] font-sans text-gray-800 overflow-x-hidden h-screen">
       <Sidebar_Trainer isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} trainerStatus={trainerStatus} />
-      <main className="flex-1 bg-[#fafafa] relative min-w-0 transition-all duration-500">
+      <main className="flex-1 bg-[#ffffff] relative min-w-0 transition-all duration-500">
         <div className="p-4 md:p-10 max-w-[1600px] mx-auto">
           <Nav_Trainer onMenuClick={() => setIsMobileMenuOpen(true)} trainerStatus={trainerStatus} />
           <div className="mt-8 animate-fade-in-up">

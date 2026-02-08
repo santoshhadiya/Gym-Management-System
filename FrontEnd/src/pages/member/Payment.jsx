@@ -10,7 +10,8 @@ const Payment = () => {
    const { api, user } = useGlobalContext();
    const { colors, theme } = useTheme();
 
-   const plan = location.state?.plan;
+   const planData = location.state?.plan;
+   const [plan, setPlan] = useState(planData)
 
    // --- STATE ---
    const [isProcessing, setIsProcessing] = useState(false);
@@ -65,18 +66,19 @@ const Payment = () => {
    }, [api, plan, navigate]);
 
    // --- RAZORPAY LOGIC ---
-   const initiateRazorpay = async () => {
+   // Updated to accept the latest plan data from the validation step
+   const initiateRazorpay = async (finalPlan) => {
       try {
          setIsProcessing(true);
-         const orderRes = await api.post("/payments/razorpay-order", { planId: plan._id });
+         const orderRes = await api.post("/payments/razorpay-order", { planId: finalPlan._id });
          const order = orderRes.data;
 
          const options = {
-            key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SC45T3ibqRcWn4", 
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SC45T3ibqRcWn4",
             amount: order.amount,
             currency: order.currency,
             name: "Songar's GYM",
-            description: `Membership: ${plan.name}`,
+            description: `Membership: ${finalPlan.name}`,
             order_id: order.id,
             handler: async function (response) {
                try {
@@ -84,12 +86,13 @@ const Payment = () => {
                      razorpay_order_id: response.razorpay_order_id,
                      razorpay_payment_id: response.razorpay_payment_id,
                      razorpay_signature: response.razorpay_signature,
-                     planId: plan._id
+                     planId: finalPlan._id
                   });
                   toast.success("Membership Activated!");
                   navigate("/member/profile");
                } catch (err) {
                   toast.error(err.response?.data?.message || "Verification failed.");
+                  setIsProcessing(false);
                }
             },
             prefill: { name: user?.name || "", email: user?.email || "" },
@@ -105,10 +108,11 @@ const Payment = () => {
       }
    };
 
-   const handlePaymentClick = (e) => {
+   // --- UPDATED HANDLE PAYMENT CLICK WITH VALIDATION ---
+   const handlePaymentClick = async (e) => {
       e.preventDefault();
-      
-      // BLOCKING RESTRICTION: No purchase allowed if plan is active
+
+      // 1. BLOCKING RESTRICTION: No purchase allowed if plan is active
       if (remainingDays > 0) {
          toast.error(`You have an active plan (${remainingDays} days left). Purchase is restricted until expiry.`, {
             duration: 6000,
@@ -116,8 +120,67 @@ const Payment = () => {
          });
          return;
       }
-      
-      initiateRazorpay();
+
+      try {
+         setIsProcessing(true);
+
+         // 2. FETCH LATEST PLAN DATA FROM DATABASE
+         // Fetching all active plans to find the current selection's latest state
+         const res = await api.get("/plans");
+         const latestPlan = res.data.find(p => p._id === plan._id);
+
+         if (!latestPlan) {
+            toast.error("This plan is no longer available.");
+            setIsProcessing(false);
+            return;
+         }
+
+         // 3. VALIDATE PLAN STATUS
+         // If the plan is marked 'Inactive' in the database, block the purchase
+         if (latestPlan.status === "Inactive") {
+            toast.error("This plan is currently inactive. Please choose another plan.", {
+               icon: '🚫'
+            });
+            setIsProcessing(false);
+            return;
+         }
+
+         // 4. VALIDATE PRICE CHANGES
+         // If the price has changed since the user selected the plan, ask for confirmation
+         if (Number(latestPlan.price) !== Number(plan.price)) {
+            const direction =
+               Number(latestPlan.price) > Number(plan.price)
+                  ? "increased"
+                  : "decreased";
+
+            const confirmNewPrice = window.confirm(
+               `The price of this plan has ${direction} from ₹${plan.price} to ₹${latestPlan.price}. Do you want to continue with the new price?`
+            );
+
+            if (!confirmNewPrice) {
+               setIsProcessing(false);
+               setPlan((prev) => ({
+                  ...prev,
+                  price: latestPlan.price,
+               }));
+               return;
+            } else {
+               setPlan((prev) => ({
+                  ...prev,
+                  price: latestPlan.price,
+               }));
+            }
+         }
+
+
+         // 5. PROCEED TO PAYMENT WITH LATEST DATA
+         await initiateRazorpay(latestPlan);
+
+      } catch (error) {
+         console.error("Validation error:", error);
+         toast.error("Failed to verify plan details. Please try again.");
+         setIsProcessing(false);
+      }
    };
 
    const getStatusColor = (status) => status === "Success" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700";
@@ -152,7 +215,7 @@ const Payment = () => {
                   <h3 className="font-black text-lg mb-6 flex items-center gap-3" style={{ color: colors.text }}>
                      <i className="fa-solid fa-shield-check text-green-500"></i> Razorpay Secure
                   </h3>
-                  
+
                   <button
                      onClick={handlePaymentClick}
                      disabled={isProcessing}

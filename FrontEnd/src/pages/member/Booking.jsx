@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import toast from 'react-hot-toast'; // Updated Toast
+import toast from 'react-hot-toast';
 import { useGlobalContext } from "../../context/GlobalContext";
-import { useTheme } from "../../context/ThemeContext"; // Import Context
+import { useTheme } from "../../context/ThemeContext";
 
 const Booking = () => {
    const { api, BACKEND_URL, loadingIMG } = useGlobalContext();
-   const { colors, theme } = useTheme(); // Consume Theme
+   const { colors, theme } = useTheme();
    const activeApi = api;
 
    // --- STATE ---
@@ -42,6 +42,32 @@ const Booking = () => {
          fetchSessions();
       }
    }, [viewState]);
+
+   // --- HELPER FUNCTIONS ---
+   const getTrainerDisplay = (session) => {
+      const trainers = [];
+      
+      // Primary trainer
+      if (session.trainer?.name) {
+         trainers.push({ name: session.trainer.name, isPrimary: true, type: 'internal' });
+      }
+      
+      // Additional internal trainers
+      if (session.additionalTrainers && session.additionalTrainers.length > 0) {
+         session.additionalTrainers.forEach(t => {
+            if (t.name) trainers.push({ name: t.name, isPrimary: false, type: 'internal' });
+         });
+      }
+      
+      // External trainers
+      if (session.externalTrainers && session.externalTrainers.length > 0) {
+         session.externalTrainers.forEach(name => {
+            trainers.push({ name: name, isPrimary: false, type: 'external' });
+         });
+      }
+      
+      return trainers;
+   };
 
    // --- ACTIONS ---
    const handleBookSession = async (session) => {
@@ -112,7 +138,7 @@ const Booking = () => {
          {isLoading ? (
 
             <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
-               <img src={loadingIMG} className='h-20 w-25'/>
+               <img src={loadingIMG} className='h-20 w-25' alt="Loading"/>
             </div>
          ) : (
             <div className="space-y-4">
@@ -130,6 +156,7 @@ const Booking = () => {
                            const bookedCount = session.bookedCount || 0;
                            const isFull = bookedCount >= capacity;
                            const cancelReason = existingBooking?.cancelReason;
+                           const trainers = getTrainerDisplay(session);
 
                            return (
                               <div key={session._id}
@@ -145,31 +172,80 @@ const Booking = () => {
                                        <h3 className="text-xl font-bold" style={{ color: colors.text }}>{session.type}</h3>
                                        <div className="flex flex-wrap gap-2">
                                           <span className="px-3 py-1 rounded-full text-xs font-bold border w-fit"
-                                             style={{ backgroundColor: theme === 'dark' ? '#1e3a8a' : '#eff6ff', color: theme === 'dark' ? '#bfdbfe' : '#2563eb', borderColor: theme === 'dark' ? '#1e40af' : '#dbeafe' }}>
+                                             style={{ 
+                                                backgroundColor: colors.accent, 
+                                                color: theme === 'dark' ? '#fff' : '#854d0e', 
+                                                borderColor: colors.accent 
+                                             }}
+                                          >
                                              {session.duration}
                                           </span>
-
-                                          {isCancelled && (
-                                             <div className="flex items-center gap-2 px-3 py-1 rounded-full border"
-                                                style={{ backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', borderColor: theme === 'dark' ? '#991b1b' : '#fee2e2' }}>
-                                                <span className="text-xs font-bold text-red-600 dark:text-red-400">You Cancelled</span>
-                                                {cancelReason && (
-                                                   <span className="text-xs pl-2 border-l border-red-200 dark:border-red-800 text-red-500 dark:text-red-300">
-                                                      {cancelReason}
-                                                   </span>
-                                                )}
+                                          <span className="px-3 py-1 rounded-full text-xs font-bold border w-fit"
+                                             style={{ backgroundColor: colors.background, color: colors.textMuted, borderColor: colors.border }}
+                                          >
+                                             {bookedCount}/{capacity} Booked
+                                          </span>
+                                          {isActive && (
+                                             <div className="flex items-center gap-1">
+                                                <span className={`w-2 h-2 rounded-full animate-pulse`} style={{ backgroundColor: colors.primary }}></span>
+                                                <span className="text-xs font-bold" style={{ color: colors.primary }}>
+                                                   You're Booked
+                                                </span>
                                              </div>
                                           )}
                                        </div>
                                     </div>
-                                    <p className="text-sm mb-1" style={{ color: colors.textMuted }}>
-                                       <i className="fa-solid fa-user-ninja mr-2 w-4"></i>
-                                       Trainer: <span className="font-medium" style={{ color: colors.text }}>{session.trainer?.name}</span>
-                                    </p>
+
+                                    {/* TRAINERS DISPLAY - ENHANCED */}
+                                    {trainers.length > 0 && (
+                                       <div className="mb-2">
+                                          <div className="flex flex-wrap items-center gap-2">
+                                             <span className="text-sm font-medium" style={{ color: colors.textMuted }}>
+                                                <i className="fa-solid fa-user-ninja mr-1"></i>
+                                                Trainer{trainers.length > 1 ? 's' : ''}:
+                                             </span>
+                                             {trainers.map((trainer, idx) => (
+                                                <span 
+                                                   key={idx}
+                                                   className="px-2 py-1 rounded-full text-xs font-bold border inline-flex items-center gap-1"
+                                                   style={{
+                                                      backgroundColor: trainer.isPrimary 
+                                                         ? colors.secondary 
+                                                         : trainer.type === 'external' 
+                                                            ? colors.accent 
+                                                            : colors.background,
+                                                      color: trainer.isPrimary 
+                                                         ? (theme === 'dark' ? '#fff' : '#1e3a8a')
+                                                         : trainer.type === 'external'
+                                                            ? (theme === 'dark' ? '#fff' : '#854d0e')
+                                                            : colors.text,
+                                                      borderColor: trainer.isPrimary 
+                                                         ? colors.secondary 
+                                                         : trainer.type === 'external'
+                                                            ? colors.accent
+                                                            : colors.border
+                                                   }}
+                                                >
+                                                   {trainer.isPrimary && <i className="fa-solid fa-star text-xs"></i>}
+                                                   {trainer.type === 'external' && <i className="fa-solid fa-user-tie text-xs"></i>}
+                                                   {trainer.name}
+                                                </span>
+                                             ))}
+                                          </div>
+                                       </div>
+                                    )}
+
                                     <p className="text-sm" style={{ color: colors.textMuted }}>
                                        <i className="fa-regular fa-clock mr-2 w-4"></i>
                                        {session.date} • {session.time}
                                     </p>
+                                    
+                                    {session.notes && (
+                                       <p className="text-xs mt-2 p-2 rounded-lg" style={{ color: colors.textMuted, backgroundColor: colors.background }}>
+                                          <i className="fa-solid fa-info-circle mr-1"></i>
+                                          {session.notes}
+                                       </p>
+                                    )}
                                  </div>
 
                                  <button
@@ -215,6 +291,7 @@ const Booking = () => {
                         const isSessionCompleted = b.session?.status === 'Completed';
                         const isSessionCancelled = b.session?.status === 'Cancelled';
                         const isUserCancelled = b.bookingStatus === 'Cancelled';
+                        const trainers = b.session ? getTrainerDisplay(b.session) : [];
 
                         return (
                            <div key={b._id}
@@ -223,9 +300,41 @@ const Booking = () => {
                            >
                               <div className="flex-1 w-full">
                                  <h3 className="text-lg font-bold mb-1" style={{ color: colors.text }}>{b.session?.type || "Session"}</h3>
-                                 <p className="text-sm" style={{ color: colors.textMuted }}>
+                                 <p className="text-sm mb-2" style={{ color: colors.textMuted }}>
                                     {b.session?.date} • {b.session?.time}
                                  </p>
+
+                                 {/* TRAINERS DISPLAY */}
+                                 {trainers.length > 0 && (
+                                    <div className="mb-2 flex flex-wrap items-center gap-1">
+                                       <span className="text-xs" style={{ color: colors.textMuted }}>
+                                          <i className="fa-solid fa-user-ninja mr-1"></i>
+                                       </span>
+                                       {trainers.map((trainer, idx) => (
+                                          <span 
+                                             key={idx}
+                                             className="px-2 py-0.5 rounded-full text-xs border"
+                                             style={{
+                                                backgroundColor: trainer.isPrimary 
+                                                   ? colors.secondary 
+                                                   : trainer.type === 'external'
+                                                      ? colors.accent
+                                                      : colors.background,
+                                                color: trainer.isPrimary 
+                                                   ? (theme === 'dark' ? '#fff' : '#1e3a8a')
+                                                   : trainer.type === 'external'
+                                                      ? (theme === 'dark' ? '#fff' : '#854d0e')
+                                                      : colors.text,
+                                                borderColor: colors.border
+                                             }}
+                                          >
+                                             {trainer.isPrimary && <i className="fa-solid fa-star text-xs mr-1"></i>}
+                                             {trainer.type === 'external' && <i className="fa-solid fa-user-tie text-xs mr-1"></i>}
+                                             {trainer.name}
+                                          </span>
+                                       ))}
+                                    </div>
+                                 )}
 
                                  {isUserCancelled && (
                                     <div className="mt-2 flex items-start gap-2">

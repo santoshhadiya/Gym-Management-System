@@ -124,10 +124,10 @@ const Dashboard = () => {
          <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
             <div className="space-y-1">
                <div className="flex items-center gap-3">
-                  <h1 className="text-4xl font-black tracking-tight" style={{ color: colors.text }}>Command Center</h1>
+                  
                   <span className="px-3 py-1 rounded-full text-[10px] font-black bg-[#D9F17F] text-green-900 uppercase">Coach Mode</span>
                </div>
-               <p className="text-gray-500 font-medium" style={{ color: colors.textMuted }}>Manage your roster and track live gym performance.</p>
+               <p className="text-gray-500 font-medium" style={{ color: colors.textMuted }}>Manage members and track live gym performance.</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">

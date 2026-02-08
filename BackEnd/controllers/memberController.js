@@ -176,13 +176,13 @@ exports.getAllMembersAll = async (req, res) => {
   }
 };
 
+
 // @desc   Get all members with Payment Data (Admin)
 // @route  GET /api/members/all/manage
 // @access Admin
 exports.getAllMembersAllForManageMember = async (req, res) => {
   try {
     const members = await Member.find()
-      // [UPDATED] Populate profileImage here
       .populate("user", "name email phone status createdAt profileImage")
       .populate("assignedTrainer", "name email")
       .populate("plan", "name price");
@@ -210,6 +210,9 @@ exports.getAllMembersAllForManageMember = async (req, res) => {
           plan: m.plan ? { _id: m.plan._id, name: m.plan.name, price: m.plan.price } : null,
           trainer: m.assignedTrainer ? { _id: m.assignedTrainer._id, name: m.assignedTrainer.name } : null,
           joinDate: m.user.createdAt,
+          // --- ADDED EXPIRY DATE HERE ---
+          expiryDate: m.expiryDate || null, 
+          // ------------------------------
           age: m.age || "",
           gender: m.gender || "Male",
           height: m.height || "",
@@ -233,7 +236,6 @@ exports.getAllMembersAllForManageMember = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 // @desc   Admin create member
 // @route  POST /api/members
 // @access Admin

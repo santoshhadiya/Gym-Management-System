@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const isHosted=false;
+const isHosted=true;
 // Create an Axios instance
 const api = axios.create({
   baseURL: !isHosted ? "http://localhost:5000/api":"https://gym-management-system-backend-vive.onrender.com/api",

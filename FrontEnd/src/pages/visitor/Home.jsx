@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useGlobalContext } from "../../context/GlobalContext";
 import PublicFeature from '../../components/visitor/PublicFeature';
 import Footer from '../../components/visitor/Footer';
+import GymChatbot from './GymChatbot';
 
 const Home = () => {
 
@@ -254,7 +255,7 @@ const Home = () => {
           </div>
         </div>
       </section>
-
+      
     </div>
   );
 };

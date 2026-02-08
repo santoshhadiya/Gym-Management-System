@@ -25,6 +25,7 @@ exports.uploadMedia = async (req, res) => {
 
     const { caption, category, visibility, type } = req.body;
     
+    
     // Store relative path "uploads/filename.ext"
     const url = `uploads/${req.file.filename}`;
 
@@ -38,6 +39,7 @@ exports.uploadMedia = async (req, res) => {
 
     res.status(201).json(media);
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: error.message });
   }
 };

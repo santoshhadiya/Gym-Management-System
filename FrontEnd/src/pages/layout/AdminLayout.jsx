@@ -32,7 +32,7 @@ const AdminLayout = () => {
 
   return (
     <div 
-      className="flex min-h-screen font-sans transition-colors duration-300"
+      className="flex min-h-screen font-sans transition-colors duration-300 h-screen"
       style={backgroundStyle}
     >
       {/* Sidebar */}
@@ -42,7 +42,7 @@ const AdminLayout = () => {
       <main className="flex-1 overflow-y-auto bg-transparent">
         <div className="p-6">
             <Nav_Admin />
-            <div className="mt-6 animate-fade-in">
+            <div className="mt-6 animate-fade-in h-screen">
                 <Outlet />
             </div>
         </div>

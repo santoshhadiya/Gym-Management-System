@@ -34,6 +34,8 @@ exports.createRazorpayOrder = async (req, res) => {
 // @desc   Step 2: Verify Signature & Activate Membership
 // @route  POST /api/payments/verify
 // Updated verifyRazorpayPayment in paymentController.js
+// paymentController.js
+
 exports.verifyRazorpayPayment = async (req, res) => {
   try {
     const {
@@ -41,6 +43,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
       razorpay_payment_id,
       razorpay_signature,
       planId,
+      memberId, // Added: Receive explicit memberId for Admin actions
     } = req.body;
 
     // 1. Verify Signature
@@ -54,8 +57,16 @@ exports.verifyRazorpayPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment signature" });
     }
 
-    // 2. Retrieve Member and Plan Details
-    const member = await Member.findOne({ user: req.user.id });
+    // 2. Retrieve Member Details
+    let member;
+    if (memberId) {
+      // If memberId is provided (Admin Dashboard flow), use it directly
+      member = await Member.findById(memberId);
+    } else if (req.user && req.user.id) {
+      // If no memberId, fall back to the logged-in user (Member Dashboard flow)
+      member = await Member.findOne({ user: req.user.id });
+    }
+
     const plan = await Plan.findById(planId);
 
     if (!member || !plan) {
@@ -67,13 +78,11 @@ exports.verifyRazorpayPayment = async (req, res) => {
     let startDate = today;
     let isQueued = false;
 
-    // If current plan is still active, set start date to the existing expiry date
     if (member.expiryDate && new Date(member.expiryDate) > today) {
       startDate = new Date(member.expiryDate);
       isQueued = true;
     }
 
-    // Calculate new expiry based on the determined startDate and plan duration
     const expiryDate = new Date(
       startDate.getTime() + plan.duration * 24 * 60 * 60 * 1000
     );
@@ -96,7 +105,6 @@ exports.verifyRazorpayPayment = async (req, res) => {
     member.expiryDate = expiryDate;
     await member.save();
 
-    // 6. Send Response
     return res.status(201).json({
       message: isQueued 
         ? "Payment verified and plan queued successfully" 

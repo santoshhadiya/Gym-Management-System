@@ -1,19 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import logo from "../../assets/logo.png";
+import { useGlobalContext } from '../../context/GlobalContext'; //
 
 const GymSchedule = () => {
-  // Your specific operating hours
-  const openingHours = [
-    { day: "Monday", hours: "6 am – 10 pm" },
-    { day: "Tuesday", hours: "6 am – 10 pm" },
-    { day: "Wednesday", hours: "6 am – 10 pm" },
-    { day: "Thursday", hours: "6 am – 10 pm" },
-    { day: "Friday", hours: "6 am – 10 pm" },
-    { day: "Saturday", hours: "6 am – 10 pm" },
-    { day: "Sunday", hours: "Closed" }
-  ];
+  const { api } = useGlobalContext(); //
+  const [openingHours, setOpeningHours] = useState([]); // State for dynamic hours
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real data from backend on component mount
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        const { data } = await api.get('/schedule'); //
+        // Sort days to ensure they appear in order (Mon-Sun)
+        const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        const sortedData = data.sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day));
+        setOpeningHours(sortedData);
+      } catch (error) {
+        console.error("Failed to load schedule:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSchedules();
+  }, [api]);
 
   const currentDay = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-12 h-12 border-4 border-[#D9F17F] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white pt-24 pb-20">
@@ -40,38 +60,42 @@ const GymSchedule = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#D9F17F]/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
             
             <div className="relative z-10 space-y-6">
-              {openingHours.map((item) => (
-                <div 
-                  key={item.day} 
-                  className={`flex items-center justify-between pb-4 border-b ${
-                    item.day === currentDay ? 'border-[#D9F17F]' : 'border-white/10'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    {item.day === currentDay && (
-                      <div className="w-2 h-2 rounded-full bg-[#D9F17F] animate-pulse"></div>
-                    )}
-                    <span className={`text-lg font-bold ${
-                      item.day === currentDay ? 'text-[#D9F17F]' : 'text-white'
+              {openingHours.length > 0 ? (
+                openingHours.map((item) => (
+                  <div 
+                    key={item.day} 
+                    className={`flex items-center justify-between pb-4 border-b ${
+                      item.day === currentDay ? 'border-[#D9F17F]' : 'border-white/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      {item.day === currentDay && (
+                        <div className="w-2 h-2 rounded-full bg-[#D9F17F] animate-pulse"></div>
+                      )}
+                      <span className={`text-lg font-bold ${
+                        item.day === currentDay ? 'text-[#D9F17F]' : 'text-white'
+                      }`}>
+                        {item.day}
+                      </span>
+                    </div>
+                    
+                    <span className={`text-lg font-medium ${
+                      item.day === currentDay ? 'text-white' : 'text-gray-400'
                     }`}>
-                      {item.day}
+                      {item.isClosed ? "Closed" : item.hours} {/* */}
                     </span>
                   </div>
-                  
-                  <span className={`text-lg font-medium ${
-                    item.day === currentDay ? 'text-white' : 'text-gray-400'
-                  }`}>
-                    {item.hours}
-                  </span>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-white text-center opacity-50 italic">Schedule currently unavailable.</p>
+              )}
             </div>
 
             {/* Sunday Recovery Note */}
             <div className="mt-10 p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
               <p className="text-[#FEEF75] text-sm font-bold flex items-center justify-center gap-2">
                 <i className="fa-solid fa-mug-hot"></i>
-                Sundays are for recovery and maintenance.
+                Check our official hours for recovery and maintenance windows.
               </p>
             </div>
           </div>

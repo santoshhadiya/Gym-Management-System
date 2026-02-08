@@ -245,7 +245,7 @@ const PaymentReceiptPDF = ({ txn }) => (
 );
 
 const PaymentHistory = () => {
-   const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
+   const { api, BACKEND_URL, loadingIMG } = useGlobalContext();
    const { colors, theme } = useTheme();
 
    // --- STATE ---
@@ -315,8 +315,7 @@ const PaymentHistory = () => {
 
    // --- FILTERING ---
    const filteredPayments = payments.filter(p => {
-      const matchesSearch = p.member.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         p.id.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = p.member.toLowerCase().includes(searchTerm.toLowerCase()) || p.id.toLowerCase().includes(searchTerm.toLowerCase()) || p._id.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = filterStatus === "All" || p.status === filterStatus;
       const matchesMethod = filterMethod === "All" || p.method === filterMethod;
       const matchesDate = filterDate === "" || p.date === filterDate;
@@ -472,7 +471,7 @@ const PaymentHistory = () => {
                         <td className="px-6 py-4 font-mono text-xs" style={{ color: colors.textMuted }}>{p.id}</td>
                         <td className="px-6 py-4">
                            <div className="font-bold" style={{ color: colors.text }}>{p.member}</div>
-                           <div className="text-[10px]" style={{ color: colors.textMuted }}>{p.memberId ? `#${p.memberId.slice(-4)}` : ""}</div>
+                           <div className="text-[10px]" style={{ color: colors.textMuted }}>id: {p.memberId ? `${p.memberId}` : ""}</div>
                         </td>
                         <td className="px-6 py-4" style={{ color: colors.text }}>{p.plan}</td>
                         <td className="px-6 py-4 text-right font-bold" style={{ color: colors.text }}>₹{p.amount.toLocaleString()}</td>

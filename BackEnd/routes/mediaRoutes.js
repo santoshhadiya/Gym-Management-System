@@ -12,13 +12,12 @@ const { protect, authorize } = require("../middlewares/authMiddleware"); // Assu
 
 // Public read, Admin write
 router.get("/", getAllMedia);
-router.post(
-  "/",
+router.post("/",
   protect,
   authorize("admin"),
   upload.single("file"),
   uploadMedia,
-); // 'file' matches frontend form data key
+); 
 router.put("/:id", protect, authorize("admin"), updateMedia);
 router.delete("/:id", protect, authorize("admin"), deleteMedia);
 

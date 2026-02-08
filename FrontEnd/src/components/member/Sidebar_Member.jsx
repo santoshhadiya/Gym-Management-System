@@ -7,7 +7,7 @@ import { useTheme } from '../../context/ThemeContext';
 const Sidebar_Member = ({ isOpen, onClose }) => {
   const [collapsed, setCollapsed] = useState(false);
   const { setUser, api } = useGlobalContext();
-  const { theme, toggleTheme, colors } = useTheme(); 
+  const { theme, toggleTheme, colors } = useTheme();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -21,7 +21,7 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
         const res = await api.get("/members/profile");
         const expiryDate = res.data.expiryDate ? new Date(res.data.expiryDate) : null;
         const today = new Date();
-        
+
         // Member is active only if they have a plan and it hasn't expired
         if (!res.data.plan || (expiryDate && expiryDate < today)) {
           setHasActivePlan(false);
@@ -58,6 +58,7 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
     { name: "Invoices", path: "/member/invoices", icon: "fa-solid fa-file-invoice-dollar", public: true },
     { name: "Gallery", path: "/member/gallery", icon: "fa-regular fa-images", public: true },
     { name: "Attendance History", path: "/member/attendance-history", icon: "fa-solid fa-clipboard-list", public: false },
+    { name: "Scan Session", path: "/member/scan-session", icon: "fa-solid fa-clipboard-list", public: false },
     { name: "Scan Attendance", path: "/member/scan-attendance", icon: "fa-solid fa-qrcode", public: false },
   ];
 
@@ -66,9 +67,10 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
 
   return (
     <>
-      <div className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={onClose}></div>
-      <aside style={{ backgroundColor: colors.sidebar, borderColor: colors.border }} className={`fixed lg:sticky top-0 left-0 border-r z-50 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-xl lg:shadow-none max-lg:h-screen max-lg:overflow-y-auto lg:min-h-screen ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${collapsed ? "lg:w-22 px-2" : "lg:w-64 px-2"}`}>
-        
+      <div className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+       onClick={onClose}></div>
+      <aside style={{ backgroundColor: colors.sidebar, borderColor: colors.border}} className={`fixed lg:sticky top-0 left-0 border-r z-50 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-xl lg:shadow-none max-lg:h-screen max-lg:overflow-y-auto lg:min-h-screen ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${collapsed ? "lg:w-22 px-2" : "lg:w-64 px-2"} h-screen `}>
+
         {/* Toggle Button */}
         <button onClick={() => setCollapsed(prev => !prev)} className="absolute -right-3.5 top-3 w-8 h-8 rounded-full hidden lg:flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50 cursor-pointer" style={{ backgroundColor: colors.secondary, color: theme === 'dark' ? '#fff' : '#000' }}>
           <i className={`fa-solid fa-chevron-left text-[10px] transition-transform duration-500 ${collapsed ? "rotate-180" : ""}`}></i>
@@ -85,7 +87,7 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
         </div>
 
         {/* --- NAVIGATION --- */}
-        <div className="flex-1 px-2 space-y-1.5 pb-4 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 px-2 space-y-1.5 pb-4 overflow-y-auto no-scrollbar">
           {menuItems.map((item, idx) => {
             const isActive = pathname === item.path;
             return (
@@ -104,18 +106,16 @@ const Sidebar_Member = ({ isOpen, onClose }) => {
               <button onClick={() => navigate('/member/plans')} className="mt-3 text-[10px] font-bold text-orange-900 underline hover:no-underline">Go to Plans →</button>
             </div>
           )}
-        </div>
-
-        {/* Footer Actions */}
-        <div className="p-4 flex flex-col gap-2" style={{ borderTop: `1px solid ${colors.border}` }}>
-          <button onClick={toggleTheme} className={`flex items-center h-12 rounded-2xl transition-all duration-300 group overflow-hidden cursor-pointer hover:opacity-80 ${collapsed ? "w-12 justify-center" : "px-4 w-full font-bold text-xs uppercase tracking-widest"}`} style={{ backgroundColor: theme === 'light' ? '#f3f4f6' : '#1f2937', color: colors.text }}>
-            <div className="shrink-0 flex justify-center w-14 transition-colors"><i className={`fa-solid ${theme === 'light' ? 'fa-moon' : 'fa-sun'} text-lg`}></i></div>
-            <span className={`transition-all duration-500 whitespace-nowrap ${collapsed ? "opacity-0 -translate-x-4 pointer-events-none w-0" : "opacity-100 translate-x-0 w-auto delay-150"}`}>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
-          </button>
-          <button className={`flex items-center h-12 rounded-2xl transition-all duration-300 group overflow-hidden hover:bg-red-50 text-red-500 ${collapsed ? "w-12 justify-center" : "px-4 w-full font-bold text-xs uppercase tracking-widest"}`} onClick={signOutMember}>
-            <div className="shrink-0 flex justify-center w-14 transition-colors"><i className="fa-solid fa-right-from-bracket text-lg"></i></div>
-            <span className={`transition-all duration-500 whitespace-nowrap ${collapsed ? "opacity-0 -translate-x-4 pointer-events-none w-0" : "opacity-100 translate-x-0 w-auto delay-150"}`}>Sign Out</span>
-          </button>
+          <div className="p-4 flex flex-col gap-2" style={{ borderTop: `1px solid ${colors.border}` }}>
+            <button onClick={toggleTheme} className={`flex items-center h-12 rounded-2xl transition-all duration-300 group overflow-hidden cursor-pointer hover:opacity-80 ${collapsed ? "w-12 justify-center" : "px-4 w-full font-bold text-xs uppercase tracking-widest"}`} style={{ backgroundColor: theme === 'light' ? '#f3f4f6' : '#1f2937', color: colors.text }}>
+              <div className="shrink-0 flex justify-center w-14 transition-colors"><i className={`fa-solid ${theme === 'light' ? 'fa-moon' : 'fa-sun'} text-lg`}></i></div>
+              <span className={`transition-all duration-500 whitespace-nowrap ${collapsed ? "opacity-0 -translate-x-4 pointer-events-none w-0" : "opacity-100 translate-x-0 w-auto delay-150"}`}>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+            </button>
+            <button className={`flex items-center h-12 rounded-2xl transition-all duration-300 group overflow-hidden hover:bg-red-50 text-red-500 ${collapsed ? "w-12 justify-center" : "px-4 w-full font-bold text-xs uppercase tracking-widest"}`} onClick={signOutMember}>
+              <div className="shrink-0 flex justify-center w-14 transition-colors"><i className="fa-solid fa-right-from-bracket text-lg"></i></div>
+              <span className={`transition-all duration-500 whitespace-nowrap ${collapsed ? "opacity-0 -translate-x-4 pointer-events-none w-0" : "opacity-100 translate-x-0 w-auto delay-150"}`}>Sign Out</span>
+            </button>
+          </div>
         </div>
       </aside>
     </>

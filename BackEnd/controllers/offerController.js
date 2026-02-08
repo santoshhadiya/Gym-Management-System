@@ -14,84 +14,59 @@ exports.getOffers = async (req, res) => {
 // Create or Re-Activate Offer
 exports.createOffer = async (req, res) => {
   try {
-    const {
-      planId,
-      discountType,
-      discountValue,
-      startDate,
-      endDate,
-    } = req.body;
-
-    // Find plan
+    const { planId, discountType, discountValue, startDate, endDate } = req.body;
     const plan = await Plan.findById(planId);
+    if (!plan) return res.status(404).json({ message: "Plan not found" });
 
-    if (!plan) {
-      return res.status(404).json({ message: "Plan not found" });
-    }
-
-    // Find any existing offer (active or inactive)
+    // 1. Find or create the offer
     let offer = await Offer.findOne({ plan: planId });
-
-    // If already active → block
     if (offer && offer.isActive) {
-      return res.status(400).json({
-        message: "This plan already has an active offer",
-      });
+      return res.status(400).json({ message: "This plan already has an active offer" });
     }
 
-    // Calculate new price
-    let newPrice = plan.originalPrice;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const today = new Date();
+    
 
-    if (discountType === "percentage") {
-      newPrice =
-        plan.originalPrice -
-        (plan.originalPrice * discountValue) / 100;
-    } else if (discountType === "flat") {
-      newPrice = plan.originalPrice - discountValue;
-    }
-
-    newPrice = Math.max(newPrice, 0);
-
-    // If offer exists (but inactive) → reuse
+    // 2. Save/Update Offer details
     if (offer) {
       offer.discountType = discountType;
       offer.discountValue = discountValue;
       offer.startDate = startDate;
       offer.endDate = endDate;
       offer.isActive = true;
-
       await offer.save();
-    } 
-    // Else create new
-    else {
+    } else {
       offer = await Offer.create({
-        plan: planId,
-        discountType,
-        discountValue,
-        startDate,
-        endDate,
-        isActive: true,
+        plan: planId, discountType, discountValue,
+        startDate, endDate, isActive: true,
       });
     }
 
-    // Update plan
-    plan.price = newPrice;
-    plan.offer = offer._id;
+    // 3. ONLY update plan price IF the offer starts TODAY or in the PAST
+    if (start <= today) {
+      let newPrice = plan.originalPrice;
+      if (discountType === "percentage") {
+        newPrice = plan.originalPrice - (plan.originalPrice * discountValue) / 100;
+      } else if (discountType === "flat") {
+        newPrice = plan.originalPrice - discountValue;
+      }
+      plan.price = Math.max(newPrice, 0);
+      plan.offer = offer._id;
+      await plan.save();
+    } else {
+      // If it's a future offer, keep original price and link the offer
+      plan.price = plan.originalPrice; 
+      plan.offer = offer._id;
+      await plan.save();
+    }
 
-    await plan.save();
-
-    res.status(201).json({
-      message: "Offer applied successfully",
-      offer,
-      plan,
-    });
-
+    res.status(201).json({ message: "Offer scheduled/applied successfully", offer, plan });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // Deactivate offer
 exports.deactivateOffer = async (req, res) => {

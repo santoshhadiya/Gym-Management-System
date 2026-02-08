@@ -63,7 +63,7 @@ const GymInvoicePDF = ({ inv }) => (
             <View style={pdfStyles.infoBox}>
                <Text style={pdfStyles.label}>Member Details</Text>
                <Text style={pdfStyles.value}>{inv.member.name}</Text>
-               <Text style={pdfStyles.address}>Member ID: {inv._id?.slice(-6).toUpperCase()}</Text>
+               <Text style={pdfStyles.address}>Member ID: {inv._id}</Text>
             </View>
             <View style={[pdfStyles.infoBox, { textAlign: 'right' }]}>
                <Text style={pdfStyles.label}>Payment Method</Text>

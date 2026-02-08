@@ -6,6 +6,7 @@ import Nav_Member from '../../components/member/Nav_Member';
 import { useTheme } from '../../context/ThemeContext';
 import Sidebar_Member from '../../components/member/Sidebar_Member';
 
+
 const MemberLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [memberStatus, setMemberStatus] = useState({ loading: true, hasPlan: false });
@@ -66,7 +67,7 @@ const MemberLayout = () => {
   }
 
   return (
-    <div className="flex min-h-screen font-sans overflow-x-hidden transition-colors duration-300" style={{ backgroundColor: colors.background, color: colors.text }}>
+    <div className="flex h-screen font-sans overflow-x-hidden transition-colors duration-300" style={{ backgroundColor: colors.background, color: colors.text }}>
       <Sidebar_Member isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       <main className="flex-1 relative min-w-0 transition-colors duration-300" style={{ backgroundColor: colors.background }}>
         <div className="p-6 md:p-8 max-w-[1600px] mx-auto">

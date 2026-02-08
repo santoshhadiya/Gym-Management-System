@@ -16,6 +16,7 @@ import { Line, Bar, Doughnut } from "react-chartjs-2";
 import { toast } from 'react-hot-toast'; // Switched to react-hot-toast
 import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext"; // Import useTheme
+import PaymentHistory from "./PaymentHistory";
 
 // Register ChartJS components
 ChartJS.register(
@@ -33,6 +34,7 @@ ChartJS.register(
 
 const FinancialReports = () => {
   const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
+  const [hh,setH]=useState()
   const { colors, theme } = useTheme(); // Access custom colors and current theme
 
   // --- STATE ---
@@ -127,27 +129,37 @@ const FinancialReports = () => {
 
     // 1. FILTER DATA & SETUP AXIS
     if (graphFilter === "Today") {
-      trendLabels = ["6 AM", "10 AM", "2 PM", "6 PM", "10 PM"];
-      trendData = new Array(5).fill(0);
-      
-      filteredTxns = transactions.filter(t => {
-        const d = new Date(t.date);
-        return d.getFullYear() === now.getFullYear() && 
-               d.getMonth() === now.getMonth() && 
-               d.getDate() === now.getDate();
-      });
 
-      filteredTxns.forEach(t => {
-        if (!["Paid", "Success"].includes(t.status)) return;
-        const h = new Date(t.date).getHours();
-        if (h >= 6 && h < 10) trendData[0] += Number(t.amount);
-        else if (h >= 10 && h < 14) trendData[1] += Number(t.amount);
-        else if (h >= 14 && h < 18) trendData[2] += Number(t.amount);
-        else if (h >= 18 && h < 22) trendData[3] += Number(t.amount);
-        else trendData[4] += Number(t.amount); 
-      });
+  // Format today's date (06 Feb 2026)
+  const todayLabel = now.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 
-    } else if (graphFilter === "This Week") {
+  // Only one label & one value
+  trendLabels = [todayLabel];
+  trendData = [0];
+
+  filteredTxns = transactions.filter(t => {
+    const d = new Date(t.date);
+
+    return (
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate()
+    );
+  });
+
+  // Sum all today's transactions
+  filteredTxns.forEach(t => {
+    if (!["Paid", "Success"].includes(t.status)) return;
+
+    trendData[0] += Number(t.amount);
+  });
+
+}
+ else if (graphFilter === "This Week") {
       trendLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       trendData = new Array(7).fill(0);
       
@@ -351,6 +363,7 @@ const FinancialReports = () => {
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: colors.text }}>Financial Reports</h1>
+          
           <p className="text-sm mt-1" style={{ color: colors.textMuted }}>Overview of your business performance.</p>
         </div>
         
@@ -422,92 +435,8 @@ const FinancialReports = () => {
                </div>
             </div>
          </div>
-      </div>
-
-      {/* TRANSACTION HISTORY WITH DATE FILTERS */}
-      <div className="rounded-3xl shadow-sm overflow-hidden border transition-colors" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
-         <div className="p-6 border-b flex flex-col sm:flex-row justify-between items-center gap-4" style={{ borderColor: colors.border }}>
-            <h3 className="font-bold text-lg" style={{ color: colors.text }}>Transaction History</h3>
-            
-            <div className="flex flex-wrap items-center gap-2">
-               <div className="flex items-center gap-2 px-3 py-2 rounded-xl border transition-colors" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
-                  <span className="text-xs font-bold" style={{ color: colors.textMuted }}>From</span>
-                  <input 
-                     type="date" 
-                     value={historyFrom}
-                     onChange={(e) => setHistoryFrom(e.target.value)}
-                     className="bg-transparent text-xs font-bold outline-none"
-                     style={{ color: colors.text }}
-                  />
-               </div>
-               <div className="flex items-center gap-2 px-3 py-2 rounded-xl border transition-colors" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
-                  <span className="text-xs font-bold" style={{ color: colors.textMuted }}>To</span>
-                  <input 
-                     type="date" 
-                     value={historyTo}
-                     onChange={(e) => setHistoryTo(e.target.value)}
-                     className="bg-transparent text-xs font-bold outline-none"
-                     style={{ color: colors.text }}
-                  />
-               </div>
-               <button 
-                  onClick={handleExport}
-                  className="px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm"
-                  style={{ backgroundColor: colors.accent, color: theme === 'dark' ? '#fff' : '#854d0e' }}
-               >
-                  <i className="fa-solid fa-download mr-1"></i> Export
-               </button>
-            </div>
-         </div>
-
-         <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm" style={{ color: colors.text }}>
-               <thead className="font-semibold uppercase text-xs" style={{ backgroundColor: theme === 'dark' ? colors.sidebar : '#f8f9fa' }}>
-                  <tr>
-                     <th className="px-6 py-4">ID</th>
-                     <th className="px-6 py-4">Date</th>
-                     <th className="px-6 py-4">Member</th>
-                     <th className="px-6 py-4">Plan</th>
-                     <th className="px-6 py-4">Method</th>
-                     <th className="px-6 py-4 text-right">Amount</th>
-                     <th className="px-6 py-4 text-center">Status</th>
-                  </tr>
-               </thead>
-               <tbody className="divide-y" style={{ divideColor: colors.border }}>
-                  {filteredTransactions.length > 0 ? filteredTransactions.map((t) => (
-                     <tr key={t._id} className="transition-colors hover:opacity-80">
-                        <td className="px-6 py-4 font-mono text-xs" style={{ color: colors.textMuted }}>{t.id}</td>
-                        <td className="px-6 py-4">{t.date}</td>
-                        <td className="px-6 py-4 font-bold" style={{ color: colors.text }}>{t.member}</td>
-                        <td className="px-6 py-4 text-xs">{t.plan}</td>
-                        <td className="px-6 py-4 text-xs">{t.method}</td>
-                        <td className="px-6 py-4 text-right font-bold" style={{ color: colors.text }}>
-                           ₹{t.amount.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                           <span 
-                             className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border"
-                             style={{ 
-                                backgroundColor: (t.status === 'Paid' || t.status === 'Success') ? colors.primary : '#fee2e2',
-                                color: (t.status === 'Paid' || t.status === 'Success') ? '#111827' : '#ef4444',
-                                borderColor: (t.status === 'Paid' || t.status === 'Success') ? colors.primary : '#fecaca'
-                             }}
-                           >
-                              {t.status}
-                           </span>
-                        </td>
-                     </tr>
-                  )) : (
-                     <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center" style={{ color: colors.textMuted }}>
-                           No transactions found for the selected dates.
-                        </td>
-                     </tr>
-                  )}
-               </tbody>
-            </table>
-         </div>
-      </div>
+      </div> 
+      <PaymentHistory/>
     </div>
   );
 };

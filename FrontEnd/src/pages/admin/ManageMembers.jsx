@@ -5,7 +5,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const ManageMember = () => {
-  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
+  const { api, BACKEND_URL, user } = useGlobalContext();
   const { colors, theme } = useTheme();
 
   const [members, setMembers] = useState([]);
@@ -24,12 +24,22 @@ const ManageMember = () => {
 
   const [selectedMember, setSelectedMember] = useState(null);
 
+  // --- 1. INITIALIZE RAZORPAY SCRIPT ---
   useEffect(() => {
     const linkFA = document.createElement("link");
     linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
     linkFA.rel = "stylesheet";
     document.head.appendChild(linkFA);
-    return () => document.head.removeChild(linkFA);
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.head.removeChild(linkFA);
+      document.body.removeChild(script);
+    };
   }, []);
 
   const fetchData = async () => {
@@ -42,7 +52,6 @@ const ManageMember = () => {
       setMembers(membersRes.data);
       setPlans(plansRes.data);
 
-      // Update selectedMember if currently viewing details
       if (selectedMember) {
         const updated = membersRes.data.find(m => m._id === selectedMember._id);
         if (updated) setSelectedMember(updated);
@@ -56,6 +65,114 @@ const ManageMember = () => {
 
   useEffect(() => { fetchData(); }, []);
 
+  // --- 2. RAZORPAY PAYMENT HANDLER ---
+  const handleRazorpayPayment = async (finalPlan) => {
+    try {
+      // Create Razorpay order on backend
+      const orderRes = await api.post("/payments/razorpay-order", {
+        planId: finalPlan._id,
+        memberId: selectedMember._id
+      });
+      const order = orderRes.data;
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SC45T3ibqRcWn4",
+        amount: order.amount,
+        currency: order.currency,
+        name: "Songar's GYM",
+        description: `Membership: ${finalPlan.name} for ${selectedMember.name}`,
+        order_id: order.id,
+        handler: async function (response) {
+          try {
+            await api.post("/payments/verify", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              planId: finalPlan._id,
+              memberId: selectedMember._id, 
+              method: "Online"
+            });
+            toast.success("Online Payment Verified & Membership Activated!");
+            fetchData();
+          } catch (err) {
+            toast.error(err.response?.data?.message || "Verification failed.");
+          }
+        },
+        prefill: {
+          name: selectedMember.name,
+          email: selectedMember.email,
+          contact: selectedMember.phone
+        },
+        theme: { color: "#FEEF75" }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      toast.error("Failed to initiate Razorpay.");
+    }
+  };
+
+  // --- 3. MEMBERSHIP PURCHASE LOGIC WITH VALIDATIONS ---
+  const handlePurchasePlan = async () => {
+    if (!purchaseData.planId) return toast.error("Please select a plan");
+
+    // A. Check if current plan is active
+    if (selectedMember.expiryDate) {
+      const expiry = new Date(selectedMember.expiryDate);
+      const today = new Date();
+      if (expiry > today) {
+        toast.error(`Member has an active plan until ${expiry.toLocaleDateString()}. Restricted until expiry.`);
+        return;
+      }
+    }
+
+    const selectedPlan = plans.find(p => p._id === purchaseData.planId);
+
+    // B. Validate Price Changes
+    if (Number(selectedPlan.price) !== Number(purchaseData.amount)) {
+      const diff = Number(selectedPlan.price) > Number(purchaseData.amount) ? "increased" : "decreased";
+      const confirmPrice = window.confirm(
+        `The price of this plan has ${diff} to ₹${selectedPlan.price}. Do you want to continue with the new price?`
+      );
+      if (!confirmPrice) return;
+      // Sync UI amount with database price
+      setPurchaseData(prev => ({ ...prev, amount: selectedPlan.price }));
+    }
+
+    // C. Route by Payment Method
+    if (purchaseData.method === "Online") {
+      await handleRazorpayPayment(selectedPlan);
+    } else {
+      // Direct Cash Activation
+      try {
+        const startDate = new Date();
+        const expiryDate = new Date();
+        expiryDate.setDate(startDate.getDate() + selectedPlan.duration);
+
+        await api.put(`/members/${selectedMember._id}`, {
+          plan: purchaseData.planId,
+          startDate,
+          expiryDate,
+          status: "Active"
+        });
+
+        await api.post("/payments/record", {
+          memberId: selectedMember._id,
+          amount: purchaseData.amount,
+          method: "Cash",
+          planId: purchaseData.planId,
+          date: startDate
+        });
+
+        toast.success("Cash Membership Activated!");
+        fetchData();
+      } catch (err) {
+        toast.error("Cash activation failed.");
+      }
+    }
+  };
+
   const getStatusColor = (status) => {
     if (status === "Inactive") return theme === 'dark' ? "bg-gray-800 text-gray-400 border-gray-700" : "bg-gray-100 text-gray-500 border-gray-200";
     return theme === 'dark' ? "bg-[#D9F17F]/20 text-[#D9F17F] border-[#D9F17F]/30" : "bg-[#D9F17F] text-green-800 border-green-200";
@@ -63,7 +180,6 @@ const ManageMember = () => {
 
   const getImageUrl = (path) => path ? (path.startsWith("http") ? path : `${BACKEND_URL}/${path}`) : null;
 
-  // --- NEW: Toggle Status Function ---
   const handleToggleStatus = async (id) => {
     try {
       const res = await api.put(`/members/${id}/deactivate`);
@@ -102,41 +218,12 @@ const ManageMember = () => {
     }
   };
 
-  const handlePurchasePlan = async () => {
-    if (!purchaseData.planId) return toast.error("Please select a plan");
-    const selectedPlan = plans.find(p => p._id === purchaseData.planId);
-    try {
-      const startDate = new Date();
-      const expiryDate = new Date();
-      expiryDate.setDate(startDate.getDate() + selectedPlan.duration);
-
-      await api.put(`/members/${selectedMember._id}`, {
-        plan: purchaseData.planId,
-        startDate: startDate,
-        expiryDate: expiryDate,
-        status: "Active"
-      });
-
-      await api.post("/payments/record", {
-        memberId: selectedMember._id,
-        amount: purchaseData.amount,
-        method: purchaseData.method,
-        planId: purchaseData.planId,
-        date: startDate
-      });
-
-      toast.success("Membership activated & payment recorded!");
-      fetchData();
-    } catch (err) {
-      toast.error("Failed to process transaction");
-    }
-  };
-
   const filteredMembers = members.filter(m => {
     const matchesSearch = (m.name + m.email + m.phone).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === "All" || m.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
+
   const getTransparentColor = (hex, opacity) => {
     if (!hex) return `rgba(255, 255, 255, ${opacity})`;
     const r = parseInt(hex.slice(1, 3), 16);
@@ -148,7 +235,7 @@ const ManageMember = () => {
   return (
     <div className="w-full rounded-3xl p-4 md:p-4 font-sans min-h-screen transition-colors duration-300" >
 
-      {/* Header Section */}
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: colors.text }}>Manage Members</h1>
@@ -161,12 +248,7 @@ const ManageMember = () => {
 
       {isLoading ? (
         <div className="text-center py-20 font-bold" style={{ color: colors.text }}>
-          <DotLottieReact
-            src="path/to/animation.lottie"
-            loop
-            autoplay
-          />
-
+          <i className="fa-solid fa-circle-notch fa-spin text-4xl" style={{ color: colors.primary }}></i>
         </div>
       ) : (
         <>
@@ -182,9 +264,9 @@ const ManageMember = () => {
 
               <div className="rounded-[1rem] border shadow-xl overflow-hidden"
                 style={{
-                  backgroundColor: getTransparentColor(colors.sidebar, 0.4), // 40% opacity
+                  backgroundColor: getTransparentColor(colors.sidebar, 0.4),
                   borderColor: getTransparentColor(colors.border, 0.2),
-                  backdropFilter: 'blur(16px)', // Blur effect
+                  backdropFilter: 'blur(16px)',
                   WebkitBackdropFilter: 'blur(16px)'
                 }}>
                 <table className="w-full text-left text-sm">
@@ -255,7 +337,6 @@ const ManageMember = () => {
               </button>
 
               <div className="grid lg:grid-cols-12 gap-8">
-                {/* Member Identity Sidebar */}
                 <div className="lg:col-span-4 space-y-6">
                   <div className="p-8 rounded-[2.5rem] border bg-white shadow-xl" style={{ borderColor: colors.border }}>
                     <div className="flex flex-col items-center text-center">
@@ -265,12 +346,11 @@ const ManageMember = () => {
                       <h3 className="font-black text-2xl text-gray-800">{selectedMember.name}</h3>
                       <p className="text-xs font-bold text-gray-400 mb-6">{selectedMember.email}</p>
 
-                      {/* --- NEW: STATUS TOGGLE BUTTON --- */}
                       <button
                         onClick={() => handleToggleStatus(selectedMember._id)}
                         className={`w-full py-3 mb-6 rounded-xl text-xs font-black transition-all border ${selectedMember.status === "Active"
-                            ? "bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white"
-                            : "bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white"
+                          ? "bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white"
+                          : "bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white"
                           }`}
                       >
                         {selectedMember.status === "Active" ? "DEACTIVATE ACCOUNT" : "ACTIVATE ACCOUNT"}
@@ -298,12 +378,13 @@ const ManageMember = () => {
                   </div>
                 </div>
 
-                {/* Membership Management & History */}
                 <div className="lg:col-span-8 space-y-8">
                   <div className="p-8 rounded-[2.5rem] border bg-white shadow-xl" style={{ borderColor: colors.border }}>
                     <h3 className="font-black text-lg flex items-center gap-2 mb-8">
                       <i className="fa-solid fa-cart-shopping text-green-500"></i> Assign Membership Plan
                     </h3>
+
+                    {/* PLAN PURCHASE FIELDS */}
                     <div className="grid md:grid-cols-3 gap-6 mb-8">
                       <div className="space-y-1">
                         <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Select Plan</label>
@@ -320,21 +401,36 @@ const ManageMember = () => {
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Amount Paid (₹)</label>
+                        <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Amount to Pay (₹)</label>
                         <input type="number" className="w-full p-3 rounded-xl border bg-slate-50 text-xs font-bold outline-none" value={purchaseData.amount} onChange={(e) => setPurchaseData({ ...purchaseData, amount: e.target.value })} />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Payment Method</label>
                         <select className="w-full p-3 rounded-xl border bg-slate-50 text-xs font-bold outline-none" value={purchaseData.method} onChange={(e) => setPurchaseData({ ...purchaseData, method: e.target.value })}>
-                          <option>Cash</option>
-                          <option>UPI / Online</option>
-                          <option>Card</option>
+                          <option value="Cash">Cash (Manual)</option>
+                          <option value="Online">Online (Razorpay)</option>
                         </select>
                       </div>
                     </div>
-                    <button onClick={handlePurchasePlan} className="w-full py-4 rounded-2xl bg-green-500 text-white font-black shadow-lg hover:bg-green-600 transition-all">
-                      Activate Membership & Log Payment
+
+                    <button
+                      onClick={handlePurchasePlan}
+                      className={`w-full py-4 rounded-2xl font-black shadow-lg transition-all ${selectedMember.expiryDate && new Date(selectedMember.expiryDate) > new Date()
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-green-500 text-white hover:bg-green-600"
+                        }`}
+                      disabled={selectedMember.expiryDate && new Date(selectedMember.expiryDate) > new Date()}
+                    >
+                      {selectedMember.expiryDate && new Date(selectedMember.expiryDate) > new Date()
+                        ? "Current Plan Not Expired"
+                        : "Activate Membership & Log Payment"}
                     </button>
+
+                    {selectedMember.expiryDate && new Date(selectedMember.expiryDate) > new Date() && (
+                      <p className="text-center text-[10px] font-black text-red-500 mt-2 uppercase">
+                        Action Restricted until current plan expires.
+                      </p>
+                    )}
                   </div>
 
                   <div className="p-8 rounded-[2.5rem] border bg-white shadow-xl" style={{ borderColor: colors.border }}>
