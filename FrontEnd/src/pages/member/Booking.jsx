@@ -46,26 +46,26 @@ const Booking = () => {
    // --- HELPER FUNCTIONS ---
    const getTrainerDisplay = (session) => {
       const trainers = [];
-      
+
       // Primary trainer
       if (session.trainer?.name) {
          trainers.push({ name: session.trainer.name, isPrimary: true, type: 'internal' });
       }
-      
+
       // Additional internal trainers
       if (session.additionalTrainers && session.additionalTrainers.length > 0) {
          session.additionalTrainers.forEach(t => {
             if (t.name) trainers.push({ name: t.name, isPrimary: false, type: 'internal' });
          });
       }
-      
+
       // External trainers
       if (session.externalTrainers && session.externalTrainers.length > 0) {
          session.externalTrainers.forEach(name => {
             trainers.push({ name: name, isPrimary: false, type: 'external' });
          });
       }
-      
+
       return trainers;
    };
 
@@ -138,7 +138,7 @@ const Booking = () => {
          {isLoading ? (
 
             <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
-               <img src={loadingIMG} className='h-20 w-25' alt="Loading"/>
+               <img src={loadingIMG} className='h-20 w-25' alt="Loading" />
             </div>
          ) : (
             <div className="space-y-4">
@@ -147,7 +147,15 @@ const Booking = () => {
                {viewState === 'upcoming' && (
                   sessions.filter(s => s.status === 'Upcoming').length > 0 ? (
                      sessions
-                        .filter(s => s.status === 'Upcoming')
+                        .filter(s => {
+                           // 1. Filter: Status must be Upcoming
+                           const isUpcoming = s.status === 'Upcoming';
+                           // 2. Filter: Do not display if user has already "Attended" this session
+                           const userBooking = myBookings.find(b => b.session?._id === s._id);
+                           const isAttended = userBooking?.bookingStatus === "Attended";
+                           return isUpcoming && !isAttended;
+                        })
+                        .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort: Latest first
                         .map(session => {
                            const existingBooking = myBookings.find(b => b.session?._id === session._id);
                            const isCancelled = existingBooking?.bookingStatus === "Cancelled";
@@ -155,7 +163,6 @@ const Booking = () => {
                            const capacity = session.capacity || 10;
                            const bookedCount = session.bookedCount || 0;
                            const isFull = bookedCount >= capacity;
-                           const cancelReason = existingBooking?.cancelReason;
                            const trainers = getTrainerDisplay(session);
 
                            return (
@@ -172,10 +179,10 @@ const Booking = () => {
                                        <h3 className="text-xl font-bold" style={{ color: colors.text }}>{session.type}</h3>
                                        <div className="flex flex-wrap gap-2">
                                           <span className="px-3 py-1 rounded-full text-xs font-bold border w-fit"
-                                             style={{ 
-                                                backgroundColor: colors.accent, 
-                                                color: theme === 'dark' ? '#fff' : '#854d0e', 
-                                                borderColor: colors.accent 
+                                             style={{
+                                                backgroundColor: colors.accent,
+                                                color: theme === 'dark' ? '#fff' : '#854d0e',
+                                                borderColor: colors.accent
                                              }}
                                           >
                                              {session.duration}
@@ -205,22 +212,22 @@ const Booking = () => {
                                                 Trainer{trainers.length > 1 ? 's' : ''}:
                                              </span>
                                              {trainers.map((trainer, idx) => (
-                                                <span 
+                                                <span
                                                    key={idx}
                                                    className="px-2 py-1 rounded-full text-xs font-bold border inline-flex items-center gap-1"
                                                    style={{
-                                                      backgroundColor: trainer.isPrimary 
-                                                         ? colors.secondary 
-                                                         : trainer.type === 'external' 
-                                                            ? colors.accent 
+                                                      backgroundColor: trainer.isPrimary
+                                                         ? colors.secondary
+                                                         : trainer.type === 'external'
+                                                            ? colors.accent
                                                             : colors.background,
-                                                      color: trainer.isPrimary 
+                                                      color: trainer.isPrimary
                                                          ? (theme === 'dark' ? '#fff' : '#1e3a8a')
                                                          : trainer.type === 'external'
                                                             ? (theme === 'dark' ? '#fff' : '#854d0e')
                                                             : colors.text,
-                                                      borderColor: trainer.isPrimary 
-                                                         ? colors.secondary 
+                                                      borderColor: trainer.isPrimary
+                                                         ? colors.secondary
                                                          : trainer.type === 'external'
                                                             ? colors.accent
                                                             : colors.border
@@ -239,7 +246,7 @@ const Booking = () => {
                                        <i className="fa-regular fa-clock mr-2 w-4"></i>
                                        {session.date} • {session.time}
                                     </p>
-                                    
+
                                     {session.notes && (
                                        <p className="text-xs mt-2 p-2 rounded-lg" style={{ color: colors.textMuted, backgroundColor: colors.background }}>
                                           <i className="fa-solid fa-info-circle mr-1"></i>
@@ -287,116 +294,137 @@ const Booking = () => {
                {/* VIEW: MY BOOKINGS (HISTORY) */}
                {viewState === 'history' && (
                   myBookings.length > 0 ? (
-                     myBookings.map(b => {
-                        const isSessionCompleted = b.session?.status === 'Completed';
-                        const isSessionCancelled = b.session?.status === 'Cancelled';
-                        const isUserCancelled = b.bookingStatus === 'Cancelled';
-                        const trainers = b.session ? getTrainerDisplay(b.session) : [];
+                     [...myBookings]
+                        .sort((a, b) => {
+                           // Sort: "Booked" sessions first, then "Attended" (and others) last
+                           if (a.bookingStatus === 'Booked' && b.bookingStatus !== 'Booked') return -1;
+                           if (a.bookingStatus !== 'Booked' && b.bookingStatus === 'Booked') return 1;
+                           return 0;
+                        })
+                        .map(b => {
+                           const isSessionCompleted = b.session?.status === 'Completed';
+                           const isSessionCancelled = b.session?.status === 'Cancelled';
+                           const isUserCancelled = b.bookingStatus === 'Cancelled';
+                           const isAttended = b.bookingStatus === 'Attended';
+                           const trainers = b.session ? getTrainerDisplay(b.session) : [];
 
-                        return (
-                           <div key={b._id}
-                              className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isUserCancelled || isSessionCancelled ? 'opacity-75' : ''}`}
-                              style={{ backgroundColor: colors.card, borderColor: colors.border }}
-                           >
-                              <div className="flex-1 w-full">
-                                 <h3 className="text-lg font-bold mb-1" style={{ color: colors.text }}>{b.session?.type || "Session"}</h3>
-                                 <p className="text-sm mb-2" style={{ color: colors.textMuted }}>
-                                    {b.session?.date} • {b.session?.time}
-                                 </p>
+                           return (
+                              <div key={b._id}
+                                 className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isUserCancelled || isSessionCancelled ? 'opacity-75' : ''}`}
+                                 style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                              >
+                                 <div className="flex-1 w-full">
+                                    <h3 className="text-lg font-bold mb-1" style={{ color: colors.text }}>{b.session?.type || "Session"}</h3>
+                                    <p className="text-sm mb-2" style={{ color: colors.textMuted }}>
+                                       {b.session?.date} • {b.session?.time}
+                                    </p>
 
-                                 {/* TRAINERS DISPLAY */}
-                                 {trainers.length > 0 && (
-                                    <div className="mb-2 flex flex-wrap items-center gap-1">
-                                       <span className="text-xs" style={{ color: colors.textMuted }}>
-                                          <i className="fa-solid fa-user-ninja mr-1"></i>
-                                       </span>
-                                       {trainers.map((trainer, idx) => (
-                                          <span 
-                                             key={idx}
-                                             className="px-2 py-0.5 rounded-full text-xs border"
-                                             style={{
-                                                backgroundColor: trainer.isPrimary 
-                                                   ? colors.secondary 
-                                                   : trainer.type === 'external'
-                                                      ? colors.accent
-                                                      : colors.background,
-                                                color: trainer.isPrimary 
-                                                   ? (theme === 'dark' ? '#fff' : '#1e3a8a')
-                                                   : trainer.type === 'external'
-                                                      ? (theme === 'dark' ? '#fff' : '#854d0e')
-                                                      : colors.text,
-                                                borderColor: colors.border
-                                             }}
-                                          >
-                                             {trainer.isPrimary && <i className="fa-solid fa-star text-xs mr-1"></i>}
-                                             {trainer.type === 'external' && <i className="fa-solid fa-user-tie text-xs mr-1"></i>}
-                                             {trainer.name}
+                                    {/* TRAINERS DISPLAY */}
+                                    {trainers.length > 0 && (
+                                       <div className="mb-2 flex flex-wrap items-center gap-1">
+                                          <span className="text-xs" style={{ color: colors.textMuted }}>
+                                             <i className="fa-solid fa-user-ninja mr-1"></i>
                                           </span>
-                                       ))}
-                                    </div>
-                                 )}
+                                          {trainers.map((trainer, idx) => (
+                                             <span
+                                                key={idx}
+                                                className="px-2 py-0.5 rounded-full text-xs border"
+                                                style={{
+                                                   backgroundColor: trainer.isPrimary
+                                                      ? colors.secondary
+                                                      : trainer.type === 'external'
+                                                         ? colors.accent
+                                                         : colors.background,
+                                                   color: trainer.isPrimary
+                                                      ? (theme === 'dark' ? '#fff' : '#1e3a8a')
+                                                      : trainer.type === 'external'
+                                                         ? (theme === 'dark' ? '#fff' : '#854d0e')
+                                                         : colors.text,
+                                                   borderColor: colors.border
+                                                }}
+                                             >
+                                                {trainer.isPrimary && <i className="fa-solid fa-star text-xs mr-1"></i>}
+                                                {trainer.type === 'external' && <i className="fa-solid fa-user-tie text-xs mr-1"></i>}
+                                                {trainer.name}
+                                             </span>
+                                          ))}
+                                       </div>
+                                    )}
 
-                                 {isUserCancelled && (
-                                    <div className="mt-2 flex items-start gap-2">
-                                       <i className="fa-solid fa-circle-info text-red-500 mt-0.5 text-xs"></i>
-                                       <p className="text-xs text-red-600 font-bold bg-red-50 px-2 py-1 rounded">
-                                          You Cancelled: {b.cancelReason || "No reason provided"}
-                                       </p>
-                                    </div>
-                                 )}
+                                    {isUserCancelled && (
+                                       <div className="mt-2 flex items-start gap-2">
+                                          <i className="fa-solid fa-circle-info text-red-500 mt-0.5 text-xs"></i>
+                                          <p className="text-xs text-red-600 font-bold bg-red-50 px-2 py-1 rounded">
+                                             You Cancelled: {b.cancelReason || "No reason provided"}
+                                          </p>
+                                       </div>
+                                    )}
 
-                                 {isSessionCancelled && !isUserCancelled && (
-                                    <div className="mt-2 flex items-start gap-2">
-                                       <i className="fa-solid fa-triangle-exclamation text-orange-500 mt-0.5 text-xs"></i>
-                                       <p className="text-xs text-orange-700 font-bold bg-orange-50 px-2 py-1 rounded">
-                                          Session Cancelled: {b.session?.cancelReason || b.session?.notes || "Administrative Action"}
-                                       </p>
-                                    </div>
-                                 )}
+                                    {isAttended && (
+                                       <div className="mt-2 flex items-start gap-2">
+                                         
+                                          <p className="text-xs text-gray-700 font-bold bg-gray-50 px-2 py-1 rounded">
+                                             Great job! You attended this session.
+                                          </p>
+                                       </div>
+                                    )}
 
-                                 {isSessionCompleted && (
-                                    <div className="mt-2 flex items-start gap-2">
-                                       <i className="fa-solid fa-check-circle text-green-500 mt-0.5 text-xs"></i>
-                                       <p className="text-xs text-green-700 font-bold bg-green-50 px-2 py-1 rounded">
-                                          Session Completed
-                                       </p>
-                                    </div>
-                                 )}
-                              </div>
+                                    {isSessionCancelled && !isUserCancelled && (
+                                       <div className="mt-2 flex items-start gap-2">
+                                          <i className="fa-solid fa-triangle-exclamation text-orange-500 mt-0.5 text-xs"></i>
+                                          <p className="text-xs text-orange-700 font-bold bg-orange-50 px-2 py-1 rounded">
+                                             Session Cancelled: {b.session?.cancelReason || b.session?.notes || "Administrative Action"}
+                                          </p>
+                                       </div>
+                                    )}
 
-                              <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
-                                 <div className={`px-4 py-2 rounded-xl text-sm font-bold border ${isUserCancelled
-                                       ? 'bg-red-50 text-red-600 border-red-100'
-                                       : isSessionCancelled
-                                          ? 'bg-orange-50 text-orange-600 border-orange-100'
-                                          : isSessionCompleted
-                                             ? 'bg-gray-100 text-gray-600 border-gray-200'
-                                             : 'bg-green-50 text-green-700 border-green-100'
-                                    }`}>
-                                    {isUserCancelled
-                                       ? "Cancelled"
-                                       : isSessionCancelled
-                                          ? "Session Cancelled"
-                                          : isSessionCompleted
-                                             ? "Completed"
-                                             : b.bookingStatus || "Confirmed"
-                                    }
+                                    {isSessionCompleted && !isAttended && (
+                                       <div className="mt-2 flex items-start gap-2">
+                                          <i className="fa-solid fa-check-circle text-green-500 mt-0.5 text-xs"></i>
+                                          <p className="text-xs text-green-700 font-bold bg-green-50 px-2 py-1 rounded">
+                                             Session Completed
+                                          </p>
+                                       </div>
+                                    )}
                                  </div>
 
-                                 {!isUserCancelled && !isSessionCancelled && !isSessionCompleted && (
-                                    <button
-                                       onClick={() => handleCancelSession(b.session?._id)}
-                                       className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
-                                       style={{ backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', color: '#dc2626' }}
-                                       title="Cancel Booking"
-                                    >
-                                       <i className="fa-solid fa-trash-can"></i>
-                                    </button>
-                                 )}
+                                 <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                                    <div className={`px-4 py-2 rounded-xl text-sm font-bold border ${isUserCancelled
+                                       ? 'bg-red-50 text-red-600 border-red-100'
+                                       : isAttended
+                                          ? 'bg-gray-600 text-white border-gray-700 shadow-sm'
+                                          : isSessionCancelled
+                                             ? 'bg-orange-50 text-orange-600 border-orange-100'
+                                             : isSessionCompleted
+                                                ? 'bg-gray-100 text-gray-600 border-gray-200'
+                                                : 'bg-green-50 text-green-700 border-green-100'
+                                       }`}>
+                                       {isUserCancelled
+                                          ? "Cancelled"
+                                          : isAttended
+                                             ? <><i className="fa-solid fa-circle-check mr-1"></i> Attended</>
+                                             : isSessionCancelled
+                                                ? "Session Cancelled"
+                                                : isSessionCompleted
+                                                   ? "Completed"
+                                                   : b.bookingStatus || "Confirmed"
+                                       }
+                                    </div>
+
+                                    {!isUserCancelled && !isSessionCancelled && !isSessionCompleted && !isAttended && (
+                                       <button
+                                          onClick={() => handleCancelSession(b.session?._id)}
+                                          className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
+                                          style={{ backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2', color: '#dc2626' }}
+                                          title="Cancel Booking"
+                                       >
+                                          <i className="fa-solid fa-trash-can"></i>
+                                       </button>
+                                    )}
+                                 </div>
                               </div>
-                           </div>
-                        )
-                     })
+                           )
+                        })
                   ) : (
                      <div className="text-center py-16 rounded-[2.5rem] border border-dashed"
                         style={{ backgroundColor: colors.card, borderColor: colors.border }}>

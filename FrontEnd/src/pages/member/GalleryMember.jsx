@@ -3,9 +3,8 @@ import { useGlobalContext } from "../../context/GlobalContext";
 import { ToastContainer, toast } from 'react-toastify';
 
 const GalleryMember = () => {
-  const { api, user } = useGlobalContext(); // Assuming 'user' object is available in context
-
-  const {BACKEND_URL, loadingIMG}=useGlobalContext();
+  const { api, user } = useGlobalContext(); 
+  const { BACKEND_URL, loadingIMG } = useGlobalContext();
   const baseURL = BACKEND_URL; 
 
   // --- STATE ---
@@ -58,15 +57,14 @@ const GalleryMember = () => {
       const res = await api.put(`/media/${id}/like`);
       const updatedMediaItem = res.data;
       
-      // Update local state with the new media object from backend (which has updated likes array)
       setMedia(prev => prev.map(item => 
         item._id === id ? updatedMediaItem : item
       ));
 
-      // Also update selectedMedia if it's open
       if (selectedMedia && selectedMedia._id === id) {
          setSelectedMedia(updatedMediaItem);
       }
+      
       
     } catch (error) {
       toast.error("Failed to update like");
@@ -74,18 +72,15 @@ const GalleryMember = () => {
   };
 
   // --- HELPERS ---
- const getFullUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http")) return url;
-  // Ensure there is exactly one slash between baseURL and url
-  const separator = baseURL.endsWith('/') ? '' : '/';
-  return `${baseURL}${separator}${url}`;
-};
+  const getFullUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    const separator = baseURL.endsWith('/') ? '' : '/';
+    return `${baseURL}${separator}${url}`;
+  };
 
-  // Check if current user liked the media
   const checkIsLiked = (mediaItem) => {
       if (!user || !mediaItem.likes) return false;
-      // Media.likes is an array of populated objects, so we check _id
       return mediaItem.likes.some(like => like._id === user._id);
   };
 
@@ -93,29 +88,35 @@ const GalleryMember = () => {
   const filteredMedia = filter === "All" ? media : media.filter(m => m.category === filter);
 
   return (
-    <div className="font-sans text-gray-800  pt-6 min-h-screen pb-20">
+    <div className="font-sans text-gray-800 pt-6 min-h-screen pb-20 bg-gray-50/50">
       <ToastContainer position="top-right" autoClose={2000} />
 
+      {/* --- ANIMATION STYLES --- */}
+      <style>{`
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .anim-item { animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .anim-modal { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      `}</style>
+
       {/* HEADER */}
-      {/* Changed: Adjusted padding and margin for mobile */}
-      <div className="container mx-auto px-4 sm:px-6 mb-6 md:mb-10">
-        <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-2">Member Gallery</h1>
-        <p className="text-sm md:text-base text-gray-500">Exclusive access to gym events, transformation stories, and workout clips.</p>
+      <div className="container mx-auto px-4 sm:px-6 mb-8 md:mb-12 text-center md:text-left">
+        <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Member Gallery</h1>
+        <p className="text-base text-gray-500 max-w-2xl">Exclusive access to gym events, transformation stories, and workout clips.</p>
       </div>
 
       {/* FILTERS */}
-      {/* Changed: Adjusted padding */}
-      <div className="container mx-auto px-4 sm:px-6 mb-6 md:mb-8">
+      <div className="container mx-auto px-4 sm:px-6 mb-8 md:mb-10">
         {media.length > 0 && (
           <div className="flex flex-wrap gap-2 md:gap-3">
             {uniqueCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
-                className={`px-4 md:px-5 py-2 rounded-xl text-xs font-bold transition-all border ${
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 transform active:scale-95 ${
                   filter === cat 
-                  ? "bg-[#CDE7FE] text-blue-900 border-blue-200 shadow-sm" 
-                  : "bg-white text-gray-500 border-gray-200 hover:border-blue-200"
+                  ? "bg-black text-white shadow-lg shadow-gray-200" 
+                  : "bg-white text-gray-500 border border-gray-200 hover:border-gray-400 hover:text-gray-900"
                 }`}
               >
                 {cat}
@@ -126,60 +127,60 @@ const GalleryMember = () => {
       </div>
 
       {/* GRID */}
-      {/* Changed: Adjusted padding and grid gap */}
       <div className="container mx-auto px-4 sm:px-6">
         {isLoading ? (
-         <div className="fixed inset-0 flex items-center justify-center h-screen">
-            <img src={loadingIMG} className='h-20 w-25'/>
+         <div className="fixed inset-0 flex items-center justify-center h-screen bg-white/80 backdrop-blur-sm z-50">
+            <img src={loadingIMG} className='h-20 w-25 animate-pulse'/>
          </div>
          ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              {filteredMedia.map((item) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredMedia.map((item, index) => {
                 const isLiked = checkIsLiked(item);
                 return (
                   <div 
                     key={item._id} 
-                    className="group relative h-64 rounded-3xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 bg-gray-100"
+                    className="anim-item group relative h-72 rounded-[2rem] overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500 bg-gray-200"
+                    style={{ animationDelay: `${index * 50}ms` }}
                     onClick={() => setSelectedMedia(item)}
                   >
                     {/* MEDIA */}
                     {item.type === 'video' ? (
-                       <div className="w-full h-full relative flex items-center justify-center bg-gray-900">
-                          <video src={getFullUrl(item.url)} className="w-full h-full object-cover opacity-80" muted />
+                       <div className="w-full h-full relative flex items-center justify-center bg-gray-900 group-hover:scale-105 transition-transform duration-700">
+                          <video src={getFullUrl(item.url)} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" muted />
                           <div className="absolute inset-0 flex items-center justify-center">
-                             <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white">
-                                <i className="fa-solid fa-play text-sm ml-0.5"></i>
+                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30 group-hover:scale-110 transition-transform">
+                                <i className="fa-solid fa-play text-sm ml-1"></i>
                              </div>
                           </div>
                        </div>
                     ) : (
-                       <img src={getFullUrl(item.url)} alt={item.caption} className="w-full h-full object-cover" />
+                       <img src={getFullUrl(item.url)} alt={item.caption} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     )}
                     
                     {/* BADGES */}
-                    <div className="absolute top-3 left-3 flex gap-2">
-                      <span className="px-2 py-1 rounded-lg bg-white/90 backdrop-blur-sm text-[10px] font-bold text-gray-800 shadow-sm">
+                    <div className="absolute top-4 left-4 z-10">
+                      <span className="px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-md text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
                         {item.category}
                       </span>
                     </div>
 
                     {/* OVERLAY */}
-                    <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end justify-between">
-                       <div className="text-white flex-1 min-w-0 mr-2">
-                          <h3 className="font-bold text-sm truncate">{item.caption}</h3>
-                          
+                    <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-end justify-between opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                       <div className="text-white flex-1 min-w-0 mr-4">
+                          <h3 className="font-bold text-sm truncate leading-snug">{item.caption}</h3>
+                          <p className="text-[10px] text-gray-300 mt-0.5">Click to view</p>
                        </div>
                        
                        {/* TOGGLE LIKE BUTTON */}
                        <button 
                           onClick={(e) => handleLike(e, item._id)}
-                          className="flex flex-col items-center justify-center gap-0.5 group/btn"
+                          className="flex flex-col items-center gap-1 group/btn hover:scale-110 transition-transform"
                        >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isLiked ? 'bg-red-500 text-white' : 'bg-white/20 backdrop-blur-md text-white hover:bg-white/30'}`}>
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-lg ${isLiked ? 'bg-red-500 text-white' : 'bg-white/20 backdrop-blur-md text-white hover:bg-white/30 border border-white/20'}`}>
                              <i className={`fa-solid fa-heart text-xs ${isLiked ? 'animate-pulse' : ''}`}></i>
                           </div>
-                          <span className="text-[10px] font-bold text-white shadow-sm">{item.likes?.length || 0}</span>
+                          <span className="text-[10px] font-bold text-white drop-shadow-md">{item.likes?.length || 0}</span>
                        </button>
                     </div>
                   </div>
@@ -193,12 +194,16 @@ const GalleryMember = () => {
       {/* LIGHTBOX MODAL */}
       {selectedMedia && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 animate-in fade-in duration-300"
           onClick={() => setSelectedMedia(null)}
         >
-          <div className="relative max-w-5xl w-full max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl bg-black flex flex-col" onClick={e => e.stopPropagation()}>
+          <button className="absolute top-6 right-6 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors z-50">
+            <i className="fa-solid fa-xmark"></i>
+          </button>
+
+          <div className="anim-modal relative max-w-6xl w-full max-h-[90vh] rounded-[2rem] overflow-hidden shadow-2xl bg-black flex flex-col border border-gray-800" onClick={e => e.stopPropagation()}>
              {/* Media */}
-             <div className="flex-grow relative flex items-center justify-center bg-black overflow-hidden">
+             <div className="flex-grow relative flex items-center justify-center bg-black overflow-hidden group">
                 {selectedMedia.type === 'video' ? (
                    <video src={getFullUrl(selectedMedia.url)} controls autoPlay className="w-full h-full max-h-[80vh] object-contain" />
                 ) : (
@@ -207,21 +212,20 @@ const GalleryMember = () => {
              </div>
              
              {/* Footer */}
-             {/* Changed: Adjusted padding and added gap for mobile layout */}
-             <div className="w-full p-4 md:p-6 bg-[#1a1a1a] text-white border-t border-gray-800 flex justify-between items-center gap-4">
-                <div className="min-w-0">
-                   <h3 className="text-base md:text-lg font-bold truncate">{selectedMedia.caption}</h3>
-                   <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                      <span className="text-[#CDE7FE] font-bold uppercase tracking-wider">{selectedMedia.category}</span>
+             <div className="w-full p-6 bg-[#111] text-white border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="min-w-0 text-center md:text-left">
+                   <div className="flex items-center justify-center md:justify-start gap-3 mb-1">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700">{selectedMedia.category}</span>
                    </div>
+                   <h3 className="text-lg font-bold">{selectedMedia.caption}</h3>
                 </div>
                 
                 <button 
                    onClick={(e) => handleLike(e, selectedMedia._id)}
-                   className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${checkIsLiked(selectedMedia) ? 'bg-red-500 text-white' : 'bg-white/10 hover:bg-white/20'}`}
+                   className={`flex-shrink-0 flex items-center gap-2 px-6 py-3 rounded-full transition-all font-bold text-sm ${checkIsLiked(selectedMedia) ? 'bg-red-600 text-white shadow-lg shadow-red-900/30' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
                 >
-                   <i className="fa-solid fa-heart"></i>
-                   <span className="font-bold">{selectedMedia.likes?.length || 0}</span>
+                   <i className={`fa-solid fa-heart ${checkIsLiked(selectedMedia) ? 'animate-bounce' : ''}`}></i>
+                   <span>{selectedMedia.likes?.length || 0} Likes</span>
                 </button>
              </div>
           </div>

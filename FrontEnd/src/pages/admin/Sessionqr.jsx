@@ -33,6 +33,12 @@ const SessionQR = () => {
    };
 
    const generateQRForSession = async (session) => {
+      // Safety check: Prevent generation if not today
+      if (!isSessionToday(session.date)) {
+         toast.error("QR codes can only be generated for today's sessions");
+         return;
+      }
+
       try {
          // Generate QR code from backend
          const res = await api.post(`/sessions/${session._id}/generate-qr`);
@@ -62,8 +68,11 @@ const SessionQR = () => {
    };
 
    const isSessionToday = (sessionDate) => {
-      const today = new Date().toISOString().split('T')[0];
-      return sessionDate === today;
+      // Proper date comparison using local system time
+      const today = new Date();
+      const offset = today.getTimezoneOffset();
+      const localToday = new Date(today.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0];
+      return sessionDate === localToday;
    };
 
    const toggleFullscreen = () => {
@@ -315,14 +324,7 @@ const SessionQR = () => {
                                              Today
                                           </span>
                                        )}
-                                       <span className="px-2 py-1 rounded-full text-xs font-bold"
-                                          style={{ 
-                                             backgroundColor: colors.background, 
-                                             color: colors.textMuted 
-                                          }}
-                                       >
-                                          {session.status}
-                                       </span>
+                                       
                                     </div>
                                  </div>
                               </div>
@@ -360,7 +362,7 @@ const SessionQR = () => {
                                     <i className="fa-solid fa-eye-slash"></i>
                                     Hide QR
                                  </button>
-                              ) : (
+                              ) : isToday ? (
                                  <button
                                     onClick={() => generateQRForSession(session)}
                                     className="px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
@@ -372,6 +374,10 @@ const SessionQR = () => {
                                     <i className="fa-solid fa-qrcode"></i>
                                     Generate QR
                                  </button>
+                              ) : (
+                                 <div className="flex items-center px-4 text-xs font-medium italic" style={{ color: colors.textMuted }}>
+                                    QR available on session date
+                                 </div>
                               )}
                            </div>
                         </div>

@@ -45,6 +45,7 @@ app.use(
       "http://localhost:5173",
       "https://songars-gym.onrender.com",
       "https://songars-gym.vercel.app",
+      "http://10.205.95.201:5173"
     ],
     credentials: true,
   }),
@@ -142,4 +143,4 @@ setInterval(async () => {
 const PORT = process.env.PORT || 5000;
 
 //  Listen on server, not app
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT,"0.0.0.0", () => console.log(`Server running on port ${PORT}`));

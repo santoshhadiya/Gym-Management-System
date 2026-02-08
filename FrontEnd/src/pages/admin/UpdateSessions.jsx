@@ -252,7 +252,8 @@ const UpdateSessions = () => {
       setShowBulkActionModal(true);
    };
 
-   const confirmBulkAction = async () => {
+  const confirmBulkAction = async () => {
+      // Only require a reason if the action is 'cancel'
       if (bulkAction === 'cancel' && (!cancelReason || !cancelReason.trim())) {
          toast.error("Please enter a valid reason for cancellation.");
          return;
@@ -277,7 +278,7 @@ const UpdateSessions = () => {
          const actionText = bulkAction === 'cancel' ? 'cancelled' : 'marked as completed';
          toast.success(`${selectedIds.length} session(s) ${actionText}`);
          
-         setShowBulkActionModal(false);
+         setShowBulkActionModal(false); // Close the modal
          setCancelReason("");
          setSelectedIds([]);
          fetchData();
@@ -388,6 +389,55 @@ const UpdateSessions = () => {
                      </button>
                   </>
                )}
+               {/* --- BULK ACTION MODAL --- */}
+         {showBulkActionModal && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+               <div 
+                  className="rounded-2xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200"
+                  style={{ backgroundColor: colors.card }}
+               >
+                  <h3 className="text-lg font-bold mb-2 capitalize" style={{ color: colors.text }}>
+                     {bulkAction} {selectedIds.length} Sessions?
+                  </h3>
+                  
+                  <p className="text-sm mb-4" style={{ color: colors.textMuted }}>
+                     {bulkAction === 'cancel' 
+                        ? "Please provide a reason. This will notify all participants." 
+                        : "This will mark these sessions as finished."}
+                  </p>
+
+                  {bulkAction === 'cancel' && (
+                     <textarea
+                        className="w-full border rounded-xl p-3 text-sm focus:outline-none mb-4 h-24 resize-none transition-colors"
+                        style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
+                        placeholder="Reason for cancellation..."
+                        value={cancelReason}
+                        onChange={(e) => setCancelReason(e.target.value)}
+                     ></textarea>
+                  )}
+
+                  <div className="flex gap-3">
+                     <button
+                        onClick={() => { setShowBulkActionModal(false); setCancelReason(""); }}
+                        className="flex-1 py-2.5 border rounded-xl text-sm font-bold transition-colors cursor-pointer"
+                        style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.textMuted }}
+                     >
+                        Go Back
+                     </button>
+                     <button
+                        onClick={confirmBulkAction}
+                        className={`flex-1 py-2.5 text-white rounded-xl text-sm font-bold shadow-sm cursor-pointer transition-colors`}
+                        style={{ 
+                           backgroundColor: bulkAction === 'cancel' ? '#dc2626' : colors.primary,
+                           color: bulkAction === 'cancel' ? '#ffffff' : '#14532d'
+                        }}
+                     >
+                        Confirm {bulkAction === 'cancel' ? 'Cancel' : 'Complete'}
+                     </button>
+                  </div>
+               </div>
+            </div>
+         )}
                
                {viewState === "list" && (
                   <button 

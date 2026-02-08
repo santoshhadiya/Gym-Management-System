@@ -11,13 +11,15 @@ const {
   markAttendanceManually,
 } = require("../controllers/sessionBookingController.js");
 
-// Member Routes
-router.post("/:sessionId", protect, authorize("member"), bookSession);
-router.get("/my", protect, authorize("member"), getMyBookings);
-router.delete("/:sessionId", protect, authorize("member"), cancelMyBooking);
 
 // Attendance Routes
-router.post("/mark-attendance", protect, authorize("member"), markAttendance);
+router.post("/mark-attendance", protect, markAttendance);
+
+// Member Routes
+router.post("/:sessionId", protect, bookSession);
+router.get("/my", protect, authorize("member"), getMyBookings);
+router.delete("/:sessionId", protect, cancelMyBooking);
+
 
 // Admin Routes
 router.get("/admin", protect, authorize("member"), getMyBookings);

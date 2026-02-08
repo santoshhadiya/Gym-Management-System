@@ -135,94 +135,41 @@ exports.cancelMyBooking = async (req, res) => {
 // UPDATED: Mark attendance via QR code scan (member-initiated)
 exports.markAttendance = async (req, res) => {
   try {
-    const { sessionId, qrId, sessionDate } = req.body;
+    const { sessionId, qrId } = req.body;
     const memberId = req.user.id;
 
-    // Validate required fields
-    if (!sessionId || !qrId || !sessionDate) {
-      return res.status(400).json({ 
-        message: "Missing required fields: sessionId, qrId, sessionDate" 
-      });
-    }
-
-    // Find the session
+    // 1. Find the session to verify QR
     const session = await Session.findById(sessionId);
+    if (!session) return res.status(404).json({ message: "Session not found" });
 
-    if (!session) {
-      return res.status(404).json({ message: "Session not found" });
-    }
-
-    // Verify QR code is valid
+    // 2. Check QR Validity (Using logic from sessionController)
     if (session.currentQrId !== qrId) {
-      return res.status(400).json({ 
-        message: "Invalid QR code. Please scan the current session QR code." 
-      });
+      return res.status(400).json({ message: "Invalid or expired QR code" });
     }
 
-    // Check if QR is expired or not valid for today
-    const today = new Date().toISOString().split('T')[0];
-    
-    if (session.date !== today) {
-      return res.status(400).json({ 
-        message: `This QR code is only valid on the session date: ${session.date}` 
-      });
-    }
-
-    if (!session.isQRValid()) {
-      return res.status(400).json({ 
-        message: "QR code has expired. Please ask the trainer to generate a new one." 
-      });
-    }
-
-    // Find the member's booking
+    // 3. Find and update the member's booking
     const booking = await SessionBooking.findOne({
       session: sessionId,
-      member: memberId,
+      member: memberId
     });
 
     if (!booking) {
-      return res.status(404).json({ 
-        message: "You don't have a booking for this session. Please book the session first." 
-      });
+      return res.status(404).json({ message: "No booking found for this session" });
     }
 
-    // Check if already attended
-    if (booking.bookingStatus === 'Attended') {
-      return res.status(400).json({ 
-        message: "Attendance already marked for this session" 
-      });
+    if (booking.bookingStatus === "Attended") {
+      return res.status(400).json({ message: "Attendance already marked" });
     }
 
-    // Check if booking is cancelled
-    if (booking.bookingStatus === 'Cancelled') {
-      return res.status(400).json({ 
-        message: "Cannot mark attendance for a cancelled booking" 
-      });
-    }
-
-    // Mark attendance
-    booking.bookingStatus = 'Attended';
+    // 4. Update status
+    booking.bookingStatus = "Attended";
     booking.attendedAt = new Date();
-    booking.qrIdUsed = qrId;
-    booking.attendanceMethod = 'qr_scan';
-    booking.attendanceMetadata = {
-      scannedBy: memberId,
-      scannedAt: new Date(),
-    };
-
     await booking.save();
 
-    // Populate session details for response
-    await booking.populate('session');
-
-    res.json({ 
-      message: "Attendance marked successfully! Welcome to the session.",
-      booking: booking
-    });
-
+    res.status(200).json({ message: "Attendance marked successfully", booking });
   } catch (err) {
     console.error("MARK ATTENDANCE ERROR:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error during attendance marking" });
   }
 };
 

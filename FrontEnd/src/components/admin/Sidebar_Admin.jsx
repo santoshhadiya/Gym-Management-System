@@ -38,12 +38,13 @@ const Sidebar_Admin = () => {
     { name: "Verify Accounts", path: "/admin/verify-accounts", icon: "fa-regular fa-square-check" },
     { name: "Staff Schedules", path: "/admin/staff-schedules", icon: "fa-regular fa-calendar" },
     { name: "Manage Bookings", path: "/admin/bookings", icon: "fa-regular fa-calendar-check" },
+    { name: "Sessions", path: "/admin/update-session", icon: "fa-solid fa-rotate" },
+    { name: "Session QR", path: "/admin/session-qr", icon: "fa-solid fa-user-tie" },
     { name: "Announcements", path: "/admin/announcements", icon: "fa-regular fa-bell" },
     { name: "Media Gallery", path: "/admin/media-gallery", icon: "fa-regular fa-images" },
     { name: "Manage Offers", path: "/admin/offers", icon: "fa-solid fa-percent" },
     { name: "Equipment Tracking", path: "/admin/equipment-tracking", icon: "fa-solid fa-dumbbell" },
     { name: "Monitor Progress", path: "/admin/monitor-progress", icon: "fa-solid fa-chart-line" },
-    { name: "Sessions", path: "/admin/update-session", icon: "fa-solid fa-rotate" },
     { name: "Chat with Trainers", path: "/admin/chat-trainers", icon: "fa-regular fa-comment-dots" },
     { name: "View Inquiry", path: "/admin/view-inquiry", icon: "fa-solid fa-circle-question" },
     { name: "View Feedback", path: "/admin/feedbacks", icon: "fa-solid fa-message" },
@@ -51,7 +52,6 @@ const Sidebar_Admin = () => {
     { name: "Attendance", path: "/admin/attendance", icon: "fa-solid fa-clipboard-user" },
     { name: "Gym Schedule", path: "/admin/manage-gym-schedule", icon: "fa-solid fa-user-tie" },
     { name: "Create Admin", path: "/admin/create-admin", icon: "fa-solid fa-user-tie" },
-    { name: "Session QR", path: "/admin/session-qr", icon: "fa-solid fa-user-tie" },
     { name: "Settings", path: "/admin/profile", icon: "fa-solid fa-user-tie" },
 
   ];
