@@ -1,28 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { Html5QrcodeScanner } from 'html5-qrcode';
+import { useNavigate } from "react-router-dom";
 import { toast } from 'react-hot-toast';
-import { useNavigate } from "react-router-dom"; // Added for redirection
 import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext";
 
 const ScanSession = () => {
    const { api } = useGlobalContext();
    const { colors, theme } = useTheme();
-   const navigate = useNavigate(); // Hook for redirection
+   const navigate = useNavigate();
 
    const [scanner, setScanner] = useState(null);
    const [isScanning, setIsScanning] = useState(false);
-   const [recentScans, setRecentScans] = useState([]);
+   const [showSuccessModal, setShowSuccessModal] = useState(false);
+   const [modalMessage, setModalMessage] = useState("");
+   const [modalType, setModalType] = useState("success"); // "success" or "info"
 
    useEffect(() => {
       initializeScanner();
       
       return () => {
-         if (scanner) {
-            scanner.clear().catch(console.error);
-         }
+         stopScanner();
       };
    }, []);
+
+   const stopScanner = () => {
+      if (scanner) {
+         scanner.clear().catch(err => console.error("Failed to clear scanner", err));
+         setScanner(null);
+         setIsScanning(false);
+      }
+   };
 
    const initializeScanner = () => {
       const config = {
@@ -43,43 +51,18 @@ const ScanSession = () => {
       setIsScanning(true);
    };
 
-   // Helper to stop camera and redirect
-   const stopAndRedirect = async () => {
-      if (scanner) {
-         try {
-            await scanner.clear(); // Stop the camera hardware
-         } catch (error) {
-            console.error("Failed to stop scanner", error);
-         }
-      }
-      // Redirect to the booking page
-      navigate("/member/booking");
-   };
-
    const onScanSuccess = async (decodedText) => {
       try {
-         // Temporarily pause scanning state
-         setIsScanning(false);
+         // 1. Immediately stop the camera once a code is read
+         stopScanner();
          
          // Parse QR code data
          const qrData = JSON.parse(decodedText);
          
          // Validate QR code structure
-         if (!qrData.sessionId || !qrData.sessionDate || !qrData.sessionType || !qrData.qrId) {
+         if (!qrData.sessionId || !qrData.sessionDate || !qrData.qrId) {
             toast.error("Invalid QR code format");
-            setIsScanning(true);
-            return;
-         }
-
-         // Check if already scanned recently in this session state (UI level preventer)
-         const isDuplicate = recentScans.some(scan => 
-            scan.sessionId === qrData.sessionId && 
-            Date.now() - scan.timestamp < 5000 
-         );
-
-         if (isDuplicate) {
-            toast.error("QR code already scanned. Please wait...");
-            setIsScanning(true);
+            initializeScanner(); // Restart if format is wrong
             return;
          }
 
@@ -90,45 +73,43 @@ const ScanSession = () => {
             sessionDate: qrData.sessionDate
          });
 
-         toast.success(res.data.message || "Attendance marked successfully!");
+         // Check if attendance was already marked or is new
+         // Assuming backend returns specific flags or messages
+         const isAlreadyMarked = res.data.message?.toLowerCase().includes("already") || res.data.alreadyMarked;
          
-         // Stop camera and redirect on success
-         setTimeout(() => {
-            stopAndRedirect();
-         }, 1500); // Small delay so user can read the success toast
+         setModalType(isAlreadyMarked ? "info" : "success");
+         setModalMessage(res.data.message || "Attendance marked successfully!");
+         setShowSuccessModal(true);
 
       } catch (err) {
-         if (err instanceof SyntaxError) {
-            toast.error("Invalid QR code data");
-            setIsScanning(true);
-         } else {
-            const errorMessage = err.response?.data?.message || "Failed to mark attendance";
-            toast.error(errorMessage);
-
-            // If the error indicates attendance already exists, redirect anyway
-            if (errorMessage.toLowerCase().includes("already") || err.response?.status === 409) {
-               setTimeout(() => {
-                  stopAndRedirect();
-               }, 1500);
-            } else {
-               setIsScanning(true);
-            }
-         }
          console.error(err);
+         const errorMessage = err.response?.data?.message || "";
+         
+         // Handle the case where backend says attendance already exists via error status
+         if (errorMessage.toLowerCase().includes("already") || err.response?.status === 409) {
+            setModalType("info");
+            setModalMessage(errorMessage || "Attendance has already been recorded for this session.");
+            setShowSuccessModal(true);
+            stopScanner();
+         } else {
+            if (err instanceof SyntaxError) {
+               toast.error("Invalid QR code data");
+            } else {
+               toast.error(errorMessage || "Failed to mark attendance");
+            }
+            // If it's a genuine error (not "already marked"), restart scanner
+            initializeScanner();
+         }
       }
    };
 
    const onScanError = (error) => {
-      // Silently ignore scan errors
-   };
-
-   const clearRecentScans = () => {
-      setRecentScans([]);
+      // Silently ignore scan errors during search
    };
 
    return (
       <div 
-         className="w-full max-w-4xl mx-auto p-4 font-sans min-h-screen"
+         className="w-full max-w-4xl mx-auto p-4 font-sans min-h-screen relative"
          style={{ color: colors.text }}
       >
          {/* Header */}
@@ -141,27 +122,9 @@ const ScanSession = () => {
             </p>
          </div>
 
-         {/* Scanner Instructions */}
+         {/* Scanner Area */}
          <div 
-            className="rounded-2xl border p-6 mb-6"
-            style={{ backgroundColor: colors.card, borderColor: colors.border }}
-         >
-            <div className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: colors.background }}>
-               <i className="fa-solid fa-info-circle text-lg" style={{ color: colors.secondary }}></i>
-               <div className="text-sm" style={{ color: colors.textMuted }}>
-                  <p className="font-bold mb-1" style={{ color: colors.text }}>How to mark attendance:</p>
-                  <ul className="list-disc list-inside space-y-1">
-                     <li>Position your camera to scan the QR code shown by your trainer</li>
-                     <li>Upon successful scan, you will be redirected to your bookings</li>
-                     <li>QR codes are only valid on the scheduled session date</li>
-                  </ul>
-               </div>
-            </div>
-         </div>
-
-         {/* Scanner */}
-         <div 
-            className="rounded-2xl border p-6 mb-6"
+            className="rounded-2xl border p-6 mb-6 shadow-sm"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}
          >
             <div className="flex items-center justify-between mb-4">
@@ -176,51 +139,73 @@ const ScanSession = () => {
                   }}
                >
                   <i className={`fa-solid fa-circle text-xs ${isScanning ? 'animate-pulse' : ''}`}></i>
-                  {isScanning ? 'Ready to Scan' : 'Processing...'}
+                  {isScanning ? 'Ready to Scan' : 'Scanner Off'}
                </div>
             </div>
 
-            <div id="qr-reader" className="rounded-xl overflow-hidden"></div>
+            {/* If successful, we show a placeholder, otherwise the reader */}
+            {!showSuccessModal ? (
+               <div id="qr-reader" className="rounded-xl overflow-hidden border-2" style={{ borderColor: colors.border }}></div>
+            ) : (
+               <div className="h-64 flex flex-col items-center justify-center text-center p-6 rounded-xl border-2 border-dashed" style={{ borderColor: colors.border }}>
+                  <i className={`fa-solid ${modalType === 'success' ? 'fa-circle-check text-green-500' : 'fa-circle-info text-blue-500'} text-5xl mb-4`}></i>
+                  <p className="font-bold">Scan Complete</p>
+                  <p className="text-sm" style={{ color: colors.textMuted }}>Camera stopped to prevent duplicate scans</p>
+               </div>
+            )}
          </div>
 
-         {/* Recent Scans Footer */}
-         {recentScans.length > 0 && (
-            <div 
-               className="rounded-2xl border p-6"
-               style={{ backgroundColor: colors.card, borderColor: colors.border }}
-            >
-               <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold" style={{ color: colors.text }}>
-                     <i className="fa-solid fa-check-circle mr-2"></i>
-                     Session Status
-                  </h2>
+         {/* Scanner Instructions */}
+         <div 
+            className="rounded-2xl border p-6 mb-6"
+            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+         >
+            <div className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: colors.background }}>
+               <i className="fa-solid fa-lightbulb text-lg" style={{ color: colors.secondary }}></i>
+               <div className="text-sm" style={{ color: colors.textMuted }}>
+                  <p className="font-bold mb-1" style={{ color: colors.text }}>Instructions:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                     <li>Align the QR code within the scanner frame</li>
+                     <li>The scanner will stop automatically once attendance is confirmed</li>
+                     <li>Check your booking history to view attended sessions</li>
+                  </ul>
                </div>
+            </div>
+         </div>
 
-               <div className="space-y-2">
-                  {recentScans.map((scan, index) => (
-                     <div 
-                        key={index}
-                        className="flex items-center justify-between p-3 rounded-lg"
-                        style={{ backgroundColor: colors.background }}
-                     >
-                        <div className="flex items-center gap-3">
-                           <i className="fa-solid fa-circle-check text-lg" style={{ color: colors.primary }}></i>
-                           <div>
-                              <p className="font-bold text-sm" style={{ color: colors.text }}>
-                                 {scan.sessionType}
-                              </p>
-                           </div>
-                        </div>
-                        <span className="px-3 py-1 rounded-full text-xs font-bold"
-                           style={{ 
-                              backgroundColor: colors.primary,
-                              color: '#14532d'
-                           }}
-                        >
-                           Processed
-                        </span>
-                     </div>
-                  ))}
+         {/* SUCCESS / ALREADY MARKED POPUP MODAL */}
+         {showSuccessModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+               <div 
+                  className="w-full max-w-sm rounded-[2.5rem] p-8 text-center shadow-2xl animate-in zoom-in-95 duration-300"
+                  style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
+               >
+                  <div 
+                     className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
+                     style={{ backgroundColor: modalType === 'success' ? colors.primary : colors.secondary + '30' }}
+                  >
+                     <i className={`fa-solid ${modalType === 'success' ? 'fa-check text-green-900' : 'fa-info text-blue-900'} text-3xl`}></i>
+                  </div>
+                  
+                  <h2 className="text-2xl font-black mb-2" style={{ color: colors.text }}>
+                     {modalType === 'success' ? 'Success!' : 'Notice'}
+                  </h2>
+                  
+                  <p className="text-sm mb-8 font-medium" style={{ color: colors.textMuted }}>
+                     {modalMessage}
+                  </p>
+
+                  <button
+                     onClick={() => navigate('/member/booking')}
+                     className="w-full py-4 rounded-2xl font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-green-900/10"
+                     style={{ 
+                        backgroundColor: colors.primary,
+                        color: '#14532d' 
+                     }}
+                  >
+                     <i className="fa-solid fa-calendar-check mr-2"></i>
+                     Go to My Bookings
+                  </button>
                </div>
             </div>
          )}
