@@ -5,7 +5,7 @@ const Trainer = require("../models/Trainer");
 const Equipment = require("../models/Equipment");
 const Schedule = require("../models/Schedule"); // New Model
 
-const genAI = new GoogleGenerativeAI("AIzaSyD-uE1EL74mPG7UsiJGSmBNZ_v4ZL6fQAA");
+const genAI = new GoogleGenerativeAI("AIzaSyDywcq8fjR3qpO1r4SkZ5Xx0U68xad7U_8");
 
 exports.chatWithGemini = async (req, res) => {
   try {
