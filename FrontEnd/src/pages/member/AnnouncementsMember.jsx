@@ -3,9 +3,8 @@ import toast from 'react-hot-toast'; // Updated Toast
 import { useTheme } from "../../context/ThemeContext"; // Import Context
 import { useGlobalContext } from "../../context/GlobalContext";
 
-
 const AnnouncementsMember = () => {
-   const { BACKEND_URL ,loadingIMG } = useGlobalContext();
+   const { BACKEND_URL, loadingIMG } = useGlobalContext();
    const { colors, theme } = useTheme(); // Consume Theme
    const [announcements, setAnnouncements] = useState([]);
    const [loading, setLoading] = useState(true);
@@ -36,7 +35,25 @@ const AnnouncementsMember = () => {
          if (!res.ok) throw new Error("Failed to load announcements");
 
          const data = await res.json();
-         setAnnouncements(data);
+
+         // --- FILTER LOGIC ---
+         // Only show announcements where expiryDate is NOT passed
+         const now = new Date();
+         const validAnnouncements = data.filter(item => {
+            // If no expiry date is set, assume it's permanent and keep it
+            if (!item.expiryDate) return true;
+
+            // Create date object from expiry string
+            const expiry = new Date(item.expiryDate);
+            
+            // Set expiry time to the END of that day (23:59:59)
+            // This ensures it is visible ON the expiry date, but gone the next day
+            expiry.setHours(23, 59, 59, 999);
+
+            return expiry >= now;
+         });
+
+         setAnnouncements(validAnnouncements);
       } catch (err) {
          console.error(err);
          toast.error("Failed to load announcements");
@@ -89,7 +106,7 @@ const AnnouncementsMember = () => {
 
          {loading ? (
             <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
-               <img src={loadingIMG} className='h-20 w-25'/>
+               <img src={loadingIMG} className='h-20 w-25' alt="Loading" />
             </div>
          ) : (
             <div className="grid grid-cols-1 gap-6">
