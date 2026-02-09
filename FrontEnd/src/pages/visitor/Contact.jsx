@@ -280,7 +280,7 @@ const Contact = () => {
 
          <div className="space-y-4">
             {[
-              { q: "What are your opening hours?", a: "We are open Monday to Saturday from 6:00 AM to 10:00 PM. On Sundays, we are open from 8:00 AM to 12:00 PM." },
+              { q: "What are your opening hours?", a: "We are open Monday to Saturday from 6:00 AM to 10:00 PM." },
               { q: "Is personal training included in the membership?", a: "General trainer guidance is included. Dedicated 1-on-1 Personal Training packages are available as an add-on." },
               { q: "Is there parking available?", a: "Yes, the complex has ample parking space for both two-wheelers and four-wheelers." },
             ].map((faq, idx) => (
