@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
-import logo from "../../assets/logo.png"; // Removed to fix build error
+import logo from "../../assets/logo.png"; 
 import { useGlobalContext } from '../../context/GlobalContext';
 
 const RegisterPage = () => {
@@ -47,6 +47,14 @@ const RegisterPage = () => {
       return;
     }
     
+    // --- NEW: Mobile Number Validation ---
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(formData.phone)) {
+        setError("Please enter a valid 10-digit mobile number.");
+        return;
+    }
+    // -------------------------------------
+
     if (formData.password.length < 6) {
        setError("Password must be at least 6 characters long.");
        return;
@@ -102,7 +110,7 @@ const RegisterPage = () => {
         <div className='flex flex-col items-center justify-center'>
           {/* Logo Section */}
           <div className="flex justify-center mb-4">
-             <img src={logo} className='h-40'/>
+             <img src={logo} className='h-40' alt="Logo"/>
           </div>
 
           <h2 className="text-3xl font-bold text-[#2d3436] mb-2">Create Account</h2>
@@ -111,8 +119,6 @@ const RegisterPage = () => {
         </div>
         <div>
           
-          
-
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
               <i className="fa-solid fa-circle-exclamation"></i>
@@ -162,6 +168,8 @@ const RegisterPage = () => {
                     placeholder="Phone Number"
                     value={formData.phone}
                     onChange={handleChange}
+                    // Added maxLength to restrict user input visually as well
+                    maxLength="10" 
                     required
                   />
                 </div>
