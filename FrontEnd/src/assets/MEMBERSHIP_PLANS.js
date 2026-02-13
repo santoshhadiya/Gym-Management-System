@@ -21,7 +21,7 @@ const MEMBERSHIP_PLANS = [
     durationInDays: 90,
     description: "Our most popular plan for those committed to a 3-month body transformation.",
     features: [
-      "24/7 Access to Gym Floor",
+      "Easy Access to Gym Floor",
       "All Cardio & Strength Equipment",
       "2 Personal Training Sessions",
       "Steam Bath & Sauna Access",
