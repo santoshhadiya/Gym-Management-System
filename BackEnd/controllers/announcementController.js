@@ -5,9 +5,10 @@ const Announcement = require("../models/Announcement");
 // @access  Private/Admin
 exports.getAnnouncements = async (req, res) => {
   try {
+    // Admin needs to see all announcements (active & expired) for management
     const announcements = await Announcement.find().sort({ createdAt: -1 });
     
-    // Map to frontend structure if needed, or send directly
+    // Map to frontend structure
     const formatted = announcements.map(a => ({
         id: a._id,
         _id: a._id,
@@ -16,8 +17,10 @@ exports.getAnnouncements = async (req, res) => {
         audience: a.audience,
         priority: a.priority,
         publishDate: new Date(a.publishDate).toISOString().split('T')[0],
+        // Handle expiryDate safely if it exists
         expiryDate: a.expiryDate ? new Date(a.expiryDate).toISOString().split('T')[0] : "",
-        status: a.isActive ? "Active" : "Expired",
+        // Determine status based on active flag AND date check
+        status: (a.isActive && new Date(a.expiryDate) > new Date()) ? "Active" : "Expired",
         views: a.views,
         attachment: a.attachment,
         notify: a.notify
@@ -76,7 +79,8 @@ exports.deleteAnnouncement = async (req, res) => {
     const announcement = await Announcement.findById(req.params.id);
     if (!announcement) return res.status(404).json({ message: "Not found" });
 
-    await announcement.remove(); // Or findByIdAndDelete
+    // Used findByIdAndDelete as .remove() is deprecated in newer Mongoose versions
+    await Announcement.findByIdAndDelete(req.params.id); 
     res.json({ message: "Deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -96,7 +100,8 @@ exports.getAnnouncementFeed = async (req, res) => {
             { audience: "All Users" },
             { audience: role === 'member' ? "Members Only" : "Trainers Only" }
         ],
-        // expiryDate: { $gte: new Date() } // Optional: strict expiry check
+        // UPDATED: Strictly filter for expiryDate greater than NOW
+        expiryDate: { $gt: new Date() } 
     };
 
     const announcements = await Announcement.find(query).sort({ priority: -1, publishDate: -1 });
