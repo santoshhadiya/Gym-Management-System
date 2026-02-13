@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const mongoose = require("mongoose");
 
 const bookingSchema = new mongoose.Schema({
@@ -24,3 +25,5 @@ const bookingSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model("SessionBooking", bookingSchema); 
+=======
+>>>>>>> db303e4a15a08f999e34a05606f6483360373ebd
