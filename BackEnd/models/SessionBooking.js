@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 const mongoose = require("mongoose");
 
 const bookingSchema = new mongoose.Schema({
@@ -14,16 +13,29 @@ const bookingSchema = new mongoose.Schema({
   },
   bookingStatus: {
     type: String,
-    enum: ["Booked", "Cancelled", "Attended", "Confirmed"], // Added 'Confirmed' to match your controller logic
+    enum: ["Booked", "Cancelled", "Attended", "Confirmed"],
     default: "Booked",
   },
-  // [NEW] Add this field to store the reason
   cancelReason: {
     type: String,
     default: "", 
-  }
+  },
+ 
+  attendedAt: {
+    type: Date,
+  },
+  // NEW: Track QR code generation for security
+  qrGenerated: {
+    type: Boolean,
+    default: false,
+  },
+  qrGeneratedAt: {
+    type: Date,
+  },
 }, { timestamps: true });
 
-module.exports = mongoose.model("SessionBooking", bookingSchema); 
-=======
->>>>>>> db303e4a15a08f999e34a05606f6483360373ebd
+// Index for faster queries
+bookingSchema.index({ session: 1, member: 1 });
+bookingSchema.index({ member: 1, bookingStatus: 1 });
+
+module.exports = mongoose.model("SessionBooking", bookingSchema);
