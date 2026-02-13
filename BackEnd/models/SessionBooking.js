@@ -20,7 +20,7 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     default: "", 
   },
-  // NEW: Track when attendance was marked
+ 
   attendedAt: {
     type: Date,
   },
