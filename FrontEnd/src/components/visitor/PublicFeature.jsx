@@ -23,8 +23,8 @@ const PublicFeature = () => {
     },
     {
       id: 3,
-      title: "24/7 Access",
-      description: "Fitness on your schedule. Enjoy full access to our facilities any time of the day or night.",
+      title: "Easy Access",
+      description: "Fitness on your schedule. Enjoy full access to our facilities.",
       icon: "fa-key",
       bgColor: "bg-[#D9F17F]",
       textColor: "text-green-700",
