@@ -3,10 +3,8 @@ import { useGlobalContext } from "../../context/GlobalContext";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PublicFeedback = () => {
-  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
-  const [homeData, setHomeData] = useState({
-    testimonials: []
-  });
+  const { BACKEND_URL } = useGlobalContext();
+  const [testimonials, setTestimonials] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -14,153 +12,96 @@ const PublicFeedback = () => {
     const fetchHomeData = async () => {
       try {
         const res = await fetch(`${BACKEND_URL}/api/public/home-data`);
-        if (res.ok) {
-          const data = await res.json();
-          // Fallback data if testimonials array is empty or small
-          const testimonials = data.testimonials?.length >= 3 ? data.testimonials : [
-            { name: "Sarah J.", role: "Member", review: "The community here is unmatched. I've never felt more motivated!", rating: 5 },
-            { name: "Mike Ross", role: "Athlete", review: "Top tier equipment and the cleanest facility I have ever trained in.", rating: 5 },
-            { name: "Elena G.", role: "Yoga Specialist", review: "Songar's Gym changed my perspective on fitness. Truly world-class.", rating: 5 }
-          ];
-          setHomeData({ ...data, testimonials });
-        }
+        const data = await res.json();
+        const list = data.testimonials?.length >= 3 ? data.testimonials : [
+          { name: "Sarah J.", role: "Member", review: "The community here is unmatched. I've never felt more motivated!", rating: 5 },
+          { name: "Mike Ross", role: "Athlete", review: "Top tier equipment and the cleanest facility.", rating: 5 },
+          { name: "Elena G.", role: "Yoga Specialist", review: "Songar's Gym changed my perspective on fitness.", rating: 5 },
+          { name: "David K.", role: "Pro Boxer", review: "Best atmosphere for serious training.", rating: 5 }
+        ];
+        setTestimonials(list);
       } catch (err) {
-        console.error("Failed to fetch home data", err);
+        console.error("Failed to fetch", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchHomeData();
-
-    const link = document.createElement("link");
-    link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
-    return () => { document.head.removeChild(link); };
   }, [BACKEND_URL]);
 
-  // Navigation Logic
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % homeData.testimonials.length);
+  // Auto-scroll logic: moves the window by 1 every 4 seconds
+  useEffect(() => {
+    if (testimonials.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [testimonials]);
+
+  // Helper to get exactly 3 items for the current view
+  const getVisibleItems = () => {
+    if (testimonials.length === 0) return [];
+    const items = [];
+    for (let i = 0; i < 3; i++) {
+      items.push(testimonials[(currentIndex + i) % testimonials.length]);
+    }
+    return items;
   };
 
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + homeData.testimonials.length) % homeData.testimonials.length);
-  };
-
-  // Helper to identify the three cards to display
-  const getVisibleCards = () => {
-    const len = homeData.testimonials.length;
-    if (len === 0) return [];
-    
-    const prev = (currentIndex - 1 + len) % len;
-    const next = (currentIndex + 1) % len;
-
-    return [
-      { ...homeData.testimonials[prev], position: 'left' },
-      { ...homeData.testimonials[currentIndex], position: 'center' },
-      { ...homeData.testimonials[next], position: 'right' }
-    ];
-  };
-
-  if (loading) return <div className="py-20 text-center">Loading Stories...</div>;
+  if (loading) return <div className="py-20 text-center">Loading...</div>;
 
   return (
-    <section className="overflow-hidden">
+    <section className=" bg-white overflow-hidden">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-4">Community Stories</h2>
-          <p className="text-gray-500 max-w-xl mx-auto">Real results from our dedicated members. Join the movement today.</p>
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-black text-gray-900 mb-2">Community Stories</h2>
+          <p className="text-gray-500">Real results from our dedicated members</p>
         </div>
 
-        {/* Carousel Container */}
-        <div className="relative flex items-center justify-center h-[500px]">
-          
-          {/* Navigation Controls */}
-          <div className="absolute inset-0 flex items-center justify-between z-40 px-2 md:px-10 pointer-events-none">
-            <button 
-              onClick={prevSlide} 
-              className="w-12 h-12 rounded-full bg-white shadow-xl pointer-events-auto hover:bg-[#D9F17F] transition-all flex items-center justify-center border border-gray-100 group"
-            >
-              <i className="fa-solid fa-chevron-left text-gray-800 group-hover:scale-125 transition-transform"></i>
-            </button>
-            <button 
-              onClick={nextSlide} 
-              className="w-12 h-12 rounded-full bg-white shadow-xl pointer-events-auto hover:bg-[#D9F17F] transition-all flex items-center justify-center border border-gray-100 group"
-            >
-              <i className="fa-solid fa-chevron-right text-gray-800 group-hover:scale-125 transition-transform"></i>
-            </button>
-          </div>
+        <div className="flex flex-col md:flex-row gap-6 justify-center items-stretch">
+          <AnimatePresence mode="popLayout">
+            {getVisibleItems().map((item, idx) => (
+              <motion.div
+                key={`${item.name}-${currentIndex}-${idx}`} // Unique key triggers animation on index change
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                className="flex-1 min-w-[300px] bg-gray-50 p-8 rounded-3xl border border-gray-100 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex gap-1 mb-4 text-[#FEEF75]">
+                    {[...Array(5)].map((_, i) => (
+                      <i key={i} className="fa-solid fa-star text-xs"></i>
+                    ))}
+                  </div>
+                  <p className="text-gray-700 italic mb-8">"{item.review}"</p>
+                </div>
 
-          {/* Animated Feedback Cards */}
-          <div className="relative w-full max-w-6xl flex items-center justify-center">
-            <AnimatePresence mode="popLayout">
-              {getVisibleCards().map((item, idx) => {
-                const isCenter = item.position === 'center';
-                const isLeft = item.position === 'left';
-                const isRight = item.position === 'right';
-
-                return (
-                  <motion.div
-                    key={`${item.name}-${item.position}`}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ 
-                      opacity: 1, 
-                      x: isLeft ? -350 : (isRight ? 350 : 0),
-                      scale: isCenter ? 1.1 : 0.85,
-                      filter: isCenter ? 'blur(0px)' : 'blur(2px)',
-                      zIndex: isCenter ? 30 : 10,
-                    }}
-                    exit={{ opacity: 0, scale: 0.5 }}
-                    transition={{ type: "spring", stiffness: 180, damping: 20 }}
-                    className={`absolute w-full max-w-[380px] bg-white p-10 rounded-[3rem] shadow-2xl border border-gray-100 
-                      ${isCenter ? 'ring-8 ring-[#D9F17F]/10' : 'opacity-40'}
-                      hidden md:block 
-                    `}
-                    style={{ display: isCenter ? 'block' : undefined }} // Ensure center card shows on mobile
-                  >
-                    <div className="relative">
-                      <i className="fa-solid fa-quote-left text-5xl text-[#D9F17F]/20 absolute -top-4 -left-4"></i>
-                      
-                      <div className="flex gap-1 mb-6 relative z-10">
-                        {[...Array(5)].map((_, i) => (
-                          <i key={i} className={`fa-solid fa-star text-sm ${i < item.rating ? 'text-[#FEEF75]' : 'text-gray-200'}`}></i>
-                        ))}
-                      </div>
-
-                      <p className="text-gray-700 text-sm italic leading-relaxed  relative z-10">
-                        "{item.review}"
-                      </p>
-
-                      <div className="flex items-center gap-4 border-t border-gray-50 pt-6">
-                        <div className="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center text-white font-black overflow-hidden shadow-lg shadow-black/10">
-                          {item.image ? (
-                            <img src={`${BACKEND_URL}/${item.image}`} alt={item.name} className="w-full h-full object-cover" />
-                          ) : (
-                            item.name.charAt(0)
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-gray-900 text-base">{item.name}</h4>
-                          <p className="text-[10px] text-[#D9F17F] font-bold uppercase tracking-widest">{item.role}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
+                <div className="flex items-center gap-4 pt-6 border-t border-gray-200">
+                  <div className="w-12 h-12 rounded-full bg-gray-900 flex-shrink-0 overflow-hidden ring-2 ring-[#D9F17F]">
+                    {item.image ? (
+                      <img src={`${BACKEND_URL}/${item.image}`} alt={item.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white flex items-center justify-center h-full font-bold">{item.name[0]}</span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-sm">{item.name}</h4>
+                    
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
 
-        {/* Indicator Dots */}
-        <div className="flex justify-center gap-2 mt-8">
-          {homeData.testimonials.map((_, i) => (
-            <button 
+        {/* Simple Dots */}
+        <div className="flex justify-center gap-2 mt-10">
+          {testimonials.map((_, i) => (
+            <div 
               key={i} 
-              onClick={() => setCurrentIndex(i)}
-              className={`h-2 rounded-full transition-all ${currentIndex === i ? 'w-8 bg-gray-900' : 'w-2 bg-gray-300'}`}
+              className={`h-1.5 transition-all duration-300 rounded-full ${currentIndex === i ? 'w-8 bg-gray-900' : 'w-1.5 bg-gray-200'}`}
             />
           ))}
         </div>

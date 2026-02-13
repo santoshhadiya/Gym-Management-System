@@ -216,7 +216,7 @@ const Dashboard = () => {
       <div className="w-full max-w-7xl mx-auto space-y-6 pb-10 font-sans px-4 sm:px-0">
 
          {/* 1. WELCOME HEADER - Always Dark Style for contrast */}
-         <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden w-full md:w-fit mx-auto md:mx-0 cursor-pointer"
+         <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 text-white p-8 rounded-[1rem] shadow-xl relative overflow-hidden w-full md:w-fit mx-auto md:mx-0 cursor-pointer"
             onClick={navigateMembership}>
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#D9F17F] rounded-full filter blur-[80px] opacity-20 translate-x-1/2 -translate-y-1/2"></div>
             <div className="relative z-10 flex gap-6 mt-4 md:mt-0 text-center w-full justify-center md:justify-start md:w-auto">
@@ -247,7 +247,7 @@ const Dashboard = () => {
       <div
         key={i}
         onClick={navigateProgress}
-        className="relative overflow-hidden p-6 rounded-[2rem] border shadow-sm flex flex-col justify-between transition-all duration-500 cursor-pointer group hover:-translate-y-1 hover:shadow-xl"
+        className="relative overflow-hidden p-6 rounded-[1rem] border shadow-sm flex flex-col justify-between transition-all duration-500 cursor-pointer group hover:-translate-y-1 hover:shadow-xl"
         style={{
           backgroundColor: cardBg,
           borderColor: 'rgba(255,255,255,0.4)'
@@ -296,7 +296,7 @@ const Dashboard = () => {
 
                {/* Weight Chart */}
                <div
-                  className="p-6 rounded-[2.5rem] border shadow-sm transition-colors duration-300"
+                  className="p-6 rounded-[1rem] border shadow-sm transition-colors duration-300"
                   style={{ backgroundColor: colors.card, borderColor: colors.border }}
                >
                   <div className="flex justify-between items-center mb-6">
@@ -322,7 +322,7 @@ const Dashboard = () => {
 
                {/* Next Session Card */}
                <div
-                  className="p-6 rounded-[2.5rem] border flex flex-col sm:flex-row justify-between items-center transition-colors duration-300"
+                  className="p-6 rounded-[1rem] border flex flex-col sm:flex-row justify-between items-center transition-colors duration-300"
                   style={{
                      backgroundColor: theme === 'dark' ? '#1f2937' : '#f8f9fa',
                      borderColor: colors.border
@@ -360,7 +360,7 @@ const Dashboard = () => {
             <div className="space-y-6">
                {/* Diet Adherence */}
                <div
-                  className="p-6 rounded-[2.5rem] border shadow-sm text-center relative transition-colors duration-300"
+                  className="p-6 rounded-[1rem] border shadow-sm text-center relative transition-colors duration-300"
                   style={{ backgroundColor: colors.card, borderColor: colors.border }}
                >
                   <h3 className="text-lg font-bold mb-6" style={{ color: colors.text }}>Diet Adherence</h3>
@@ -378,7 +378,7 @@ const Dashboard = () => {
 
                {/* Notifications */}
                <div
-                  className="p-6 rounded-[2.5rem] border"
+                  className="p-6 rounded-[1rem] border"
                   style={{
                      backgroundColor: theme === 'dark' ? 'rgba(30, 58, 138, 0.2)' : '#eff6ff', // blue-900/20 vs blue-50
                      borderColor: theme === 'dark' ? 'rgba(30, 58, 138, 0.4)' : '#dbeafe'

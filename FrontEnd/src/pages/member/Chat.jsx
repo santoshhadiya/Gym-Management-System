@@ -223,7 +223,7 @@ const Chat = () => {
    }
 
   return (
-    <div className="flex flex-col md:flex-row h-[92vh] md:h-[88vh] md:rounded-3xl overflow-hidden shadow-2xl border font-sans mx-auto max-w-7xl md:mt-4 relative"
+    <div className="flex flex-col md:flex-row h-[92vh] md:h-[88vh] md:rounded-xl overflow-hidden  border font-sans mx-auto max-w-7xl md:mt-4 relative"
          style={{ backgroundColor: colors.background, borderColor: colors.border }}>
       
       {/* --- SIDEBAR --- */}
@@ -237,7 +237,7 @@ const Chat = () => {
          backgroundColor: theme === 'dark' ? 'rgba(17, 24, 39, 0.95)' : 'rgba(205, 231, 254, 0.3)', // #111827 / #CDE7FE
          borderColor: colors.border
       }}>
-        <div className="p-6 md:p-8 border-b" style={{ borderColor: colors.border, backgroundColor: theme === 'dark' ? colors.card : 'rgba(255,255,255,0.8)' }}>
+        <div className="p-6 md:p-6 border-b" style={{ borderColor: colors.border, backgroundColor: theme === 'dark' ? colors.card : 'rgba(255,255,255,0.8)' }}>
            <div className="flex items-center justify-between">
               <h2 className="text-xl md:text-2xl font-extrabold tracking-tight" style={{ color: colors.text }}>Messages</h2>
               {!showSidebar && currentChat && (
@@ -246,15 +246,7 @@ const Chat = () => {
                 </button>
               )}
            </div>
-           {trainer && (
-               <button 
-                  onClick={startChatWithTrainer}
-                  className="mt-4 w-full py-3 rounded-2xl text-[10px] md:text-xs font-black hover:shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-wider active:scale-95"
-                  style={{ backgroundColor: colors.primary, color: '#111827' }} // Always dark text on Lime
-               >
-                  <i className="fa-solid fa-user-ninja"></i> Chat with Trainer
-               </button>
-           )}
+           
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
@@ -342,7 +334,6 @@ const Chat = () => {
                   </div>
                   <div>
                      <h3 className="font-extrabold text-base md:text-lg leading-tight" style={{ color: colors.text }}>{currentChat.participant?.name}</h3>
-                     <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest" style={{ color: colors.textMuted }}>Active</span>
                   </div>
                </div>
             </div>

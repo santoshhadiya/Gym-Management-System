@@ -234,7 +234,7 @@ const Progress = () => {
     labels: ["Adherence", "Missed"],
     datasets: [{
       data: [dietPercentage, 100 - dietPercentage],
-      backgroundColor: ["#4ade80", theme === 'dark' ? '#374151' : '#f3f4f6'],
+      backgroundColor: ["#D5EBFE", theme === 'dark' ? '#374151' : '#f3f4f6'],
       borderWidth: 0,
     }],
   };

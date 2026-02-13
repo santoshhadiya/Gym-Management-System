@@ -100,14 +100,11 @@ const Membership = () => {
    }
 
    return (
-      <div className="w-full max-w-6xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-6xl mx-auto space-y-6 pb-10 font-sans px-4 sm:px-6 lg:px-6">
 
          {/* --- HEADER --- */}
          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-            <div>
-               <h1 className="text-2xl md:text-3xl font-black" style={{ color: colors.text }}>Membership</h1>
-               <p className="text-sm md:text-base mt-1" style={{ color: colors.textMuted }}>Manage your plan, payments, and renewals.</p>
-            </div>
+            
             <div className="flex gap-3 w-full md:w-auto">
                {/* <button 
                   onClick={handleRenewalRequest}
@@ -124,7 +121,7 @@ const Membership = () => {
 
          {/* --- MAIN MEMBERSHIP CARD --- */}
          {/* Kept dark gradient always for consistency, updated text colors */}
-         <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-[2.5rem] p-6 md:p-10 text-white relative overflow-hidden shadow-2xl">
+         <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-[2.5rem] p-6 md:p-10 text-white relative overflow-hidden ">
             <div className="absolute top-0 right-0 w-96 h-96 bg-[#D9F17F] rounded-full filter blur-[120px] opacity-10 translate-x-1/3 -translate-y-1/3"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#CDE7FE] rounded-full filter blur-[100px] opacity-10 -translate-x-1/3 translate-y-1/3"></div>
 
@@ -187,14 +184,8 @@ const Membership = () => {
                      <span className="text-sm" style={{ color: colors.textMuted }}>Plan Price</span>
                      <span className="font-bold" style={{ color: colors.text }}>₹{planPrice.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 rounded-xl border border-green-900/20 bg-green-50 dark:bg-green-900/20">
-                     <span className="text-sm text-green-800 dark:text-green-400">Amount Paid</span>
-                     <span className="font-bold text-green-900 dark:text-green-300">₹{amountPaid.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-xl border border-red-900/20 bg-red-50 dark:bg-red-900/20">
-                     <span className="text-sm text-red-800 dark:text-red-400">Pending Dues</span>
-                     <span className="font-bold text-red-600 dark:text-red-400">₹{pendingAmount.toLocaleString()}</span>
-                  </div>
+                  
+                  
                   <p className="text-xs text-right mt-2" style={{ color: colors.textMuted }}>Last Payment: {lastPaymentDate}</p>
                </div>
             </div>

@@ -143,12 +143,12 @@ const Dashboard = () => {
          {/* STATS GRID - Aggregating live counts for clients, sessions, and ratings */}
          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, i) => (
-               <div key={i} className="group relative bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+               <div key={i} className="group relative bg-white p-6 rounded-[1rem] border border-gray-100 shadow-sm overflow-hidden" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
                   <div className="flex justify-between items-start mb-4">
                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${stat.color} ${stat.text}`}>
                         <i className={`fa-solid ${stat.icon}`}></i>
                      </div>
-                     <span className="text-[10px] font-black text-gray-300 group-hover:text-blue-500 transition-colors">LIVE</span>
+                     
                   </div>
                   <div>
                      <h3 className="text-3xl font-black" style={{ color: colors.text }}>{stat.value}</h3>

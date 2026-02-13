@@ -92,7 +92,7 @@ const AnnouncementsMember = () => {
 
    return (
       <div
-         className="w-full rounded-3xl p-8 shadow-sm border font-sans min-h-screen relative"
+         className="w-full  p-6 font-sans min-h-screen relative"
          style={{ backgroundColor: colors.background, borderColor: colors.border }}
       >
 

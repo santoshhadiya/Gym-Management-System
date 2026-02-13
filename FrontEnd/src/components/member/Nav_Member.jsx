@@ -100,7 +100,7 @@ const Nav_Member = ({ onMenuClick }) => {
   }
   return (
     <nav
-      className="flex justify-between items-center px-6 py-4 mb-6 relative z-20 rounded-4xl shadow-sm transition-colors"
+      className="flex justify-between items-center px-6 py-4 mb-6 relative z-20  border-b-1 border-gray-300 transition-colors"
       style={{ backgroundColor: colors.card, color: colors.text }}
     >
 

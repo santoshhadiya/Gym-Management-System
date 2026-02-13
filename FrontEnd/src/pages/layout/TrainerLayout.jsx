@@ -7,7 +7,7 @@ import logo from "../../assets/logo.png";
 // --- INTERNAL COMPONENT: TRAINER NAVIGATION (Top Bar) ---
 const Nav_Trainer = ({ onMenuClick, trainerStatus }) => {
   return (
-    <section className="w-full bg-white rounded-[2rem] px-4 py-4 md:px-8 md:py-5 mb-6 md:mb-8 shadow-sm border border-gray-100 transition-all duration-300">
+    <section className="w-full bg-white py-2 transition-all duration-300">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 md:gap-6">
           <button
@@ -18,14 +18,10 @@ const Nav_Trainer = ({ onMenuClick, trainerStatus }) => {
           </button>
 
           <div>
-            <h1 className="text-lg md:text-2xl font-black text-[#121212] flex items-center gap-2 md:gap-3 tracking-tight">
+            <h2 className="text-lg md:text-xl font-black text-[#121212] flex items-center gap-2 md:gap-3 tracking-tight">
               Hello, Coach!
-              {trainerStatus === "Inactive" ? (
-                <span className="text-[10px] bg-red-500 text-white px-2 py-1 rounded-lg ml-2 animate-pulse uppercase tracking-widest">Account Inactive</span>
-              ) : (
-                <span className="text-xl md:text-2xl animate-bounce">🔥</span>
-              )}
-            </h1>
+             
+            </h2>
             <p className="text-[9px] md:text-[11px] text-gray-400 font-bold uppercase tracking-[0.15em] truncate max-w-[150px] md:max-w-none">
               {trainerStatus === "Inactive" ? "Contact Admin to reactivate your access." : "Ready to transform lives today?"}
             </p>
@@ -74,8 +70,8 @@ const Sidebar_Trainer = ({ isOpen, onClose, trainerStatus }) => {
     { path: '/trainer/workout-diet', label: 'Workout & Diet Plans', icon: 'fa-clipboard-list', restricted: true },
     { path: '/trainer/monitor-progress', label: 'Member Progress', icon: 'fa-chart-line', restricted: true },
     { path: '/trainer/feedbacks', label: 'Feedbacks', icon: 'fa-star', restricted: true },
-    { path: '/trainer/availability', label: 'My Availability', icon: 'fa-clock' },
-    { path: '/trainer/payments', label: 'Payment Status', icon: 'fa-file-invoice-dollar' },
+   /*  { path: '/trainer/availability', label: 'My Availability', icon: 'fa-clock' }, */
+/*     { path: '/trainer/payments', label: 'Payment Status', icon: 'fa-file-invoice-dollar' }, */
     { path: '/trainer/chat/member', label: 'Chat with Member', icon: 'fa-comments', restricted: true },
     { path: '/trainer/chat/owner', label: 'Chat with Owner', icon: 'fa-user-shield', restricted: true },
   ];

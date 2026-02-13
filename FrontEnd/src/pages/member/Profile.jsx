@@ -143,7 +143,7 @@ const Profile = () => {
    // --- RENDER ---
    return (
       <div className="w-full max-w-7xl mx-auto pb-14 px-4 sm:px-6">
-         
+
          {/* --- ADVANCED STYLES & ANIMATIONS --- */}
          <style>{`
             /* 1. 3D Card Tilt Effect */
@@ -190,9 +190,9 @@ const Profile = () => {
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
 
             {/* --- LEFT: IDENTITY & NAVIGATION (Sticky) --- */}
-            <div className="lg:col-span-4 xl:col-span-3 space-y-6">
-               <div 
-                  className="rounded-[2.5rem] p-6 text-center border relative overflow-hidden anim-enter  top-8 shadow-xl hover-3d"
+            <div className="lg:col-span-4 xl:col-span-4 space-y-6">
+               <div
+                  className="rounded-[1rem] p-6 text-center border relative overflow-hidden anim-enter  top-8  "
                   style={{ backgroundColor: colors.card, borderColor: colors.border }}
                >
                   {/* Decorative Header Gradient */}
@@ -216,9 +216,9 @@ const Profile = () => {
                      </div>
 
                      <h2 className="mt-5 text-2xl font-black tracking-tight" style={{ color: colors.text }}>{profile.name}</h2>
-                     
+
                      {/* Glassmorphism Status Badge */}
-                     <div className="mt-2 inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-panel shadow-sm">
+                     <div className="mt-2 inline-flex items-center gap-2 px-4 py-1.5 border-b-2 glass-panel ">
                         <span className={`w-2 h-2 rounded-full ${profile.status === 'Active' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
                         <span className="text-xs font-bold uppercase tracking-widest opacity-90" style={{ color: colors.text }}>{profile.status} Member</span>
                      </div>
@@ -235,11 +235,11 @@ const Profile = () => {
                            <button
                               key={tab.id}
                               onClick={() => setActiveTab(tab.id)}
-                              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 relative overflow-hidden group ${activeTab === tab.id ? 'bg-gray-100 dark:bg-white/5 shadow-md' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                              className={`w-full flex items-center gap-4 px-5 py-4  cursor-pointer transition-all duration-300 relative overflow-hidden group ${activeTab === tab.id ? 'bg-gray-100 dark:bg-white/5 border-b-1 border-gray-400' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
                            >
                               {/* Active Indicator Bar */}
                               {activeTab === tab.id && <div className="absolute left-0 top-3 bottom-3 w-1 bg-[#D9F17F] rounded-r-full"></div>}
-                              
+
                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-colors ${activeTab === tab.id ? 'bg-[#D9F17F] text-black shadow-lg shadow-[#D9F17F]/20' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
                                  <i className={`fa-solid ${tab.icon}`}></i>
                               </div>
@@ -252,41 +252,37 @@ const Profile = () => {
             </div>
 
             {/* --- RIGHT: ACTION CENTER --- */}
-            <div className="lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
-               
+            <div className="lg:col-span-8 xl:col-span-8 flex flex-col gap-6">
+
                {/* Context Header */}
-               <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 anim-enter" style={{ animationDelay: '0.1s' }}>
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 anim-enter" >
                   <div>
-                     <h1 className="text-4xl font-black mb-1 tracking-tight" style={{ color: colors.text }}>
-                        {activeTab === 'personal' && 'Hello, ' + profile.name.split(' ')[0] + '!'}
-                        {activeTab === 'fitness' && 'Your Progress'}
-                        {activeTab === 'settings' && 'Account Security'}
-                     </h1>
+
                      <p className="text-sm font-medium opacity-60 max-w-md leading-relaxed" style={{ color: colors.text }}>
                         {activeTab === 'personal' && 'View and manage your personal information and contact details.'}
                         {activeTab === 'fitness' && 'Track your body metrics, update goals, and monitor progress.'}
                         {activeTab === 'settings' && 'Keep your account secure by updating your password regularly.'}
                      </p>
                   </div>
-                  
+
                   {/* Action Buttons */}
                   <div className="flex gap-3 w-full md:w-auto">
                      {!isEditing ? (
-                        <button onClick={() => setIsEditing(true)} 
-                           className="btn-press flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-2xl border-2 font-bold text-sm uppercase tracking-wide hover:bg-gray-100 dark:hover:bg-white/5 transition-all shadow-sm"
+                        <button onClick={() => setIsEditing(true)}
+                           className="btn-press flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-xl border-2 font-bold text-sm uppercase tracking-wide hover:bg-gray-100 dark:hover:bg-white/5 transition-all shadow-sm cursor-pointer"
                            style={{ borderColor: colors.border, color: colors.text }}>
                            <i className="fa-solid fa-pen-to-square"></i> Edit Details
                         </button>
                      ) : (
                         <>
                            <button onClick={() => { setIsEditing(false); setTempData(profile); }}
-                              className="btn-press flex-1 px-8 py-4 rounded-2xl font-bold text-sm uppercase tracking-wide border hover:bg-red-50 dark:hover:bg-red-900/10 hover:border-red-200 dark:hover:border-red-800 hover:text-red-500 transition-colors"
+                              className="btn-press flex-1 px-8 py-4 rounded-xl font-bold text-sm uppercase tracking-wide border  transition-colors cursor-pointer"
                               style={{ borderColor: colors.border, color: colors.text }}>
                               Cancel
                            </button>
                            <button onClick={handleSave}
-                              className="btn-press flex-1 px-10 py-4 rounded-2xl font-bold text-sm uppercase tracking-wide bg-[#D9F17F] text-black shadow-xl shadow-[#D9F17F]/30 hover:-translate-y-1 transition-all">
-                              Save Changes
+                              className="btn-press flex-1 px-10 py-4 rounded-xl font-bold text-sm uppercase tracking-wide bg-[#D9F17F] text-black cursor-pointer">
+                              Save
                            </button>
                         </>
                      )}
@@ -294,9 +290,9 @@ const Profile = () => {
                </div>
 
                {/* Main Form Card */}
-               <div className="rounded-[3rem] p-8 md:p-12 border shadow-lg flex-1 relative overflow-hidden anim-enter hover-3d" 
-                    style={{ backgroundColor: colors.card, borderColor: colors.border, animationDelay: '0.2s' }}>
-                  
+               <div className="rounded-[1rem] p-8 md:p-12 border flex-1 relative overflow-hidden anim-enter "
+                  style={{ backgroundColor: colors.card, borderColor: colors.border, animationDelay: '0.2s' }}>
+
                   {/* Background Icon Watermark */}
                   <div className="absolute top-10 right-10 p-10 opacity-[0.03] pointer-events-none transform rotate-12">
                      <i className={`fa-solid ${activeTab === 'personal' ? 'fa-id-card' : activeTab === 'fitness' ? 'fa-bolt' : 'fa-lock'} text-9xl`}></i>
@@ -309,8 +305,8 @@ const Profile = () => {
                            <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">Full Name</label>
                            <div className="relative group">
                               <i className="fa-solid fa-user absolute left-6 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:text-[#D9F17F] group-focus-within:opacity-100 transition-all"></i>
-                              <input type="text" name="name" disabled={!isEditing} value={tempData.name} onChange={handleInputChange} 
-                                 className="input-glow w-full pl-14 pr-6 py-5 rounded-2xl border-2 outline-none font-bold text-xl disabled:opacity-60"
+                              <input type="text" name="name" disabled={!isEditing} value={tempData.name} onChange={handleInputChange}
+                                 className="input-glow w-full pl-14 pr-6 py-3 rounded-xl border-2 outline-none font-bold text-md disabled:opacity-60"
                                  style={{ borderColor: colors.border, color: colors.text }} />
                            </div>
                         </div>
@@ -318,8 +314,8 @@ const Profile = () => {
                            <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">Email Address</label>
                            <div className="relative group">
                               <i className="fa-solid fa-envelope absolute left-6 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:text-[#D9F17F] group-focus-within:opacity-100 transition-all"></i>
-                              <input type="email" value={tempData.email} disabled 
-                                 className="input-glow w-full pl-14 pr-6 py-5 rounded-2xl border-2 outline-none font-medium text-xl opacity-60 cursor-not-allowed"
+                              <input type="email" value={tempData.email} disabled
+                                 className="input-glow w-full pl-14 pr-6 py-3 rounded-xl border-2 outline-none font-medium text-md opacity-60 cursor-not-allowed"
                                  style={{ borderColor: colors.border, color: colors.text }} />
                            </div>
                         </div>
@@ -327,15 +323,15 @@ const Profile = () => {
                            <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">Phone Number</label>
                            <div className="relative group">
                               <i className="fa-solid fa-phone absolute left-6 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:text-[#D9F17F] group-focus-within:opacity-100 transition-all"></i>
-                              <input type="tel" name="phone" disabled={!isEditing} value={tempData.phone} onChange={handleInputChange} 
-                                 className="input-glow w-full pl-14 pr-6 py-5 rounded-2xl border-2 outline-none font-bold text-xl disabled:opacity-60"
+                              <input type="tel" name="phone" disabled={!isEditing} value={tempData.phone} onChange={handleInputChange}
+                                 className="input-glow w-full pl-14 pr-6 py-3 rounded-xl border-2 outline-none font-bold text-md disabled:opacity-60"
                                  style={{ borderColor: colors.border, color: colors.text }} />
                            </div>
                         </div>
                         <div className="space-y-3 md:col-span-2">
                            <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">Address</label>
-                           <textarea name="address" rows="3" disabled={!isEditing} value={tempData.address} onChange={handleInputChange} 
-                              className="input-glow w-full px-6 py-5 rounded-2xl border-2 outline-none font-medium text-lg resize-none disabled:opacity-60 leading-relaxed"
+                           <textarea name="address" rows="3" disabled={!isEditing} value={tempData.address} onChange={handleInputChange}
+                              className="input-glow w-full px-6 py-3 rounded-xl border-2 outline-none font-medium text-lg resize-none disabled:opacity-60 leading-relaxed"
                               style={{ borderColor: colors.border, color: colors.text }}></textarea>
                         </div>
                      </div>
@@ -347,35 +343,33 @@ const Profile = () => {
                         {/* 3D Cards for Stats */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                            {['height', 'weight'].map((field) => (
-                              <div key={field} className="relative overflow-hidden rounded-[2rem] p-8 border-2 group transition-all duration-300 hover:border-[#D9F17F] hover:shadow-lg hover:-translate-y-1" 
-                                   style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.03)' : '#f8f9fa', borderColor: colors.border }}>
+                              <div key={field} className="relative overflow-hidden rounded-[1rem] p-4 border-2 group transition-all duration-300 hover:border-[#D9F17F] "
+                                 style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.03)' : '#f8f9fa', borderColor: colors.border }}>
                                  <div className="flex justify-between items-start mb-4">
                                     <span className="text-xs font-black uppercase opacity-40 tracking-widest">{field === 'height' ? 'HEIGHT' : 'WEIGHT'}</span>
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner ${field === 'height' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-md shadow-inner ${field === 'height' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
                                        <i className={`fa-solid ${field === 'height' ? 'fa-ruler-vertical' : 'fa-scale-unbalanced'}`}></i>
                                     </div>
                                  </div>
                                  <div className="flex items-baseline gap-2 mt-2">
-                                    <input type="number" name={field} disabled={!isEditing} value={tempData.fitness[field]} onChange={(e) => handleInputChange(e, 'fitness')} 
-                                       className="w-full bg-transparent text-6xl font-black outline-none border-none p-0 focus:ring-0 disabled:cursor-not-allowed tracking-tighter"
+                                    <input type="number" name={field} disabled={!isEditing} value={tempData.fitness[field]} onChange={(e) => handleInputChange(e, 'fitness')}
+                                       className="w-full bg-transparent text-3xl font-black outline-none border-none p-0 focus:ring-0 disabled:cursor-not-allowed tracking-tighter"
                                        style={{ color: colors.text }} />
                                     <span className="text-sm font-bold opacity-40 uppercase">{field === 'height' ? 'cm' : 'kg'}</span>
                                  </div>
                               </div>
                            ))}
                         </div>
-                        
+
                         <div className="space-y-3">
                            <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">Current Goal</label>
                            <div className="relative group">
-                              <select name="goal" disabled={!isEditing} value={tempData.fitness.goal} onChange={(e) => handleInputChange(e, 'fitness')} 
-                                 className="input-glow w-full px-8 py-6 rounded-2xl border-2 font-bold text-2xl outline-none appearance-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                              <select name="goal" disabled={!isEditing} value={tempData.fitness.goal} onChange={(e) => handleInputChange(e, 'fitness')}
+                                 className="input-glow w-full px-8 py-6 rounded-xl border-2 font-bold text-md outline-none appearance-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                                  style={{ borderColor: colors.border, color: colors.text }}>
                                  {['Weight Loss', 'Muscle Gain', 'Endurance', 'General Fitness'].map(o => <option key={o} className="text-black text-lg">{o}</option>)}
                               </select>
-                              <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none opacity-50 transition-transform group-hover:translate-y-0.5">
-                                 <i className="fa-solid fa-chevron-down text-2xl"></i>
-                              </div>
+                             
                            </div>
                         </div>
                      </div>
@@ -385,30 +379,7 @@ const Profile = () => {
                   {activeTab === 'settings' && (
                      <div className="flex flex-col xl:flex-row gap-12 h-full anim-enter">
                         {/* Security Health Widget */}
-                        <div className="hidden xl:flex flex-col justify-between w-1/3 p-8 rounded-[2.5rem] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-white/5 dark:to-white/0 border border-dashed relative overflow-hidden" 
-                             style={{ borderColor: colors.border }}>
-                           {/* Glowing Orb */}
-                           <div className="absolute top-0 right-0 w-32 h-32 bg-[#D9F17F] opacity-20 blur-3xl rounded-full translate-x-10 -translate-y-10"></div>
-                           
-                           <div>
-                              <div className="w-20 h-20 rounded-3xl bg-green-100 text-green-600 flex items-center justify-center text-4xl mb-6 shadow-sm">
-                                 <i className="fa-solid fa-shield-check"></i>
-                              </div>
-                              <h3 className="text-2xl font-black mb-2" style={{ color: colors.text }}>Secure</h3>
-                              <p className="text-sm font-medium opacity-60 leading-relaxed" style={{ color: colors.text }}>
-                                 Your account security is optimal. We recommend updating your password every 90 days.
-                              </p>
-                           </div>
-                           <div className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700">
-                              <div className="flex justify-between items-center text-xs font-bold opacity-40 uppercase tracking-widest mb-2">
-                                 <span>Strength</span>
-                                 <span>Strong</span>
-                              </div>
-                              <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                 <div className="w-[85%] h-full bg-green-500 rounded-full"></div>
-                              </div>
-                           </div>
-                        </div>
+                       
 
                         {/* Password Form */}
                         <form onSubmit={handlePasswordChange} className="flex-1 flex flex-col justify-center space-y-6">
@@ -419,19 +390,19 @@ const Profile = () => {
                                     {idx > 0 && <span className="w-1.5 h-1.5 rounded-full bg-[#D9F17F]"></span>}
                                  </label>
                                  <div className="relative group">
-                                    <input type="password" value={passwords[field]} onChange={e => setPasswords({ ...passwords, [field]: e.target.value })} 
-                                       className="input-glow w-full px-8 py-5 rounded-2xl border-2 font-bold text-xl outline-none transition-all placeholder-opacity-20"
+                                    <input type="password" value={passwords[field]} onChange={e => setPasswords({ ...passwords, [field]: e.target.value })}
+                                       className="input-glow w-full px-8 py-3 rounded-xl border-2 font-bold text-md outline-none transition-all placeholder-opacity-20"
                                        placeholder="••••••••"
                                        style={{ borderColor: colors.border, color: colors.text }} />
                                     <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:text-[#D9F17F] group-focus-within:opacity-100 transition-all">
-                                       <i className={`fa-solid ${field === 'confirm' ? 'fa-check-double' : 'fa-key'} text-xl`}></i>
+                                       <i className={`fa-solid ${field === 'confirm' ? 'fa-check-double' : 'fa-key'} text-md`}></i>
                                     </div>
                                  </div>
                               </div>
                            ))}
                            <div className="pt-6">
-                              <button type="submit" className="btn-press w-full py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] bg-gray-900 text-white dark:bg-white dark:text-black hover:opacity-90 shadow-xl transition-all hover:shadow-2xl">
-                                 Update Credentials
+                              <button type="submit" className="btn-press w-full py-3 rounded-xl font-black text-sm   bg-gray-900 text-white dark:bg-white dark:text-black border-1 border-gray-400 cursor-pointer">
+                                 Update
                               </button>
                            </div>
                         </form>

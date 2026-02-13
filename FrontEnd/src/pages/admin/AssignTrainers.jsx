@@ -248,7 +248,7 @@ const AssignTrainers = () => {
                     <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Member</th>
                     <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Plan</th>
                     <th className="px-6 py-4 font-semibold" style={{ color: colors.text }}>Assigned Trainer</th>
-                    <th className="px-6 py-4 font-semibold text-center" style={{ color: colors.text }}>Since</th>
+                    
                     <th className="px-6 py-4 font-semibold text-right" style={{ color: colors.text }}>Actions</th>
                   </tr>
                 </thead>
@@ -274,9 +274,7 @@ const AssignTrainers = () => {
                             <span className="italic" style={{ color: colors.textMuted }}>Unassigned</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-center text-xs" style={{ color: colors.textMuted }}>
-                          {member.assignedDate ? new Date(member.assignedDate).toLocaleDateString() : "-"}
-                        </td>
+                        
                         <td className="px-6 py-4 text-right">
                           {assignedTrainer ? (
                             <div className="flex justify-end gap-2">

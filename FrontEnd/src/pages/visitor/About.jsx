@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import gym from "../../assets/gym.jpg"
 
 const About = () => {
   // Inject Font Awesome for icons
@@ -45,7 +46,7 @@ const About = () => {
             <div className="w-full md:w-1/2 relative">
               <div className="absolute inset-0 bg-[#CDE7FE] rounded-[2.5rem] rotate-3 transform translate-x-2 translate-y-2"></div>
               <img
-                src="https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=1469&auto=format&fit=crop"
+                src={gym}
                 alt="Gym Founder"
                 className="relative rounded-[2.5rem] shadow-xl w-full object-cover z-10 h-[400px]"
               />
@@ -63,21 +64,8 @@ const About = () => {
                 </p>
               </div>
               
-              {/* Stats Strip (Achievements) */}
-              <div className="grid grid-cols-3 gap-4 mt-8 border-t border-gray-100 pt-8">
-                <div>
-                  <h4 className="text-2xl font-black text-[#D9F17F]">10+</h4>
-                  <p className="text-xs text-gray-500 uppercase font-bold">Years Experience</p>
-                </div>
-                <div>
-                  <h4 className="text-2xl font-black text-[#FEEF75]">5k+</h4>
-                  <p className="text-xs text-gray-500 uppercase font-bold">Members Trained</p>
-                </div>
-                <div>
-                  <h4 className="text-2xl font-black text-[#CDE7FE]">3</h4>
-                  <p className="text-xs text-gray-500 uppercase font-bold">City Locations</p>
-                </div>
-              </div>
+              
+             
             </div>
           </div>
         </div>
@@ -87,7 +75,7 @@ const About = () => {
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-black text-gray-900 mb-4">World-Class Facilities</h2>
+            <h2 className="text-3xl font-black text-gray-900 mb-4">Facilities</h2>
             <p className="text-gray-500 max-w-xl mx-auto">We invest in the best so you can train at your best.</p>
           </div>
 

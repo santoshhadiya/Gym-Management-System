@@ -4,6 +4,7 @@ import { useGlobalContext } from "../../context/GlobalContext";
 import PublicFeature from '../../components/visitor/PublicFeature';
 import Footer from '../../components/visitor/Footer';
 import GymChatbot from './GymChatbot';
+import PublicFeedback from '../../components/visitor/PublicFeedback';
 
 const Home = () => {
 
@@ -187,35 +188,7 @@ const Home = () => {
 
       {/* 5. TESTIMONIALS (UPDATED WITH IMG & STARS) */}
       <section className="py-20 bg-white relative overflow-hidden">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-12 scroll-hidden">Real Results</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {homeData.testimonials.slice(0, 3).map((t, i) => (
-              <div key={i} className="p-8 bg-gray-50 rounded-3xl border border-gray-100 shadow-lg scroll-hidden hover:-translate-y-2 transition-transform duration-300">
-                <div className="text-[#D9F17F] text-2xl mb-4"><i className="fas fa-quote-left"></i></div>
-                <p className="text-gray-600 font-medium mb-6 italic">"{t.text}"</p>
-
-                {/* Updated User Profile Section with Image & Stars */}
-                <div className="flex items-center justify-center gap-4 mt-6">
-                  <img
-                    src={`https://randomuser.me/api/portraits/${i % 2 === 0 ? 'men' : 'women'}/${i + 25}.jpg`}
-                    alt={t.name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-[#D9F17F] shadow-sm"
-                  />
-                  <div className="text-left">
-                    <div className="flex text-yellow-400 text-xs mb-1 gap-0.5">
-                      {[...Array(5)].map((_, starI) => (
-                        <i key={starI} className="fas fa-star"></i>
-                      ))}
-                    </div>
-                    <div className="font-black text-gray-900 uppercase tracking-wider text-sm">{t.name}</div>
-                  </div>
-                </div>
-
-              </div>
-            ))}
-          </div>
-        </div>
+       <PublicFeedback/>
       </section>
 
       {/* 6. TRANSFORMATION SLIDER */}

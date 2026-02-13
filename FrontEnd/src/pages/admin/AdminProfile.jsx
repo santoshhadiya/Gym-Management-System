@@ -130,7 +130,7 @@ const AdminProfile = () => {
                 <div className="relative group cursor-pointer" onClick={() => isEditingAdmin && adminFileRef.current.click()}>
                   <img
                     src={formData.profileImage.startsWith('uploads') ? `${BACKEND_URL}/${formData.profileImage}` : formData.profileImage}
-                    className="w-32 h-32 rounded-3xl object-cover border-4"
+                    className="w-32 h-32 rounded-3xl object-cover border-4 "
                     style={{ borderColor: colors.primary }}
                     alt="Admin"
                   />

@@ -163,7 +163,7 @@ const Feedback = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-6">
+    <div className="w-full max-w-4xl mx-auto space-y-8 pb-10 font-sans ">
 
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">

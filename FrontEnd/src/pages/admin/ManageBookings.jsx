@@ -151,7 +151,7 @@ const ManageBookings = () => {
 
    return (
       <div 
-         className="w-full rounded-3xl p-4 font-sans min-h-screen relative transition-colors duration-300"
+         className="w-full p-4 font-sans min-h-screen relative transition-colors duration-300"
          style={{color: colors.text }}
       >
          {/* HEADER */}
@@ -168,7 +168,7 @@ const ManageBookings = () => {
                   className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${viewState === 'active' ? 'shadow' : ''}`}
                   style={{ 
                      backgroundColor: viewState === 'active' ? colors.background : 'transparent',
-                     color: viewState === 'active' ? colors.secondary : colors.textMuted 
+                     color: viewState === 'active' ? colors.primary : colors.textMuted 
                   }}
                >
                   Upcoming
@@ -178,7 +178,7 @@ const ManageBookings = () => {
                   className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${viewState === 'history' ? 'shadow' : ''}`}
                   style={{ 
                      backgroundColor: viewState === 'history' ? colors.background : 'transparent',
-                     color: viewState === 'history' ? colors.secondary : colors.textMuted 
+                     color: viewState === 'history' ? colors.primary : colors.textMuted 
                   }}
                >
                   History
@@ -197,7 +197,7 @@ const ManageBookings = () => {
                   visibleGroups.map((group) => (
                      <div 
                         key={group.session._id}
-                        className="rounded-[2.5rem] border overflow-hidden transition-colors shadow-sm"
+                        className="rounded-[1rem] border overflow-hidden transition-colors shadow-sm"
                         style={{ backgroundColor: colors.card, borderColor: colors.border }}
                      >
                         {/* Session Header */}

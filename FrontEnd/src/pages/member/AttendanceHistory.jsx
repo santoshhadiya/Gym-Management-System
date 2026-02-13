@@ -19,8 +19,8 @@ const AttendanceHistory = () => {
   }, [api]);
 
   return (
-    <div className="p-6 bg-white rounded-2xl shadow-md mt-6">
-      <h3 className="text-xl font-bold mb-4">My Attendance History</h3>
+    <div className="p-6 bg-white rounded-2xl border-1 border-gray-400 mt-6">
+      <h3 className="text-xl font-bold mb-4 text-black">My Attendance History</h3>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
@@ -34,12 +34,12 @@ const AttendanceHistory = () => {
             {history.map((record) => (
               <tr key={record._id} className="border-b last:border-0">
                 
-                <td className="py-3 font-medium">
+                <td className="py-3 font-medium text-gray-500">
                    {new Date(record.date).toLocaleDateString()}
                 </td>
                 
                
-                <td className="py-3 text-gray-600">
+                <td className="py-3 text-gray-500">
                   {record.checkInAt 
                     ? new Date(record.checkInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
                     : 'N/A'}
