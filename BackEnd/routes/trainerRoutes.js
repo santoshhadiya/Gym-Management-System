@@ -8,7 +8,7 @@ router.put("/profile", protect, authorize("trainer"), updateTrainerProfile);
 router.get("/:id/members/all", protect, authorize("trainer"), getTrainerMembersAll);
 
 
-router.get("/", protect, getAllTrainers); 
+router.get("/", getAllTrainers); 
 
 // Admin specific routes
 router.get("/data", protect, authorize("admin"), getAllTrainersData);
