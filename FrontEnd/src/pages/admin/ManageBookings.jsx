@@ -149,6 +149,14 @@ const ManageBookings = () => {
       return null;
    };
 
+    const formatDate = (date) => {
+      if (!date) return "-";
+
+      return new Date(date)
+         .toLocaleDateString("en-GB")
+         .replaceAll("/", "-");
+   };
+
    return (
       <div 
          className="w-full p-4 font-sans min-h-screen relative transition-colors duration-300"
@@ -223,7 +231,7 @@ const ManageBookings = () => {
 
                               <div className="flex items-center gap-4 text-xs mt-1 font-medium" style={{ color: colors.textMuted }}>
                                  <span className="flex items-center gap-1 px-2 py-1 rounded border" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
-                                    <i className="fa-regular fa-calendar" style={{ color: colors.secondary }}></i> {group.session.date}
+                                    <i className="fa-regular fa-calendar" style={{ color: colors.secondary }}></i> {formatDate(group.session.date)}
                                  </span>
                                  <span className="flex items-center gap-1 px-2 py-1 rounded border" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
                                     <i className="fa-regular fa-clock" style={{ color: colors.secondary }}></i> {group.session.time}
@@ -295,7 +303,7 @@ const ManageBookings = () => {
                                           {booking.member?.name || "Unknown Member"}
                                        </td>
                                        <td className="px-6 py-3 text-xs" style={{ color: colors.textMuted }}>
-                                          {new Date(booking.createdAt).toLocaleString()}
+                                          {formatDate(new Date(booking.createdAt).toLocaleString())}
                                        </td>
                                        <td className="px-6 py-3 text-center">
                                           <span className={`px-2 py-1 rounded text-[10px] font-bold border ${getStatusColor(booking.bookingStatus)}`}>

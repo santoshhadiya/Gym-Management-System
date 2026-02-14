@@ -4,7 +4,7 @@ import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext";
 
 const UpdateSessions = () => {
-   const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
+   const { api, BACKEND_URL, loadingIMG } = useGlobalContext();
    const { colors, theme } = useTheme();
 
    // --- STATE ---
@@ -28,15 +28,15 @@ const UpdateSessions = () => {
 
    // Form State - ENHANCED with multiple trainers
    const [formData, setFormData] = useState({
-      _id: null, 
-      trainerId: "", 
+      _id: null,
+      trainerId: "",
       additionalTrainerIds: [],
       externalTrainerNames: [],
       type: "Personal Training",
-      date: "", 
-      time: "", 
-      duration: "60 mins", 
-      status: "Upcoming", 
+      date: "",
+      time: "",
+      duration: "60 mins",
+      status: "Upcoming",
       notes: "",
       capacity: 10
    });
@@ -101,41 +101,41 @@ const UpdateSessions = () => {
 
       return sessions.some(s => {
          if (s._id === newSession._id || s.status === "Cancelled") return false;
-         
+
          const existingTrainerIds = [
             s.trainer?._id,
             ...(s.additionalTrainers?.map(t => t._id) || [])
          ].filter(Boolean);
 
-         const hasTrainerConflict = allTrainerIds.some(id => 
+         const hasTrainerConflict = allTrainerIds.some(id =>
             existingTrainerIds.includes(id)
          );
 
-         return hasTrainerConflict && 
-                s.date === newSession.date && 
-                s.time === newSession.time;
+         return hasTrainerConflict &&
+            s.date === newSession.date &&
+            s.time === newSession.time;
       });
    };
 
    const getTrainerDisplay = (session) => {
       const trainers = [];
-      
+
       if (session.trainer?.name) {
          trainers.push(session.trainer.name + " (Lead)");
       }
-      
+
       if (session.additionalTrainers && session.additionalTrainers.length > 0) {
          session.additionalTrainers.forEach(t => {
             if (t.name) trainers.push(t.name);
          });
       }
-      
+
       if (session.externalTrainers && session.externalTrainers.length > 0) {
          session.externalTrainers.forEach(name => {
             trainers.push(name + " (External)");
          });
       }
-      
+
       return trainers.join(", ") || "No trainers assigned";
    };
 
@@ -154,15 +154,15 @@ const UpdateSessions = () => {
       } else {
          const today = new Date().toISOString().split('T')[0];
          setFormData({
-            _id: null, 
-            trainerId: "", 
+            _id: null,
+            trainerId: "",
             additionalTrainerIds: [],
             externalTrainerNames: [],
             type: "Personal Training",
-            date: today, 
-            time: "", 
-            duration: "60 mins", 
-            status: "Upcoming", 
+            date: today,
+            time: "",
+            duration: "60 mins",
+            status: "Upcoming",
             notes: "",
             capacity: 10
          });
@@ -174,7 +174,7 @@ const UpdateSessions = () => {
 
    const handleSave = async (e) => {
       e.preventDefault();
-      
+
       if (!formData.trainerId || !formData.date || !formData.time) {
          toast.error("Please fill all required fields (Primary Trainer, Date, Time).");
          return;
@@ -242,6 +242,21 @@ const UpdateSessions = () => {
       }
    };
 
+   const completeSession = async (id) => {
+      if (!window.confirm("Are you sure you want to mark this session as completed?")) return;
+
+      try {
+         await api.put(`/sessions/${id}`, {
+            status: "Completed"
+         });
+
+         toast.success("Session marked as completed.");
+         fetchData(); // Refresh the list
+      } catch (error) {
+         console.error(error);
+         toast.error("Failed to update session status.");
+      }
+   };
    // NEW: Bulk Actions
    const initiateBulkAction = (action) => {
       if (selectedIds.length === 0) {
@@ -252,7 +267,7 @@ const UpdateSessions = () => {
       setShowBulkActionModal(true);
    };
 
-  const confirmBulkAction = async () => {
+   const confirmBulkAction = async () => {
       // Only require a reason if the action is 'cancel'
       if (bulkAction === 'cancel' && (!cancelReason || !cancelReason.trim())) {
          toast.error("Please enter a valid reason for cancellation.");
@@ -262,22 +277,22 @@ const UpdateSessions = () => {
       try {
          const updatePromises = selectedIds.map(id => {
             if (bulkAction === 'cancel') {
-               return api.put(`/sessions/${id}`, { 
+               return api.put(`/sessions/${id}`, {
                   status: "Cancelled",
                   cancelReason: cancelReason || "Bulk cancellation by admin"
                });
             } else if (bulkAction === 'complete') {
-               return api.put(`/sessions/${id}`, { 
+               return api.put(`/sessions/${id}`, {
                   status: "Completed"
                });
             }
          });
 
          await Promise.all(updatePromises);
-         
+
          const actionText = bulkAction === 'cancel' ? 'cancelled' : 'marked as completed';
          toast.success(`${selectedIds.length} session(s) ${actionText}`);
-         
+
          setShowBulkActionModal(false); // Close the modal
          setCancelReason("");
          setSelectedIds([]);
@@ -292,7 +307,7 @@ const UpdateSessions = () => {
    const toggleAdditionalTrainer = (trainerId) => {
       setFormData(prev => {
          const isSelected = prev.additionalTrainerIds.includes(trainerId);
-         
+
          if (isSelected) {
             return {
                ...prev,
@@ -313,7 +328,7 @@ const UpdateSessions = () => {
 
    const addExternalTrainer = () => {
       const trimmedName = externalTrainerInput.trim();
-      
+
       if (!trimmedName) {
          toast.error("Please enter a trainer name");
          return;
@@ -341,23 +356,23 @@ const UpdateSessions = () => {
 
    // --- FILTERING & DISPLAY ---
    const filteredSessions = sessions.filter(s => {
-      const matchesSearch = 
+      const matchesSearch =
          s.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
          s.trainer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
          s.additionalTrainers?.some(t => t.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
          s.externalTrainers?.some(name => name.toLowerCase().includes(searchTerm.toLowerCase()));
-      
+
       const matchesStatus = filterStatus === "All" || s.status === filterStatus;
-      
+
       return matchesSearch && matchesStatus;
    });
 
-   const displayedSessions = viewState === "list" 
+   const displayedSessions = viewState === "list"
       ? filteredSessions.filter(s => s.status === "Upcoming")
       : filteredSessions.filter(s => s.status !== "Upcoming");
 
    return (
-      <div 
+      <div
          className="w-full rounded-3xl p-4 font-sans min-h-screen relative transition-colors duration-300"
          style={{ color: colors.text }}
       >
@@ -371,76 +386,59 @@ const UpdateSessions = () => {
             </div>
 
             <div className="flex gap-3 flex-wrap justify-center md:justify-end">
-               {/* Only show bulk actions in list view (upcoming sessions) */}
-               {viewState === "list" && selectedIds.length > 0 && (
-                  <>
-                     <button
-                        onClick={() => initiateBulkAction('complete')}
-                        className="px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2"
-                        style={{ backgroundColor: colors.primary, color: '#14532d' }}
-                     >
-                        <i className="fa-solid fa-check"></i> Mark Completed ({selectedIds.length})
-                     </button>
-                     <button
-                        onClick={() => initiateBulkAction('cancel')}
-                        className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 shadow-sm transition-colors flex items-center gap-2"
-                     >
-                        <i className="fa-solid fa-ban"></i> Cancel Selected ({selectedIds.length})
-                     </button>
-                  </>
-               )}
+
                {/* --- BULK ACTION MODAL --- */}
-         {showBulkActionModal && (
-            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
-               <div 
-                  className="rounded-2xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200"
-                  style={{ backgroundColor: colors.card }}
-               >
-                  <h3 className="text-lg font-bold mb-2 capitalize" style={{ color: colors.text }}>
-                     {bulkAction} {selectedIds.length} Sessions?
-                  </h3>
-                  
-                  <p className="text-sm mb-4" style={{ color: colors.textMuted }}>
-                     {bulkAction === 'cancel' 
-                        ? "Please provide a reason. This will notify all participants." 
-                        : "This will mark these sessions as finished."}
-                  </p>
-
-                  {bulkAction === 'cancel' && (
-                     <textarea
-                        className="w-full border rounded-xl p-3 text-sm focus:outline-none mb-4 h-24 resize-none transition-colors"
-                        style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
-                        placeholder="Reason for cancellation..."
-                        value={cancelReason}
-                        onChange={(e) => setCancelReason(e.target.value)}
-                     ></textarea>
-                  )}
-
-                  <div className="flex gap-3">
-                     <button
-                        onClick={() => { setShowBulkActionModal(false); setCancelReason(""); }}
-                        className="flex-1 py-2.5 border rounded-xl text-sm font-bold transition-colors cursor-pointer"
-                        style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.textMuted }}
+               {showBulkActionModal && (
+                  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+                     <div
+                        className="rounded-2xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200"
+                        style={{ backgroundColor: colors.card }}
                      >
-                        Go Back
-                     </button>
-                     <button
-                        onClick={confirmBulkAction}
-                        className={`flex-1 py-2.5 text-white rounded-xl text-sm font-bold shadow-sm cursor-pointer transition-colors`}
-                        style={{ 
-                           backgroundColor: bulkAction === 'cancel' ? '#dc2626' : colors.primary,
-                           color: bulkAction === 'cancel' ? '#ffffff' : '#14532d'
-                        }}
-                     >
-                        Confirm {bulkAction === 'cancel' ? 'Cancel' : 'Complete'}
-                     </button>
+                        <h3 className="text-lg font-bold mb-2 capitalize" style={{ color: colors.text }}>
+                           {bulkAction} {selectedIds.length} Sessions?
+                        </h3>
+
+                        <p className="text-sm mb-4" style={{ color: colors.textMuted }}>
+                           {bulkAction === 'cancel'
+                              ? "Please provide a reason. This will notify all participants."
+                              : "This will mark these sessions as finished."}
+                        </p>
+
+                        {bulkAction === 'cancel' && (
+                           <textarea
+                              className="w-full border rounded-xl p-3 text-sm focus:outline-none mb-4 h-24 resize-none transition-colors"
+                              style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
+                              placeholder="Reason for cancellation..."
+                              value={cancelReason}
+                              onChange={(e) => setCancelReason(e.target.value)}
+                           ></textarea>
+                        )}
+
+                        <div className="flex gap-3">
+                           <button
+                              onClick={() => { setShowBulkActionModal(false); setCancelReason(""); }}
+                              className="flex-1 py-2.5 border rounded-xl text-sm font-bold transition-colors cursor-pointer"
+                              style={{ backgroundColor: colors.background, borderColor: colors.border, color: colors.textMuted }}
+                           >
+                              Go Back
+                           </button>
+                           <button
+                              onClick={confirmBulkAction}
+                              className={`flex-1 py-2.5 text-white rounded-xl text-sm font-bold shadow-sm cursor-pointer transition-colors`}
+                              style={{
+                                 backgroundColor: bulkAction === 'cancel' ? '#dc2626' : colors.primary,
+                                 color: bulkAction === 'cancel' ? '#ffffff' : '#14532d'
+                              }}
+                           >
+                              Confirm {bulkAction === 'cancel' ? 'Cancel' : 'Complete'}
+                           </button>
+                        </div>
+                     </div>
                   </div>
-               </div>
-            </div>
-         )}
-               
+               )}
+
                {viewState === "list" && (
-                  <button 
+                  <button
                      onClick={() => handleOpenModal()}
                      className="px-6 py-2.5 rounded-xl font-bold shadow-sm transition-colors flex items-center gap-2"
                      style={{ backgroundColor: colors.primary, color: '#14532d' }}
@@ -504,7 +502,7 @@ const UpdateSessions = () => {
          {/* CONTENT */}
          {isLoading ? (
             <div className="flex items-center justify-center h-64">
-               <img src={loadingIMG} className='h-20 w-25' alt="Loading"/>
+               <img src={loadingIMG} className='h-20 w-25' alt="Loading" />
             </div>
          ) : (
             <>
@@ -512,20 +510,7 @@ const UpdateSessions = () => {
                   <table className="w-full text-left text-sm" style={{ color: colors.text }}>
                      <thead className="border-b" style={{ backgroundColor: colors.sidebar, borderColor: colors.border }}>
                         <tr>
-                           <th className="px-6 py-4">
-                              <input
-                                 type="checkbox"
-                                 checked={displayedSessions.length > 0 && selectedIds.length === displayedSessions.length}
-                                 onChange={(e) => {
-                                    if (e.target.checked) {
-                                       setSelectedIds(displayedSessions.map(s => s._id));
-                                    } else {
-                                       setSelectedIds([]);
-                                    }
-                                 }}
-                                 className="w-4 h-4 rounded cursor-pointer"
-                              />
-                           </th>
+
                            <th className="px-6 py-4 font-semibold" style={{ color: colors.textMuted }}>Session Details</th>
                            <th className="px-6 py-4 font-semibold" style={{ color: colors.textMuted }}>Trainers</th>
                            <th className="px-6 py-4 font-semibold" style={{ color: colors.textMuted }}>Schedule</th>
@@ -536,25 +521,12 @@ const UpdateSessions = () => {
                      <tbody className="divide-y" style={{ divideColor: colors.border }}>
                         {displayedSessions.length > 0 ? (
                            displayedSessions.map(session => (
-                              <tr 
-                                 key={session._id} 
+                              <tr
+                                 key={session._id}
                                  className="transition-colors hover:opacity-80"
                                  style={{ backgroundColor: colors.card }}
                               >
-                                 <td className="px-6 py-4">
-                                    <input
-                                       type="checkbox"
-                                       checked={selectedIds.includes(session._id)}
-                                       onChange={(e) => {
-                                          if (e.target.checked) {
-                                             setSelectedIds([...selectedIds, session._id]);
-                                          } else {
-                                             setSelectedIds(selectedIds.filter(id => id !== session._id));
-                                          }
-                                       }}
-                                       className="w-4 h-4 rounded cursor-pointer"
-                                    />
-                                 </td>
+
                                  <td className="px-6 py-4">
                                     <div className="font-bold" style={{ color: colors.text }}>{session.type}</div>
                                     <div className="text-xs mt-1" style={{ color: colors.textMuted }}>
@@ -570,13 +542,13 @@ const UpdateSessions = () => {
                                        {session.additionalTrainers && session.additionalTrainers.length > 0 && (
                                           <div className="flex flex-wrap gap-1 mt-1">
                                              {session.additionalTrainers.map((t, idx) => (
-                                                <span 
-                                                   key={idx} 
+                                                <span
+                                                   key={idx}
                                                    className="px-2 py-0.5 rounded-full text-xs border"
-                                                   style={{ 
-                                                      backgroundColor: colors.background, 
+                                                   style={{
+                                                      backgroundColor: colors.background,
                                                       borderColor: colors.border,
-                                                      color: colors.textMuted 
+                                                      color: colors.textMuted
                                                    }}
                                                 >
                                                    {t.name}
@@ -587,11 +559,11 @@ const UpdateSessions = () => {
                                        {session.externalTrainers && session.externalTrainers.length > 0 && (
                                           <div className="flex flex-wrap gap-1 mt-1">
                                              {session.externalTrainers.map((name, idx) => (
-                                                <span 
-                                                   key={idx} 
+                                                <span
+                                                   key={idx}
                                                    className="px-2 py-0.5 rounded-full text-xs border"
-                                                   style={{ 
-                                                      backgroundColor: colors.accent, 
+                                                   style={{
+                                                      backgroundColor: colors.accent,
                                                       borderColor: colors.accent,
                                                       color: theme === 'dark' ? '#fff' : '#854d0e'
                                                    }}
@@ -615,7 +587,7 @@ const UpdateSessions = () => {
                                     </div>
                                  </td>
                                  <td className="px-6 py-4 text-center">
-                                    <span 
+                                    <span
                                        className="px-3 py-1 rounded-full text-xs font-bold border inline-block"
                                        style={getStatusColor(session.status)}
                                     >
@@ -624,20 +596,34 @@ const UpdateSessions = () => {
                                  </td>
                                  <td className="px-6 py-4 text-right">
                                     <div className="flex gap-2 justify-end">
-                                       <button
-                                          onClick={() => handleOpenModal(session)}
-                                          className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors hover:opacity-80"
-                                          style={{ backgroundColor: colors.background, color: colors.secondary, border: `1px solid ${colors.border}` }}
-                                       >
-                                          <i className="fa-solid fa-pen"></i> Edit
-                                       </button>
                                        {session.status === "Upcoming" && (
-                                          <button
-                                             onClick={() => initiateCancel(session._id)}
-                                             className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-colors"
-                                          >
-                                             <i className="fa-solid fa-ban"></i> Cancel
-                                          </button>
+                                          <>
+                                             <button
+                                                onClick={() => handleOpenModal(session)}
+                                                className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors hover:opacity-80"
+                                                style={{ backgroundColor: colors.background, color: colors.secondary, border: `1px solid ${colors.border}` }}
+                                             >
+                                                <i className="fa-solid fa-pen"></i> Edit
+                                             </button>
+
+                                             <button
+                                                onClick={() => initiateCancel(session._id)}
+                                                className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-colors"
+                                             >
+                                                <i className="fa-solid fa-ban"></i> Cancel
+                                             </button>
+
+                                             {session.date === new Date().toISOString().split('T')[0] && (
+                                                <button
+                                                   onClick={() => completeSession(session._id)} // Call the new single function
+                                                   className="px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2 cursor-pointer hover:opacity-90"
+                                                   style={{ backgroundColor: colors.primary, color: '#14532d' }}
+                                                >
+                                                   <i className="fa-solid fa-check"></i>
+                                                   <span>Completed</span>
+                                                </button>
+                                             )}
+                                          </>
                                        )}
                                     </div>
                                  </td>
@@ -659,7 +645,7 @@ const UpdateSessions = () => {
          {/* --- ADD/EDIT MODAL --- */}
          {showModal && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-               <div 
+               <div
                   className="rounded-3xl shadow-xl w-full max-w-2xl my-8 animate-in fade-in zoom-in-95 duration-200"
                   style={{ backgroundColor: colors.card }}
                >
@@ -673,7 +659,7 @@ const UpdateSessions = () => {
                   </div>
 
                   <form onSubmit={handleSave} className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-                     
+
                      {/* PRIMARY TRAINER */}
                      <div>
                         <label className="block text-xs font-bold mb-2 uppercase tracking-wider" style={{ color: colors.textMuted }}>
@@ -701,7 +687,7 @@ const UpdateSessions = () => {
                            <i className="fa-solid fa-users text-xs mr-1"></i>
                            Additional Internal Trainers (Optional)
                         </label>
-                        <div 
+                        <div
                            className="border rounded-xl p-4 max-h-48 overflow-y-auto"
                            style={{ backgroundColor: colors.background, borderColor: colors.border }}
                         >
@@ -713,9 +699,9 @@ const UpdateSessions = () => {
                                        <label
                                           key={trainer._id}
                                           className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:opacity-80 transition-colors"
-                                          style={{ 
-                                             backgroundColor: formData.additionalTrainerIds.includes(trainer._id) 
-                                                ? colors.card 
+                                          style={{
+                                             backgroundColor: formData.additionalTrainerIds.includes(trainer._id)
+                                                ? colors.card
                                                 : 'transparent'
                                           }}
                                        >
@@ -740,13 +726,13 @@ const UpdateSessions = () => {
                               {formData.additionalTrainerIds.map(id => {
                                  const trainer = trainers.find(t => t._id === id);
                                  return trainer ? (
-                                    <span 
+                                    <span
                                        key={id}
                                        className="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1"
-                                       style={{ 
-                                          backgroundColor: colors.card, 
+                                       style={{
+                                          backgroundColor: colors.card,
                                           borderColor: colors.border,
-                                          color: colors.text 
+                                          color: colors.text
                                        }}
                                     >
                                        {trainer.name}
@@ -797,15 +783,15 @@ const UpdateSessions = () => {
                         <p className="text-xs mt-1" style={{ color: colors.textMuted }}>
                            Add trainers who are not in the gym database (e.g., guest trainers, external instructors)
                         </p>
-                        
+
                         {formData.externalTrainerNames.length > 0 && (
                            <div className="flex flex-wrap gap-2 mt-3">
                               {formData.externalTrainerNames.map((name, idx) => (
-                                 <span 
+                                 <span
                                     key={idx}
                                     className="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-2"
-                                    style={{ 
-                                       backgroundColor: colors.accent, 
+                                    style={{
+                                       backgroundColor: colors.accent,
                                        borderColor: colors.accent,
                                        color: theme === 'dark' ? '#fff' : '#854d0e'
                                     }}
@@ -904,7 +890,7 @@ const UpdateSessions = () => {
 
                      {/* TRAINER SUMMARY */}
                      {(formData.trainerId || formData.additionalTrainerIds.length > 0 || formData.externalTrainerNames.length > 0) && (
-                        <div 
+                        <div
                            className="p-4 rounded-xl border"
                            style={{ backgroundColor: colors.background, borderColor: colors.border }}
                         >
@@ -922,7 +908,7 @@ const UpdateSessions = () => {
                               {formData.additionalTrainerIds.length > 0 && (
                                  <div style={{ color: colors.text }}>
                                     <i className="fa-solid fa-users text-xs mr-2"></i>
-                                    <strong>Additional:</strong> {formData.additionalTrainerIds.map(id => 
+                                    <strong>Additional:</strong> {formData.additionalTrainerIds.map(id =>
                                        trainers.find(t => t._id === id)?.name
                                     ).join(', ')}
                                  </div>
@@ -940,8 +926,8 @@ const UpdateSessions = () => {
                         </div>
                      )}
 
-                     <button 
-                        type="submit" 
+                     <button
+                        type="submit"
                         className="w-full py-3 font-bold rounded-xl shadow-sm transition-colors cursor-pointer"
                         style={{ backgroundColor: colors.primary, color: '#14532d' }}
                      >
@@ -955,7 +941,7 @@ const UpdateSessions = () => {
          {/* --- CANCEL MODAL --- */}
          {showCancelModal && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-               <div 
+               <div
                   className="rounded-2xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200 transition-colors"
                   style={{ backgroundColor: colors.card }}
                >

@@ -17,7 +17,7 @@ const Workout = () => {
     const [activeTab, setActiveTab] = useState("workout");
     const [showHistory, setShowHistory] = useState(false);
     const [history, setHistory] = useState([]);
-    
+
     // Calendar
     const [calendarDates, setCalendarDates] = useState([]);
 
@@ -37,11 +37,11 @@ const Workout = () => {
             if (!res.ok) throw new Error("Failed to load plan");
 
             const data = await res.json();
-            
+
             // Find plan for selected date
             const workout = data.workout?.plans?.find(p => p.date === selectedDate);
             const diet = data.diet?.plans?.find(p => p.date === selectedDate);
-            
+
             setWorkoutPlan(workout || null);
             setDietPlan(diet || null);
             setProgressData(data.progress || []);
@@ -61,9 +61,9 @@ const Workout = () => {
             const res = await fetch(`${BACKEND_URL}/api/workout-diet/history`, {
                 headers: { Authorization: `Bearer ${user.token}` }
             });
-            
+
             if (!res.ok) throw new Error("Failed to load history");
-            
+
             const data = await res.json();
             setHistory(data.history || []);
         } catch (err) {
@@ -86,7 +86,7 @@ const Workout = () => {
         const dates = [];
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - 7); // Show last 7 days
-        
+
         // Generate 21 days (7 past + today + 13 future)
         for (let i = 0; i < 21; i++) {
             const date = new Date(startDate);
@@ -133,9 +133,9 @@ const Workout = () => {
 
             const res = await fetch(`${BACKEND_URL}/api/workout-diet/progress`, {
                 method: "POST",
-                headers: { 
-                    "Content-Type": "application/json", 
-                    Authorization: `Bearer ${user.token}` 
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${user.token}`
                 },
                 body: JSON.stringify(payload)
             });
@@ -173,9 +173,9 @@ const Workout = () => {
 
             const res = await fetch(`${BACKEND_URL}/api/workout-diet/weight`, {
                 method: "POST",
-                headers: { 
-                    "Content-Type": "application/json", 
-                    Authorization: `Bearer ${user.token}` 
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${user.token}`
                 },
                 body: JSON.stringify(payload)
             });
@@ -209,21 +209,19 @@ const Workout = () => {
                 <div className="flex gap-3">
                     <button
                         onClick={() => setShowHistory(false)}
-                        className={`px-4 py-2 rounded-xl font-bold transition-all ${
-                            !showHistory 
-                                ? 'bg-[#D9F17F] text-black shadow-lg' 
+                        className={`px-4 py-2 rounded-xl font-bold transition-all ${!showHistory
+                                ? 'bg-[#D9F17F] text-black shadow-lg'
                                 : 'bg-gray-100 text-black'
-                        }`}
+                            }`}
                     >
                         Daily Plan
                     </button>
                     <button
                         onClick={() => setShowHistory(true)}
-                        className={`px-4 py-2 rounded-xl font-bold transition-all ${
-                            showHistory 
-                                ? 'bg-[#FEF18A] text-black shadow-lg' 
+                        className={`px-4 py-2 rounded-xl font-bold transition-all ${showHistory
+                                ? 'bg-[#FEF18A] text-black shadow-lg'
                                 : 'bg-gray-100 text-black'
-                        }`}
+                            }`}
                     >
                         History
                     </button>
@@ -249,56 +247,54 @@ const Workout = () => {
                                 const dateObj = new Date(item.date);
                                 const isPast = item.date < today;
                                 const isFuture = item.date > today;
-                                
+
                                 return (
-                                    <div 
-                                        key={idx} 
+                                    <div
+                                        key={idx}
                                         className="border rounded-2xl p-5 hover:shadow-md transition-shadow"
-                                        style={{ 
+                                        style={{
                                             borderColor: colors.border,
-                                            backgroundColor: colors.background 
+                                            backgroundColor: colors.background
                                         }}
                                     >
                                         {/* Date Header */}
                                         <div className="flex justify-between items-center mb-4">
                                             <div>
                                                 <h3 className="font-bold text-lg" style={{ color: colors.text }}>
-                                                    {dateObj.toLocaleDateString('en-US', { 
-                                                        weekday: 'long', 
-                                                        month: 'long', 
+                                                    {dateObj.toLocaleDateString('en-US', {
+                                                        weekday: 'long',
+                                                        month: 'long',
                                                         day: 'numeric',
                                                         year: 'numeric'
                                                     })}
                                                 </h3>
                                                 <p className="text-xs text-gray-500">
-                                                    {item.date === today ? '🔵 Today' : 
-                                                     isPast ? '⚪ Past' : 
-                                                     '🟢 Upcoming'}
+                                                    {item.date === today ? '🔵 Today' :
+                                                        isPast ? '⚪ Past' :
+                                                            '🟢 Upcoming'}
                                                 </p>
                                             </div>
-                                            
+
                                             {/* Status Badges */}
                                             <div className="flex gap-2">
                                                 {item.exercises && (
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                        item.isCompleted 
-                                                            ? 'bg-green-100 text-green-700' 
-                                                            : isPast 
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.isCompleted
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : isPast
                                                                 ? 'bg-red-100 text-red-700'
                                                                 : 'bg-gray-100 text-black'
-                                                    }`}>
+                                                        }`}>
                                                         <i className="fa-solid fa-dumbbell mr-1"></i>
                                                         {item.isCompleted ? 'Done' : isPast ? 'Missed' : 'Pending'}
                                                     </span>
                                                 )}
                                                 {item.dietMeals && (
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                        item.dietCompleted 
-                                                            ? 'bg-green-100 text-green-700' 
-                                                            : isPast 
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.dietCompleted
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : isPast
                                                                 ? 'bg-red-100 text-red-700'
                                                                 : 'bg-gray-100 text-black'
-                                                    }`}>
+                                                        }`}>
                                                         <i className="fa-solid fa-carrot mr-1"></i>
                                                         {item.dietCompleted ? 'Done' : isPast ? 'Missed' : 'Pending'}
                                                     </span>
@@ -316,8 +312,8 @@ const Workout = () => {
                                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                                     {item.exercises.map((ex, i) => (
                                                         <div key={i} className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg">
-                                                            <img 
-                                                                src={ex.imageUrl} 
+                                                            <img
+                                                                src={ex.imageUrl}
                                                                 alt={ex.name}
                                                                 className="w-10 h-10 object-cover rounded-lg"
                                                             />
@@ -344,7 +340,7 @@ const Workout = () => {
                                                     {['Breakfast', 'Lunch', 'Snacks', 'Dinner'].map(meal => {
                                                         const foods = item.dietMeals[meal] || [];
                                                         if (foods.length === 0) return null;
-                                                        
+
                                                         return (
                                                             <div key={meal} className="bg-green-50 p-2 rounded-lg">
                                                                 <p className="text-[10px] font-bold text-green-700 uppercase mb-1">
@@ -353,8 +349,8 @@ const Workout = () => {
                                                                 <div className="space-y-1">
                                                                     {foods.map((food, i) => (
                                                                         <div key={i} className="flex items-center gap-1">
-                                                                            <img 
-                                                                                src={food.imageUrl} 
+                                                                            <img
+                                                                                src={food.imageUrl}
                                                                                 alt={food.name}
                                                                                 className="w-6 h-6 object-cover rounded"
                                                                             />
@@ -389,15 +385,14 @@ const Workout = () => {
                                     <button
                                         key={dateObj.date}
                                         onClick={() => setSelectedDate(dateObj.date)}
-                                        className={`min-w-[80px] px-3 py-3 rounded-xl text-xs font-bold transition-all ${
-                                            selectedDate === dateObj.date
+                                        className={`min-w-[80px] px-3 py-3 rounded-xl text-xs font-bold transition-all ${selectedDate === dateObj.date
                                                 ? 'bg-[#D9F17F] text-black shadow-lg'
                                                 : dateObj.isToday
                                                     ? 'bg-blue-50 text-[#D9F17F] border-2 border-blue-200'
                                                     : dateObj.isPast
                                                         ? 'bg-gray-100 text-gray-400'
                                                         : 'bg-gray-50 text-black hover:bg-gray-100'
-                                        }`}
+                                            }`}
                                     >
                                         <div className="flex flex-col items-center gap-1">
                                             <span className="text-[10px] opacity-70">{dateObj.dayName}</span>
@@ -414,22 +409,20 @@ const Workout = () => {
                             <div className="flex bg-gray-100 p-1 rounded-xl mb-6 w-fit">
                                 <button
                                     onClick={() => setActiveTab('workout')}
-                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                                        activeTab === 'workout'
+                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'workout'
                                             ? 'bg-white shadow text-[#D9F17F]'
                                             : 'text-gray-500'
-                                    }`}
+                                        }`}
                                 >
                                     <i className="fa-solid fa-dumbbell mr-2"></i>
                                     Workout
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('diet')}
-                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                                        activeTab === 'diet'
+                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'diet'
                                             ? 'bg-white shadow text-[#D9F17F]'
                                             : 'text-gray-500'
-                                    }`}
+                                        }`}
                                 >
                                     <i className="fa-solid fa-carrot mr-2"></i>
                                     Diet
@@ -442,17 +435,16 @@ const Workout = () => {
                                     <div className="space-y-6">
                                         <div className="flex justify-between items-center">
                                             <h2 className="text-xl font-bold" style={{ color: colors.text }}>
-                                                Workout for {new Date(selectedDate).toLocaleDateString('en-US', { 
-                                                    month: 'long', 
-                                                    day: 'numeric' 
+                                                Workout for {new Date(selectedDate).toLocaleDateString('en-US', {
+                                                    month: 'long',
+                                                    day: 'numeric'
                                                 })}
                                             </h2>
                                             {isCompleted() !== null && (
-                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                    isCompleted() 
-                                                        ? 'bg-green-200 text-green-800' 
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${isCompleted()
+                                                        ? 'bg-green-200 text-green-800'
                                                         : 'bg-red-100 text-red-800'
-                                                }`}>
+                                                    }`}>
                                                     {isCompleted() ? "✓ Completed" : "✗ Missed"}
                                                 </span>
                                             )}
@@ -466,24 +458,37 @@ const Workout = () => {
                                         )}
 
                                         {/* Exercises */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {workoutPlan.exercises.map((ex, idx) => (
-                                                <div key={idx} className="flex gap-3 bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                                    <img 
-                                                        src={ex.imageUrl} 
-                                                        alt={ex.name}
-                                                        className="w-20 h-20 object-cover rounded-lg"
-                                                    />
-                                                    <div className="flex-1">
-                                                        <h4 className="font-bold text-gray-800">{ex.name}</h4>
-                                                        <p className="text-sm text-black mt-1">
-                                                            {ex.sets} sets × {ex.reps} reps
-                                                        </p>
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-center gap-5 bg-white p-4 rounded-2xl border border-blue-100 shadow-sm hover:shadow-md transition-shadow duration-200"
+                                                >
+                                                    {/* Enhanced Image Container */}
+                                                    <div className="relative flex-shrink-0">
+                                                        <img
+                                                            src={ex.imageUrl}
+                                                            alt={ex.name}
+                                                            className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-xl border border-gray-100"
+                                                        />
                                                         {ex.isCustom && (
-                                                            <span className="text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">
+                                                            <span className="absolute -top-2 -left-2 bg-blue-600 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-lg shadow-sm">
                                                                 Custom
                                                             </span>
                                                         )}
+                                                    </div>
+
+                                                    {/* Content Area */}
+                                                    <div className="flex flex-col justify-center">
+                                                        <h4 className="text-lg font-extrabold text-gray-900 leading-tight">
+                                                            {ex.name}
+                                                        </h4>
+
+                                                        <div className="flex items-center gap-2 mt-2">
+                                                            <p className="text-md font-medium text-blue-700 bg-blue-50 px-3 py-1 rounded-full">
+                                                                {ex.sets} <span className="text-xs font-normal text-blue-400">sets</span> × {ex.reps} <span className="text-xs font-normal text-blue-400">reps</span>
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}
@@ -510,13 +515,12 @@ const Workout = () => {
                                             <button
                                                 onClick={() => handleMarkProgress(true)}
                                                 disabled={!canMarkComplete()}
-                                                className={`flex-1 py-3 rounded-xl font-bold transition-all ${
-                                                    !canMarkComplete()
+                                                className={`flex-1 py-3 rounded-xl font-bold transition-all ${!canMarkComplete()
                                                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                                         : isCompleted() === true
                                                             ? 'bg-[#D9F17F] text-black shadow-lg'
-                                                            : 'bg-green-500 hover:bg-[#D9F17F] text-black shadow-lg'
-                                                }`}
+                                                            : 'bg-[#D9F17F] text-black shadow-lg'
+                                                    }`}
                                             >
                                                 <i className="fa-solid fa-check mr-2"></i>
                                                 {isCompleted() === true ? "Completed" : "Mark as Done"}
@@ -524,13 +528,12 @@ const Workout = () => {
                                             <button
                                                 onClick={() => handleMarkProgress(false)}
                                                 disabled={!canMarkComplete()}
-                                                className={`flex-1 py-3 rounded-xl font-bold transition-all border-2 ${
-                                                    !canMarkComplete()
+                                                className={`flex-1 py-3 rounded-xl font-bold transition-all border-2 ${!canMarkComplete()
                                                         ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
                                                         : isCompleted() === false
                                                             ? 'bg-red-50 text-red-600 border-red-300'
                                                             : 'border-red-200 text-red-500 hover:bg-red-50'
-                                                }`}
+                                                    }`}
                                             >
                                                 <i className="fa-solid fa-xmark mr-2"></i>
                                                 {isCompleted() === false ? "Marked Missed" : "Not Done"}
@@ -548,17 +551,16 @@ const Workout = () => {
                                     <div className="space-y-6">
                                         <div className="flex justify-between items-center">
                                             <h2 className="text-xl font-bold" style={{ color: colors.text }}>
-                                                Diet for {new Date(selectedDate).toLocaleDateString('en-US', { 
-                                                    month: 'long', 
-                                                    day: 'numeric' 
+                                                Diet for {new Date(selectedDate).toLocaleDateString('en-US', {
+                                                    month: 'long',
+                                                    day: 'numeric'
                                                 })}
                                             </h2>
                                             {isCompleted() !== null && (
-                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                    isCompleted() 
-                                                        ? 'bg-green-200 text-green-800' 
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${isCompleted()
+                                                        ? 'bg-green-200 text-green-800'
                                                         : 'bg-red-100 text-red-800'
-                                                }`}>
+                                                    }`}>
                                                     {isCompleted() ? "✓ Completed" : "✗ Missed"}
                                                 </span>
                                             )}
@@ -588,19 +590,18 @@ const Workout = () => {
                                                 return (
                                                     <div key={meal} className="bg-green-50 p-4 rounded-xl border border-green-100">
                                                         <h4 className="text-sm font-bold text-green-700 uppercase mb-3 flex items-center gap-2">
-                                                            <i className={`fa-solid ${
-                                                                meal === 'Breakfast' ? 'fa-mug-hot' :
-                                                                meal === 'Lunch' ? 'fa-bowl-food' :
-                                                                meal === 'Snacks' ? 'fa-cookie-bite' :
-                                                                'fa-utensils'
-                                                            }`}></i>
+                                                            <i className={`fa-solid ${meal === 'Breakfast' ? 'fa-mug-hot' :
+                                                                    meal === 'Lunch' ? 'fa-bowl-food' :
+                                                                        meal === 'Snacks' ? 'fa-cookie-bite' :
+                                                                            'fa-utensils'
+                                                                }`}></i>
                                                             {meal}
                                                         </h4>
                                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                                             {foods.map((food, idx) => (
                                                                 <div key={idx} className="flex items-center gap-2 bg-white p-2 rounded-lg">
-                                                                    <img 
-                                                                        src={food.imageUrl} 
+                                                                    <img
+                                                                        src={food.imageUrl}
                                                                         alt={food.name}
                                                                         className="w-12 h-12 object-cover rounded-lg"
                                                                     />
@@ -637,13 +638,12 @@ const Workout = () => {
                                             <button
                                                 onClick={() => handleMarkProgress(true)}
                                                 disabled={!canMarkComplete()}
-                                                className={`flex-1 py-3 rounded-xl font-bold transition-all ${
-                                                    !canMarkComplete()
+                                                className={`flex-1 py-3 rounded-xl font-bold transition-all ${!canMarkComplete()
                                                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                                         : isCompleted() === true
                                                             ? 'bg-[#D9F17F] text-black shadow-lg'
                                                             : 'bg-green-500 hover:bg-[#D9F17F] text-black shadow-lg'
-                                                }`}
+                                                    }`}
                                             >
                                                 <i className="fa-solid fa-check mr-2"></i>
                                                 {isCompleted() === true ? "Completed" : "Mark as Done"}
@@ -651,13 +651,12 @@ const Workout = () => {
                                             <button
                                                 onClick={() => handleMarkProgress(false)}
                                                 disabled={!canMarkComplete()}
-                                                className={`flex-1 py-3 rounded-xl font-bold transition-all border-2 ${
-                                                    !canMarkComplete()
+                                                className={`flex-1 py-3 rounded-xl font-bold transition-all border-2 ${!canMarkComplete()
                                                         ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
                                                         : isCompleted() === false
                                                             ? 'bg-red-50 text-red-600 border-red-300'
                                                             : 'border-red-200 text-red-500 hover:bg-red-50'
-                                                }`}
+                                                    }`}
                                             >
                                                 <i className="fa-solid fa-xmark mr-2"></i>
                                                 {isCompleted() === false ? "Marked Missed" : "Not Done"}
@@ -696,8 +695,8 @@ const Workout = () => {
                                     />
                                     <span className="text-lg font-bold text-[#FEF18A]">kg</span>
                                 </div>
-                                <button 
-                                    onClick={handleWeightSubmit} 
+                                <button
+                                    onClick={handleWeightSubmit}
                                     className="mt-3 w-full px-6 py-2 bg-[#FEF18A] text-black rounded-xl font-bold shadow-lg hover:bg-[#FEF18A] transition-all"
                                 >
                                     Save Entry

@@ -32,6 +32,7 @@ const bookingSchema = new mongoose.Schema({
   qrGeneratedAt: {
     type: Date,
   },
+  
 }, { timestamps: true });
 
 // Index for faster queries

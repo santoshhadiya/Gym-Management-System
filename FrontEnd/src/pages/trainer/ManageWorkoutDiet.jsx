@@ -225,7 +225,7 @@ const ManageWorkoutDiet = () => {
       setSelectedExercises([...selectedExercises, {
          ...customExercise,
          isCustom: true,
-         imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=300&fit=crop'
+         imageUrl: 'https://img.icons8.com/color/1200/personal-trainer.jpg'
       }]);
       setCustomExercise({ name: '', sets: 3, reps: '' });
       setShowCustomExercise(false);
@@ -262,7 +262,7 @@ const ManageWorkoutDiet = () => {
          [customFoodMeal]: [...selectedFoods[customFoodMeal], {
             ...customFood,
             isCustom: true,
-            imageUrl: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=400&h=300&fit=crop'
+            imageUrl: 'https://png.pngtree.com/png-vector/20230801/ourmid/pngtree-fresh-food-icon-with-bread-and-produce-vector-png-image_6829151.png'
          }]
       });
       setCustomFood({ name: '', quantity: '' });
@@ -534,7 +534,7 @@ const ManageWorkoutDiet = () => {
                                           <img
                                              src={exercise.imageUrl}
                                              alt={exercise.name}
-                                             className="w-full h-32 object-cover"
+                                             className="w-full h-40 object-cover"
                                           />
                                           <div className="p-2 bg-white">
                                              <p className="text-xs font-bold text-gray-800 truncate">{exercise.name}</p>
@@ -609,141 +609,130 @@ const ManageWorkoutDiet = () => {
                               </h3>
                            </div>
 
-                           {/* Nutrition Targets */}
-                           <div className="bg-green-50 p-4 rounded-xl border border-green-100">
-                              <label className="text-xs font-bold text-green-600 uppercase block mb-3">
-                                 Daily Nutrition Targets
-                              </label>
-                              <div className="grid grid-cols-4 gap-3">
-                                 {['calories', 'protein', 'carbs', 'fat'].map(nut => (
-                                    <div key={nut}>
-                                       <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">
-                                          {nut}
-                                       </label>
-                                       <input
-                                          type="number"
-                                          className="w-full bg-white rounded-lg p-2 text-sm font-bold border border-green-200 focus:ring-2 focus:ring-green-300"
-                                          value={nutrition[nut] || ''}
-                                          onChange={(e) => setNutrition({ ...nutrition, [nut]: Number(e.target.value) })}
-                                       />
-                                    </div>
-                                 ))}
-                              </div>
-                           </div>
+                          
 
                            {/* Meals */}
-                           {['Breakfast', 'Lunch', 'Snacks', 'Dinner'].map(meal => (
-                              <div key={meal} className="space-y-3">
-                                 <div className="flex justify-between items-center">
-                                    <h4 className="font-bold text-gray-700 flex items-center gap-2">
-                                       <span className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">
-                                          <i className={`fa-solid ${meal === 'Breakfast' ? 'fa-mug-hot' :
-                                                meal === 'Lunch' ? 'fa-bowl-food' :
-                                                   meal === 'Snacks' ? 'fa-cookie-bite' :
-                                                      'fa-utensils'
-                                             }`}></i>
-                                       </span>
-                                       {meal}
-                                    </h4>
-                                    <button
-                                       onClick={() => {
-                                          setCustomFoodMeal(meal);
-                                          setShowCustomFood(!showCustomFood);
-                                       }}
-                                       className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-lg hover:bg-green-600 transition-colors"
-                                    >
-                                       + Custom
-                                    </button>
-                                 </div>
+                           {/* Meals Section */}
+{['Breakfast', 'Lunch', 'Snacks', 'Dinner'].map(meal => (
+  <div key={meal} className="space-y-4 mb-10">
+    <div className="flex justify-between items-center border-b pb-2">
+      <h4 className="font-bold text-xl text-gray-800 flex items-center gap-3">
+        <span className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+          <i className={`fa-solid ${meal === 'Breakfast' ? 'fa-mug-hot' :
+            meal === 'Lunch' ? 'fa-bowl-food' :
+            meal === 'Snacks' ? 'fa-cookie-bite' : 'fa-utensils'
+            }`}></i>
+        </span>
+        {meal}
+      </h4>
+      <button
+        onClick={() => {
+          setCustomFoodMeal(meal); // Set which meal we are adding to
+          setShowCustomFood(!showCustomFood); // Toggle form
+        }}
+        className="text-xs font-bold bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 shadow-sm transition-all"
+      >
+        {showCustomFood && customFoodMeal === meal ? 'Cancel' : '+ Add Custom'}
+      </button>
+    </div>
 
-                                 {/* Custom Food Form */}
-                                 {showCustomFood && customFoodMeal === meal && (
-                                    <div className="bg-green-50 p-4 rounded-xl border border-green-200">
-                                       <h5 className="font-bold text-sm text-green-900 mb-3">Add Custom Food</h5>
-                                       <div className="grid grid-cols-2 gap-3">
-                                          <input
-                                             type="text"
-                                             placeholder="Food name"
-                                             className="bg-white rounded-lg p-2 text-sm border border-green-200"
-                                             value={customFood.name}
-                                             onChange={(e) => setCustomFood({ ...customFood, name: e.target.value })}
-                                          />
-                                          <input
-                                             type="text"
-                                             placeholder="Quantity (e.g., 1 cup)"
-                                             className="bg-white rounded-lg p-2 text-sm border border-green-200"
-                                             value={customFood.quantity}
-                                             onChange={(e) => setCustomFood({ ...customFood, quantity: e.target.value })}
-                                          />
-                                       </div>
-                                       <button
-                                          onClick={addCustomFood}
-                                          className="mt-3 w-full bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700"
-                                       >
-                                          Add Food
-                                       </button>
-                                    </div>
-                                 )}
+    {/* --- ADDED THIS SECTION: Custom Food Form --- */}
+    {showCustomFood && customFoodMeal === meal && (
+      <div className="bg-green-50 p-4 rounded-xl border border-green-200 shadow-inner">
+        <h5 className="font-bold text-sm text-green-900 mb-3">Add Custom Item to {meal}</h5>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input
+            type="text"
+            placeholder="Food name (e.g. Scrambled Eggs)"
+            className="sm:col-span-1 bg-white rounded-lg p-2 text-sm border border-green-200"
+            value={customFood.name}
+            onChange={(e) => setCustomFood({ ...customFood, name: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Quantity (e.g. 2 eggs)"
+            className="bg-white rounded-lg p-2 text-sm border border-green-200"
+            value={customFood.quantity}
+            onChange={(e) => setCustomFood({ ...customFood, quantity: e.target.value })}
+          />
+          <select 
+            className="bg-white rounded-lg p-2 text-sm border border-green-200"
+            value={customFood.type || 'Veg'}
+            onChange={(e) => setCustomFood({ ...customFood, type: e.target.value })}
+          >
+            <option value="Veg">Veg</option>
+            <option value="Non-Veg">Non-Veg</option>
+          </select>
+        </div>
+        <button
+          onClick={addCustomFood}
+          className="mt-3 w-full bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700 transition-all"
+        >
+          Confirm Add to {meal}
+        </button>
+      </div>
+    )}
+    {/* --- END OF ADDED SECTION --- */}
 
-                                 {/* Food Grid */}
-                                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
-                                    {foodLibrary
-                                       .filter(food => food.category === meal)
-                                       .map(food => {
-                                          const isSelected = selectedFoods[meal].some(f => f.name === food.name);
-                                          return (
-                                             <div
-                                                key={food.id}
-                                                onClick={() => toggleFood(food, meal)}
-                                                className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${isSelected
-                                                      ? 'border-green-500 shadow-md'
-                                                      : 'border-gray-200 hover:border-green-300'
-                                                   }`}
-                                             >
-                                                <img
-                                                   src={food.imageUrl}
-                                                   alt={food.name}
-                                                   className="w-full h-20 object-cover"
-                                                />
-                                                <div className="p-1.5 bg-white">
-                                                   <p className="text-[10px] font-bold text-gray-800 truncate">{food.name}</p>
-                                                </div>
-                                                {isSelected && (
-                                                   <div className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                                                      <i className="fa-solid fa-check text-white text-[8px]"></i>
-                                                   </div>
-                                                )}
-                                             </div>
-                                          );
-                                       })}
-                                 </div>
+    {/* Food Library Grid */}
+    <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+      {foodLibrary.map(food => {
+        const isSelected = selectedFoods[meal].some(f => f.id === food.id || f.name === food.name);
+        return (
+          <div
+            key={`${meal}-${food.id}`}
+            onClick={() => toggleFood(food, meal)}
+            className={`relative cursor-pointer rounded-xl overflow-hidden border-2 transition-all duration-200 ${isSelected ? 'border-green-500 scale-95 shadow-inner' : 'border-transparent hover:border-green-200 bg-white shadow-sm'
+              }`}
+          >
+            <img src={food.imageUrl} alt={food.name} className="w-full h-24 object-cover" />
+            <div className="absolute top-1 left-1 bg-white/80 backdrop-blur-sm p-1 rounded shadow-sm">
+              <div className={`w-3 h-3 border flex items-center justify-center ${food.type === 'Veg' ? 'border-green-600' : 'border-red-600'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${food.type === 'Veg' ? 'bg-green-600' : 'bg-red-600'}`}></div>
+              </div>
+            </div>
+            <div className="p-2">
+              <p className="text-[10px] font-black text-gray-700 truncate uppercase tracking-tighter">
+                {food.name}
+              </p>
+            </div>
+            {isSelected && (
+              <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center">
+                <div className="bg-green-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg">
+                  <i className="fa-solid fa-check text-xs"></i>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
 
-                                 {/* Selected Foods for this meal */}
-                                 {selectedFoods[meal].length > 0 && (
-                                    <div className="bg-gray-50 p-3 rounded-lg">
-                                       <div className="flex flex-wrap gap-2">
-                                          {selectedFoods[meal].map((food, idx) => (
-                                             <div key={idx} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-200">
-                                                <img src={food.imageUrl} alt={food.name} className="w-6 h-6 object-cover rounded-full" />
-                                                <span className="text-xs font-medium text-gray-700">{food.name}</span>
-                                                <span className="text-[10px] text-gray-500">({food.quantity})</span>
-                                                {food.isCustom && <span className="text-[10px] text-green-600">★</span>}
-                                                <button
-                                                   onClick={() => setSelectedFoods({
-                                                      ...selectedFoods,
-                                                      [meal]: selectedFoods[meal].filter((_, i) => i !== idx)
-                                                   })}
-                                                   className="text-red-400 hover:text-red-600 ml-1"
-                                                >
-                                                   <i className="fa-solid fa-times text-[10px]"></i>
-                                                </button>
-                                             </div>
-                                          ))}
-                                       </div>
-                                    </div>
-                                 )}
-                              </div>
-                           ))}
+    {/* Selected Items for this Meal */}
+    {selectedFoods[meal].length > 0 && (
+      <div className="bg-white p-4 rounded-2xl border border-dashed border-green-300">
+        <p className="text-[10px] font-bold text-green-600 mb-2 uppercase">Selected for {meal}:</p>
+        <div className="flex flex-wrap gap-2">
+          {selectedFoods[meal].map((food, idx) => (
+            <div key={idx} className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
+              <span className={`w-2 h-2 rounded-full ${food.type === 'Veg' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              <span className="text-xs font-bold text-gray-700">{food.name}</span>
+              <button
+                onClick={() => setSelectedFoods({
+                  ...selectedFoods,
+                  [meal]: selectedFoods[meal].filter((_, i) => i !== idx)
+                })}
+                className="text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <i className="fa-solid fa-circle-xmark"></i>
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+))}
 
                            {/* Notes */}
                            <div>
@@ -759,7 +748,7 @@ const ManageWorkoutDiet = () => {
 
                            <button
                               onClick={handleSaveDiet}
-                              className="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-200"
+                              className="w-full py-3 bg-[#D9F17F] text-black rounded-xl font-bold cursor-pointer "
                            >
                               Save Diet Plan
                            </button>

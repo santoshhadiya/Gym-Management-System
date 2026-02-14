@@ -53,7 +53,7 @@ const pdfStyles = StyleSheet.create({
 });
 
 // --- PDF COMPONENT ---
-const ProgressReportPDF = ({ stats, chartImages, dietInfo, dateInfo }) => (
+const ProgressReportPDF = ({ stats, chartImages, dietInfo, adherenceInfo, dateInfo }) => (
   <Document>
     <Page size="A4" style={pdfStyles.page}>
       <View style={pdfStyles.header}>
@@ -74,21 +74,32 @@ const ProgressReportPDF = ({ stats, chartImages, dietInfo, dateInfo }) => (
           <Text style={pdfStyles.statValue}>{stats.currentWeight} kg</Text>
         </View>
         <View style={pdfStyles.statBox}>
-          <Text style={pdfStyles.statLabel}>DIET ADHERENCE</Text>
-          <Text style={pdfStyles.statValue}>{dietInfo.percentage}%</Text>
+          <Text style={pdfStyles.statLabel}>SESSIONS DONE</Text>
+          <Text style={pdfStyles.statValue}>{stats.sessionsDone}</Text>
+        </View>
+        <View style={pdfStyles.statBox}>
+          <Text style={pdfStyles.statLabel}>AVG ADHERENCE</Text>
+          <Text style={pdfStyles.statValue}>{stats.avgAdherence}%</Text>
         </View>
       </View>
 
       {chartImages.weight && (
         <View style={pdfStyles.section}>
-          <Text style={pdfStyles.sectionTitle}>Weight Trend</Text>
+          <Text style={pdfStyles.sectionTitle}>Weight Progression</Text>
           <Image src={chartImages.weight} style={pdfStyles.chartImage} />
+        </View>
+      )}
+
+      {chartImages.adherence && (
+        <View style={pdfStyles.section}>
+          <Text style={pdfStyles.sectionTitle}>Weekly Adherence</Text>
+          <Image src={chartImages.adherence} style={pdfStyles.chartImage} />
         </View>
       )}
 
       {chartImages.consistency && (
         <View style={pdfStyles.section}>
-          <Text style={pdfStyles.sectionTitle}>Workout Consistency</Text>
+          <Text style={pdfStyles.sectionTitle}>Workout & Diet Consistency by Day</Text>
           <Image src={chartImages.consistency} style={pdfStyles.chartImage} />
         </View>
       )}
@@ -107,6 +118,7 @@ const Progress = () => {
   const weightChartRef = useRef(null);
   const consistencyChartRef = useRef(null);
   const dietChartRef = useRef(null);
+  const adherenceChartRef = useRef(null);
 
   // --- STATE ---
   const [weightHistory, setWeightHistory] = useState([]);
@@ -215,15 +227,60 @@ const Progress = () => {
     workoutCounts[chartIndex]++;
   });
 
+  // Calculate adherence percentages
+  const totalProgress = progressLog.length || 1;
+  const workoutCompleted = progressLog.filter(p => p.workoutCompleted).length;
+  const dietCompleted = progressLog.filter(p => p.dietCompleted).length;
+  const workoutAdherence = Math.round((workoutCompleted / totalProgress) * 100);
+  const dietAdherence = Math.round((dietCompleted / totalProgress) * 100);
+  const avgAdherence = Math.round((workoutAdherence + dietAdherence) / 2);
+
+  // Weekly Adherence Chart Data
+  const adherenceChartData = {
+    labels: ["Workout", "Diet"],
+    datasets: [{
+      label: "Adherence %",
+      data: [workoutAdherence, dietAdherence],
+      backgroundColor: ["#CDE7FE", "#FEEF75"],
+      borderRadius: 8,
+      barThickness: 40,
+    }],
+  };
+
+  // Workout & Diet Consistency by Day
+  const dietCounts = new Array(7).fill(0);
+  progressLog.forEach(log => {
+    const date = new Date(log.date);
+    const logMonth = date.getMonth();
+    const logYear = date.getFullYear();
+    
+    if (logMonth === selectedMonth && logYear === selectedYear) {
+      let dayIndex = date.getDay();
+      let chartIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+      if (log.dietCompleted) {
+        dietCounts[chartIndex]++;
+      }
+    }
+  });
+
   const consistencyData = {
     labels: daysOfWeek,
-    datasets: [{
-      label: "Workouts Completed",
-      data: workoutCounts,
-      backgroundColor: theme === 'dark' ? colors.secondary : '#1f2937',
-      borderRadius: 6,
-      barThickness: 16,
-    }],
+    datasets: [
+      {
+        label: "Workouts",
+        data: workoutCounts,
+        backgroundColor: theme === 'dark' ? colors.secondary : '#1f2937',
+        borderRadius: 6,
+        barThickness: 16,
+      },
+      {
+        label: "Diet",
+        data: dietCounts,
+        backgroundColor: "#FEEF75",
+        borderRadius: 6,
+        barThickness: 16,
+      }
+    ],
   };
 
   const dietTotal = progressLog.length;
@@ -247,12 +304,23 @@ const Progress = () => {
       const weightImage = weightChartRef.current?.toBase64Image();
       const consistencyImage = consistencyChartRef.current?.toBase64Image();
       const dietImage = dietChartRef.current?.toBase64Image();
+      const adherenceImage = adherenceChartRef.current?.toBase64Image();
 
       const blob = await pdf(
         <ProgressReportPDF
-          stats={memberStats}
-          chartImages={{ weight: weightImage, consistency: consistencyImage, diet: dietImage }}
+          stats={{
+            ...memberStats,
+            sessionsDone: workoutCompleted,
+            avgAdherence: avgAdherence
+          }}
+          chartImages={{ 
+            weight: weightImage, 
+            consistency: consistencyImage, 
+            diet: dietImage,
+            adherence: adherenceImage 
+          }}
           dietInfo={{ percentage: dietPercentage, success: dietSuccess, total: dietTotal }}
+          adherenceInfo={{ workout: workoutAdherence, diet: dietAdherence }}
           dateInfo={`${getMonthName(selectedMonth)} ${selectedYear}`}
         />
       ).toBlob();
@@ -288,31 +356,43 @@ const Progress = () => {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black" style={{ color: colors.text }}>Your Progress</h1>
+          
           <p className="text-sm md:text-base mt-1" style={{ color: colors.textMuted }}>Track your fitness journey and milestones.</p>
         </div>
-        <div className="flex flex-wrap gap-4 md:gap-3 w-full md:w-auto">
-          <div className="flex-1 md:flex-none text-left md:text-right p-3 md:p-0 rounded-xl md:rounded-none"
-            style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'transparent' }}>
-            <p className="text-xs font-bold uppercase" style={{ color: colors.textMuted }}>Current Weight</p>
-            <p className="text-xl md:text-2xl font-black" style={{ color: colors.text }}>{memberStats.currentWeight} <span className="text-sm font-bold" style={{ color: colors.textMuted }}>kg</span></p>
-          </div>
-          <div className="hidden md:block h-10 w-px" style={{ backgroundColor: colors.border }}></div>
-          <div className="flex-1 md:flex-none text-left md:text-right p-3 md:p-0 rounded-xl md:rounded-none"
-            style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'transparent' }}>
-            <p className="text-xs font-bold uppercase" style={{ color: colors.textMuted }}>Start Weight</p>
-            <p className="text-xl md:text-2xl font-black" style={{ color: colors.text }}>{memberStats.startWeight} <span className="text-sm font-bold" style={{ color: colors.textMuted }}>kg</span></p>
-          </div>
+      </div>
+
+      {/* TOP SUMMARY CARDS - 4 Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="rounded-xl p-4 border shadow-sm" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+          <p className="text-xs font-bold uppercase mb-1" style={{ color: colors.textMuted }}>Current Weight</p>
+          <p className="text-xl font-black" style={{ color: colors.text }}>
+            {memberStats.currentWeight} <span className="text-sm font-bold" style={{ color: colors.textMuted }}>kg</span>
+          </p>
+        </div>
+        <div className="rounded-xl p-4 border shadow-sm" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+          <p className="text-xs font-bold uppercase mb-1" style={{ color: colors.textMuted }}>Start Weight</p>
+          <p className="text-xl font-black" style={{ color: colors.text }}>
+            {memberStats.startWeight} <span className="text-sm font-bold" style={{ color: colors.textMuted }}>kg</span>
+          </p>
+        </div>
+        <div className="rounded-xl p-4 border shadow-sm" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+          <p className="text-xs font-bold uppercase mb-1" style={{ color: colors.textMuted }}>Sessions Done</p>
+          <p className="text-xl font-black" style={{ color: colors.text }}>{workoutCompleted}</p>
+        </div>
+        <div className="rounded-xl p-4 border shadow-sm" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+          <p className="text-xs font-bold uppercase mb-1" style={{ color: colors.textMuted }}>Avg Adherence</p>
+          <p className="text-xl font-black" style={{ color: colors.text }}>{avgAdherence}%</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* LEFT COL: Weight Trend */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Weight Progression Chart */}
           <div className="rounded-[2.5rem] p-6 md:p-8 border shadow-sm relative overflow-hidden"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}>
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold" style={{ color: colors.text }}>Weight Trend</h3>
+              <h3 className="text-lg font-bold" style={{ color: colors.text }}>Weight Progression</h3>
             </div>
             <div className="h-64 w-full">
               <Line
@@ -321,7 +401,7 @@ const Progress = () => {
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
-                  animation: false, // Helps with reliable base64 capture
+                  animation: false,
                   plugins: { legend: { display: false } },
                   scales: {
                     y: { ticks: { color: colors.textMuted }, grid: { color: colors.border } },
@@ -332,11 +412,54 @@ const Progress = () => {
             </div>
           </div>
 
-          {/* Consistency Bar Chart */}
+          {/* Weekly Adherence Chart */}
+          <div className="rounded-[2.5rem] p-6 md:p-8 border shadow-sm"
+            style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold" style={{ color: colors.text }}>Weekly Adherence</h3>
+            </div>
+            <div className="h-48 w-full">
+              <Bar
+                ref={adherenceChartRef}
+                data={adherenceChartData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  animation: false,
+                  plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                      callbacks: {
+                        label: function(context) {
+                          return context.parsed.y + '%';
+                        }
+                      }
+                    }
+                  },
+                  scales: { 
+                    y: { 
+                      beginAtZero: true, 
+                      max: 100,
+                      ticks: { 
+                        color: colors.textMuted,
+                        callback: function(value) {
+                          return value + '%';
+                        }
+                      }, 
+                      grid: { color: colors.border } 
+                    }, 
+                    x: { ticks: { color: colors.textMuted }, grid: { display: false } } 
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Workout & Diet Consistency by Day */}
           <div className="rounded-[2.5rem] p-6 md:p-8 border shadow-sm"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3 sm:gap-0">
-              <h3 className="text-lg font-bold" style={{ color: colors.text }}>Workout Consistency</h3>
+              <h3 className="text-lg font-bold" style={{ color: colors.text }}>Workout & Diet Consistency by Day</h3>
               <div className="flex gap-2">
                 <select
                   value={selectedMonth}
@@ -367,8 +490,27 @@ const Progress = () => {
                   responsive: true,
                   maintainAspectRatio: false,
                   animation: false,
-                  plugins: { legend: { display: false } },
-                  scales: { y: { display: false }, x: { ticks: { color: colors.textMuted }, grid: { display: false } } }
+                  plugins: { 
+                    legend: { 
+                      display: true,
+                      position: 'bottom',
+                      labels: {
+                        color: colors.textMuted,
+                        usePointStyle: true,
+                        padding: 15
+                      }
+                    } 
+                  },
+                  scales: { 
+                    y: { 
+                      ticks: { color: colors.textMuted }, 
+                      grid: { color: colors.border } 
+                    }, 
+                    x: { 
+                      ticks: { color: colors.textMuted }, 
+                      grid: { display: false } 
+                    } 
+                  }
                 }}
               />
             </div>

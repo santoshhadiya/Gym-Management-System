@@ -52,6 +52,10 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(
+  "/images",
+  express.static(path.join(__dirname, "utils/images"))
+);
 
 // --- Mount Routes ---
 app.use("/api/auth", authRoutes);

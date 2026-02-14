@@ -107,6 +107,14 @@ const Booking = () => {
       }
    };
 
+    const formatDate = (date) => {
+      if (!date) return "-";
+
+      return new Date(date)
+         .toLocaleDateString("en-GB")
+         .replaceAll("/", "-");
+   };
+
    return (
       <div className="w-full max-w-6xl mx-auto space-y-6 pb-10 font-sans px-4 sm:px-6">
 
@@ -118,7 +126,7 @@ const Booking = () => {
             </div>
 
             <div className="flex border rounded-xl p-1 shadow-sm w-full md:w-auto" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
-               {['history','upcoming'].map(v => (
+               {['history', 'upcoming'].map(v => (
                   <button
                      key={v}
                      onClick={() => setViewState(v)}
@@ -148,12 +156,17 @@ const Booking = () => {
                   sessions.filter(s => s.status === 'Upcoming').length > 0 ? (
                      sessions
                         .filter(s => {
-                           // 1. Filter: Status must be Upcoming
-                           const isUpcoming = s.status === 'Upcoming';
-                           // 2. Filter: Do not display if user has already "Attended" this session
+                           const isUpcomingStatus = s.status === 'Upcoming';
+
+                           // 1. ADD THIS DATE COMPARISON
+                           const today = new Date().toISOString().split('T')[0]; // Gets current date as YYYY-MM-DD
+                           const isFutureDate = s.date >= today; // Shows today and future dates
+
                            const userBooking = myBookings.find(b => b.session?._id === s._id);
                            const isAttended = userBooking?.bookingStatus === "Attended";
-                           return isUpcoming && !isAttended;
+
+                           // 2. UPDATE THE RETURN STATEMENT
+                           return isUpcomingStatus && isFutureDate && !isAttended;
                         })
                         .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort: Latest first
                         .map(session => {
@@ -244,7 +257,7 @@ const Booking = () => {
 
                                     <p className="text-sm" style={{ color: colors.textMuted }}>
                                        <i className="fa-regular fa-clock mr-2 w-4"></i>
-                                       {session.date} • {session.time}
+                                       {formatDate(session.date)} • {session.time}
                                     </p>
 
                                     {session.notes && (
@@ -316,7 +329,7 @@ const Booking = () => {
                                  <div className="flex-1 w-full">
                                     <h3 className="text-lg font-bold mb-1" style={{ color: colors.text }}>{b.session?.type || "Session"}</h3>
                                     <p className="text-sm mb-2" style={{ color: colors.textMuted }}>
-                                       {b.session?.date} • {b.session?.time}
+                                       {formatDate(b.session?.date)} • {b.session?.time}
                                     </p>
 
                                     {/* TRAINERS DISPLAY */}
@@ -362,7 +375,7 @@ const Booking = () => {
 
                                     {isAttended && (
                                        <div className="mt-2 flex items-start gap-2">
-                                         
+
                                           <p className="text-xs text-gray-700 font-bold bg-gray-50 px-2 py-1 rounded">
                                              Great job! You attended this session.
                                           </p>
