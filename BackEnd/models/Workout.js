@@ -1,13 +1,21 @@
 const mongoose = require("mongoose");
 
-const daySchema = new mongoose.Schema({
-  day: { type: String, required: true }, // Monday, Tuesday...
-  plan: { type: String, default: "" },
+const exerciseSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  sets: { type: Number },
+  reps: { type: String },
+  duration: { type: String },
+  imageUrl: { type: String },
+  isCustom: { type: Boolean, default: false }
 });
 
-const weekSchema = new mongoose.Schema({
-  weekNumber: { type: Number, required: true },
-  days: [daySchema]
+const dailyWorkoutSchema = new mongoose.Schema({
+  date: { type: String, required: true }, // YYYY-MM-DD format
+  exercises: [exerciseSchema],
+  calorieTarget: { type: Number, default: 0 },
+  notes: { type: String, default: "" },
+  isCompleted: { type: Boolean, default: false },
+  completedAt: { type: Date }
 });
 
 const workoutSchema = new mongoose.Schema(
@@ -19,13 +27,16 @@ const workoutSchema = new mongoose.Schema(
     },
     trainer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Trainer
+      ref: "User",
       required: true,
     },
-    weeks: [weekSchema], // Array of weeks
+    plans: [dailyWorkoutSchema], // Array of date-based plans
     lastUpdated: { type: Date, default: Date.now }
   },
   { timestamps: true }
 );
+
+// Index for faster queries
+workoutSchema.index({ member: 1, 'plans.date': 1 });
 
 module.exports = mongoose.model("Workout", workoutSchema);

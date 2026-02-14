@@ -1,331 +1,781 @@
 import React, { useState, useEffect } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useGlobalContext } from '../../context/GlobalContext';
 
-
-
 const ManageWorkoutDiet = () => {
-   const {BACKEND_URL}=useGlobalContext();
-  const [assignedMembers, setAssignedMembers] = useState([]);
-  const [selectedMember, setSelectedMember] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [view, setView] = useState("workout"); // workout | diet
-  const [activeDay, setActiveDay] = useState("Monday");
-  const [activeWeek, setActiveWeek] = useState(1); 
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]); 
-  
-  const user = JSON.parse(localStorage.getItem("userInfo"));
+   const { BACKEND_URL } = useGlobalContext();
+   const [assignedMembers, setAssignedMembers] = useState([]);
+   const [selectedMember, setSelectedMember] = useState(null);
+   const [loading, setLoading] = useState(true);
+   const [view, setView] = useState("workout");
+   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  const weeksList = [1, 2, 3, 4]; 
+   // Libraries
+   const [exerciseLibrary, setExerciseLibrary] = useState([]);
+   const [foodLibrary, setFoodLibrary] = useState([]);
 
-  const [workoutWeeks, setWorkoutWeeks] = useState([]);
-  const [dietWeeks, setDietWeeks] = useState([]);
+   // Current Plan Data
+   const [selectedExercises, setSelectedExercises] = useState([]);
+   const [calorieTarget, setCalorieTarget] = useState(0);
+   const [workoutNotes, setWorkoutNotes] = useState("");
 
-  // --- STYLE INJECTION ---
-  useEffect(() => {
-    const linkToast = document.createElement("link");
-    linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
-    linkToast.rel = "stylesheet";
-    document.head.appendChild(linkToast);
+   const [selectedFoods, setSelectedFoods] = useState({
+      Breakfast: [],
+      Lunch: [],
+      Snacks: [],
+      Dinner: []
+   });
+   const [nutrition, setNutrition] = useState({
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0
+   });
+   const [dietNotes, setDietNotes] = useState("");
 
-    const linkFA = document.createElement("link");
-    linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
-    linkFA.rel = "stylesheet";
-    document.head.appendChild(linkFA);
+   // Custom Entry States
+   const [showCustomExercise, setShowCustomExercise] = useState(false);
+   const [customExercise, setCustomExercise] = useState({ name: '', sets: 3, reps: '' });
 
-    return () => {
-      document.head.removeChild(linkToast);
-      document.head.removeChild(linkFA);
-    };
-  }, []);
+   const [showCustomFood, setShowCustomFood] = useState(false);
+   const [customFood, setCustomFood] = useState({ name: '', quantity: '' });
+   const [customFoodMeal, setCustomFoodMeal] = useState('Breakfast');
 
-  // --- FETCH MEMBERS ---
-  useEffect(() => {
-     const fetchMembers = async () => {
-        try {
-           setLoading(true);
-           const res = await fetch(`${BACKEND_URL}/api/trainers/${user._id}/members/all`, {
+   // Calendar View
+   const [calendarDates, setCalendarDates] = useState([]);
+   const [existingPlans, setExistingPlans] = useState({ workout: [], diet: [] });
+
+   const user = JSON.parse(localStorage.getItem("userInfo"));
+
+   // Style Injection
+   useEffect(() => {
+      const linkToast = document.createElement("link");
+      linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
+      linkToast.rel = "stylesheet";
+      document.head.appendChild(linkToast);
+
+      const linkFA = document.createElement("link");
+      linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
+      linkFA.rel = "stylesheet";
+      document.head.appendChild(linkFA);
+
+      return () => {
+         document.head.removeChild(linkToast);
+         document.head.removeChild(linkFA);
+      };
+   }, []);
+
+   // Fetch Libraries
+   useEffect(() => {
+      const fetchLibraries = async () => {
+         try {
+            const res = await fetch(`${BACKEND_URL}/api/workout-diet/libraries`, {
                headers: { Authorization: `Bearer ${user.token}` }
-           });
-           
-           if (!res.ok) throw new Error("Failed to load members");
-           
-           const data = await res.json();
-           setAssignedMembers(data);
-        } catch (err) {
-           console.error(err);
-           toast.error("Could not load assigned members");
-        } finally {
-           setLoading(false);
-        }
-     };
-     if(user) fetchMembers();
-  }, []);
-
-  // --- FETCH PLANS ---
-  useEffect(() => {
-     if(selectedMember) {
-        const fetchPlans = async () => {
-           try {
-              const res = await fetch(`${BACKEND_URL}/api/workout-diet/${selectedMember._id}`, {
-                 headers: { Authorization: `Bearer ${user.token}` }
-              });
-              
-              const data = await res.json();
-              setWorkoutWeeks(data.workout?.weeks || []);
-              setDietWeeks(data.diet?.weeks || []);
-           } catch(err) {
-              console.error(err);
-              toast.error("Failed to load plans");
-           }
-        };
-        fetchPlans();
-     }
-  }, [selectedMember]);
-
-  // --- SAVE HANDLERS ---
-  const handleSaveWorkout = async () => {
-     try {
-        const res = await fetch(`${BACKEND_URL}/api/workout-diet/${selectedMember._id}/workout`, {
-           method: "POST",
-           headers: { "Content-Type": "application/json", Authorization: `Bearer ${user.token}` },
-           body: JSON.stringify({ weeks: workoutWeeks })
-        });
-        if(!res.ok) throw new Error("Save failed");
-        toast.success("Workout Plan Saved!");
-     } catch(err) {
-        toast.error("Failed to save workout");
-     }
-  };
-
-  const handleSaveDiet = async () => {
-     try {
-        const res = await fetch(`${BACKEND_URL}/api/workout-diet/${selectedMember._id}/diet`, {
-           method: "POST",
-           headers: { "Content-Type": "application/json", Authorization: `Bearer ${user.token}` },
-           body: JSON.stringify({ weeks: dietWeeks })
-        });
-        if(!res.ok) throw new Error("Save failed");
-        toast.success("Diet Plan Saved!");
-     } catch(err) {
-        toast.error("Failed to save diet");
-     }
-  };
-
-  // --- INPUT HANDLERS ---
-  const updateWeeks = (prevWeeks, val, type, subField = null) => {
-     const newWeeks = [...prevWeeks];
-     let weekIdx = newWeeks.findIndex(w => w.weekNumber === activeWeek);
-     
-     if (weekIdx === -1) {
-         newWeeks.push({ weekNumber: activeWeek, days: [] });
-         weekIdx = newWeeks.length - 1;
-     }
-     
-     const week = newWeeks[weekIdx];
-     let dayIdx = week.days.findIndex(d => d.day === activeDay);
-     
-     if (dayIdx === -1) {
-         week.days.push({ 
-             day: activeDay, 
-             plan: "",
-             calorieTarget: 0,
-             meals: { Breakfast: "", Lunch: "", Snacks: "", Dinner: "" },
-             nutrition: { calories: 0, protein: 0, carbs: 0, fat: 0 }
-         });
-         dayIdx = week.days.length - 1;
-     }
-
-     if (type === 'workout') {
-         week.days[dayIdx].plan = val;
-     } else if (type === 'calorieTarget') {
-         week.days[dayIdx].calorieTarget = Number(val);
-     } else if (type === 'diet_meal') {
-         week.days[dayIdx].meals[subField] = val;
-     } else if (type === 'nutrition') {
-         if (!week.days[dayIdx].nutrition) {
-             week.days[dayIdx].nutrition = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+            });
+            const data = await res.json();
+            setExerciseLibrary(data.exercises || []);
+            setFoodLibrary(data.foods || []);
+         } catch (err) {
+            console.error("Failed to load libraries", err);
          }
-         week.days[dayIdx].nutrition[subField] = Number(val);
-     }
-     
-     return newWeeks;
-  };
+      };
+      if (user) fetchLibraries();
+   }, []);
 
-  const handleWorkoutChange = (val) => {
-     setWorkoutWeeks(prev => updateWeeks(prev, val, 'workout'));
-  };
+   // Fetch Members
+   useEffect(() => {
+      const fetchMembers = async () => {
+         try {
+            setLoading(true);
+            const res = await fetch(`${BACKEND_URL}/api/trainers/${user._id}/members/all`, {
+               headers: { Authorization: `Bearer ${user.token}` }
+            });
 
-  const handleCalorieTargetChange = (val) => {
-      setWorkoutWeeks(prev => updateWeeks(prev, val, 'calorieTarget'));
-  }
+            if (!res.ok) throw new Error("Failed to load members");
 
-  const handleDietMealChange = (meal, val) => {
-     setDietWeeks(prev => updateWeeks(prev, val, 'diet_meal', meal));
-  };
+            const data = await res.json();
+            setAssignedMembers(data);
+         } catch (err) {
+            console.error(err);
+            toast.error("Could not load assigned members");
+         } finally {
+            setLoading(false);
+         }
+      };
+      if (user) fetchMembers();
+   }, []);
 
-  const handleNutritionChange = (field, val) => {
-     setDietWeeks(prev => updateWeeks(prev, val, 'nutrition', field));
-  };
+   // Fetch Plans when member is selected
+   useEffect(() => {
+      if (selectedMember) {
+         fetchPlansForMember();
+         generateCalendarDates();
+      }
+   }, [selectedMember]);
 
-  const getCurrentWorkout = () => {
-      const week = workoutWeeks.find(w => w.weekNumber === activeWeek);
-      const day = week?.days.find(d => d.day === activeDay);
-      return { plan: day?.plan || "", calorieTarget: day?.calorieTarget || 0 };
-  };
+   // Load plan for selected date
+   useEffect(() => {
+      if (selectedMember && selectedDate) {
+         loadPlanForDate();
+      }
+   }, [selectedDate, existingPlans]);
 
-  const getCurrentDietDay = () => {
-      const week = dietWeeks.find(w => w.weekNumber === activeWeek);
-      const day = week?.days.find(d => d.day === activeDay);
-      return day || { meals: {}, nutrition: {} };
-  };
+   const fetchPlansForMember = async () => {
+      try {
+         const res = await fetch(`${BACKEND_URL}/api/workout-diet/${selectedMember._id}`, {
+            headers: { Authorization: `Bearer ${user.token}` }
+         });
 
-  const currentWorkoutData = getCurrentWorkout();
-  const currentDietDay = getCurrentDietDay();
+         const data = await res.json();
+         setExistingPlans({
+            workout: data.workout?.plans || [],
+            diet: data.diet?.plans || []
+         });
+      } catch (err) {
+         console.error(err);
+         toast.error("Failed to load plans");
+      }
+   };
 
-  const getDateForDay = (dayName, weekNum) => {
+   const generateCalendarDates = () => {
+      const dates = [];
       const today = new Date();
-      const currentDayOfWeek = today.getDay(); 
-      const diffToMonday = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
-      const currentWeekMonday = new Date(today);
-      currentWeekMonday.setDate(today.getDate() + diffToMonday);
-      
-      const dayIndex = days.indexOf(dayName);
-      const weekOffsetDays = (weekNum - 1) * 7;
-      
-      const targetDate = new Date(currentWeekMonday);
-      targetDate.setDate(currentWeekMonday.getDate() + dayIndex + weekOffsetDays);
-      
-      return targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
 
-  return (
-    <div className="w-full max-w-7xl mx-auto space-y-6 pb-10 font-sans">
-      <ToastContainer position="top-right" autoClose={3000} />
+      // Generate next 30 days
+      for (let i = 0; i < 30; i++) {
+         const date = new Date(today);
+         date.setDate(today.getDate() + i);
+         dates.push({
+            date: date.toISOString().split('T')[0],
+            display: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            dayName: date.toLocaleDateString('en-US', { weekday: 'short' })
+         });
+      }
+      setCalendarDates(dates);
+   };
 
-      <div className="flex flex-col md:flex-row gap-8">
-         <div className="w-full md:w-1/4 bg-white rounded-3xl p-6 border border-gray-100 shadow-sm h-[80vh] flex flex-col">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Your Clients</h2>
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-               {loading ? <p className="text-gray-400 text-center">Loading...</p> : assignedMembers.map(m => (
-                  <div 
-                     key={m._id} 
-                     onClick={() => setSelectedMember(m)}
-                     className={`p-4 rounded-2xl cursor-pointer transition-all border ${selectedMember?._id === m._id ? 'bg-[#D9F17F] border-[#D9F17F] shadow-md' : 'bg-gray-50 border-gray-100 hover:border-gray-300'}`}
-                  >
-                     <h3 className={`font-bold text-sm ${selectedMember?._id === m._id ? 'text-green-900' : 'text-gray-800'}`}>{m.name}</h3>
-                     <p className={`text-xs ${selectedMember?._id === m._id ? 'text-green-800' : 'text-gray-500'}`}>{m.plan}</p>
-                  </div>
-               ))}
+   const loadPlanForDate = () => {
+      // Load workout plan for selected date
+      const workoutPlan = existingPlans.workout.find(p => p.date === selectedDate);
+      if (workoutPlan) {
+         setSelectedExercises(workoutPlan.exercises || []);
+         setCalorieTarget(workoutPlan.calorieTarget || 0);
+         setWorkoutNotes(workoutPlan.notes || "");
+      } else {
+         setSelectedExercises([]);
+         setCalorieTarget(0);
+         setWorkoutNotes("");
+      }
+
+      // Load diet plan for selected date
+      const dietPlan = existingPlans.diet.find(p => p.date === selectedDate);
+      if (dietPlan) {
+         setSelectedFoods(dietPlan.meals || {
+            Breakfast: [],
+            Lunch: [],
+            Snacks: [],
+            Dinner: []
+         });
+         setNutrition(dietPlan.nutrition || {
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0
+         });
+         setDietNotes(dietPlan.notes || "");
+      } else {
+         setSelectedFoods({
+            Breakfast: [],
+            Lunch: [],
+            Snacks: [],
+            Dinner: []
+         });
+         setNutrition({
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0
+         });
+         setDietNotes("");
+      }
+   };
+
+   // Exercise Selection
+   const toggleExercise = (exercise) => {
+      const exists = selectedExercises.find(e => e.name === exercise.name);
+      if (exists) {
+         setSelectedExercises(selectedExercises.filter(e => e.name !== exercise.name));
+      } else {
+         setSelectedExercises([...selectedExercises, {
+            name: exercise.name,
+            sets: exercise.defaultSets,
+            reps: exercise.defaultReps,
+            imageUrl: exercise.imageUrl,
+            isCustom: false
+         }]);
+      }
+   };
+
+   const addCustomExercise = () => {
+      if (!customExercise.name) {
+         toast.error("Exercise name is required");
+         return;
+      }
+      setSelectedExercises([...selectedExercises, {
+         ...customExercise,
+         isCustom: true,
+         imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=300&fit=crop'
+      }]);
+      setCustomExercise({ name: '', sets: 3, reps: '' });
+      setShowCustomExercise(false);
+   };
+
+   // Food Selection
+   const toggleFood = (food, meal) => {
+      const exists = selectedFoods[meal].find(f => f.name === food.name);
+      if (exists) {
+         setSelectedFoods({
+            ...selectedFoods,
+            [meal]: selectedFoods[meal].filter(f => f.name !== food.name)
+         });
+      } else {
+         setSelectedFoods({
+            ...selectedFoods,
+            [meal]: [...selectedFoods[meal], {
+               name: food.name,
+               quantity: food.defaultQuantity,
+               imageUrl: food.imageUrl,
+               isCustom: false
+            }]
+         });
+      }
+   };
+
+   const addCustomFood = () => {
+      if (!customFood.name) {
+         toast.error("Food name is required");
+         return;
+      }
+      setSelectedFoods({
+         ...selectedFoods,
+         [customFoodMeal]: [...selectedFoods[customFoodMeal], {
+            ...customFood,
+            isCustom: true,
+            imageUrl: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=400&h=300&fit=crop'
+         }]
+      });
+      setCustomFood({ name: '', quantity: '' });
+      setShowCustomFood(false);
+   };
+
+   // Save Handlers
+   const handleSaveWorkout = async () => {
+      try {
+         const res = await fetch(`${BACKEND_URL}/api/workout-diet/${selectedMember._id}/workout`, {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json",
+               Authorization: `Bearer ${user.token}`
+            },
+            body: JSON.stringify({
+               date: selectedDate,
+               exercises: selectedExercises,
+               calorieTarget,
+               notes: workoutNotes
+            })
+         });
+
+         if (!res.ok) throw new Error("Save failed");
+         toast.success(`Workout plan saved for ${selectedDate}!`);
+         fetchPlansForMember(); // Refresh
+      } catch (err) {
+         toast.error("Failed to save workout");
+      }
+   };
+
+   const handleSaveDiet = async () => {
+      try {
+         const res = await fetch(`${BACKEND_URL}/api/workout-diet/${selectedMember._id}/diet`, {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json",
+               Authorization: `Bearer ${user.token}`
+            },
+            body: JSON.stringify({
+               date: selectedDate,
+               meals: selectedFoods,
+               nutrition,
+               notes: dietNotes
+            })
+         });
+
+         if (!res.ok) throw new Error("Save failed");
+         toast.success(`Diet plan saved for ${selectedDate}!`);
+         fetchPlansForMember(); // Refresh
+      } catch (err) {
+         toast.error("Failed to save diet");
+      }
+   };
+
+   const hasPlanForDate = (date) => {
+      const hasWorkout = existingPlans.workout.some(p => p.date === date);
+      const hasDiet = existingPlans.diet.some(p => p.date === date);
+      return { hasWorkout, hasDiet };
+   };
+
+   return (
+      <div className="w-full max-w-[1800px] mx-auto space-y-6 pb-10 font-sans px-4">
+
+         <div className="lg:flex-row gap-6">
+            {/* Members Sidebar */}
+            <div className="w-full flex flex-col mb-4">
+
+               <h2 className="text-xl font-bold text-gray-900 mb-4">
+                  Your Clients
+               </h2>
+
+               <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                  {loading ? (
+                     <p className="text-gray-400">Loading...</p>
+                  ) : (
+                     assignedMembers.map((m) => (
+                        <div
+                           key={m._id}
+                           onClick={() => setSelectedMember(m)}
+                           className={`min-w-[220px] p-4 rounded-2xl cursor-pointer transition-all border flex-shrink-0 ${selectedMember?._id === m._id
+                                 ? "bg-[#D9F17F] border-[#D9F17F] shadow-md"
+                                 : "bg-gray-50 border-gray-100 hover:border-gray-300 hover:shadow-sm"
+                              }`}
+                        >
+                           <h3
+                              className={`font-bold text-sm ${selectedMember?._id === m._id
+                                    ? "text-green-900"
+                                    : "text-gray-800"
+                                 }`}
+                           >
+                              {m.name}
+                           </h3>
+
+                           <p
+                              className={`text-xs ${selectedMember?._id === m._id
+                                    ? "text-green-800"
+                                    : "text-gray-500"
+                                 }`}
+                           >
+                              {m.plan}
+                           </p>
+                        </div>
+                     ))
+                  )}
+               </div>
             </div>
-         </div>
 
-         <div className="flex-1 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm min-h-[80vh]">
-            {selectedMember ? (
-               <>
-                  <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-                     <div>
-                        <h2 className="text-3xl font-black text-gray-900">{selectedMember.name}</h2>
-                        <p className="text-gray-500 mt-1">Goal: <span className="font-bold text-gray-800">{selectedMember.goal || "General Fitness"}</span></p>
+
+            {/* Main Content */}
+            <div className="flex-1  p-6 lg:p-8  ">
+               {selectedMember ? (
+                  <>
+                     {/* Header */}
+                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-gray-100 pb-4 gap-4">
+                        <div>
+                           <h2 className="text-3xl font-black text-gray-900">{selectedMember.name}</h2>
+                           <p className="text-gray-500 mt-1">
+                              Goal: <span className="font-bold text-gray-800">{selectedMember.goal || "General Fitness"}</span>
+                           </p>
+                        </div>
+                        <div className="flex bg-gray-100 p-1 rounded-xl">
+                           <button
+                              onClick={() => setView('workout')}
+                              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${view === 'workout'
+                                    ? 'bg-[#CDE7FE] text-[#1C398E] '
+                                    : 'text-gray-500'
+                                 }`}
+                           >
+                              Workout
+                           </button>
+                           <button
+                              onClick={() => setView('diet')}
+                              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${view === 'diet'
+                                    ? 'bg-[#CDE7FE] text-[#1C398E] '
+                                    : 'text-gray-500'
+                                 }`}
+                           >
+                              Diet
+                           </button>
+                        </div>
                      </div>
-                     <div className="flex bg-gray-100 p-1 rounded-xl">
-                        <button onClick={() => setView('workout')} className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${view === 'workout' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}>Workout</button>
-                        <button onClick={() => setView('diet')} className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${view === 'diet' ? 'bg-white shadow text-green-600' : 'text-gray-500'}`}>Diet</button>
+
+                     {/* Calendar Date Selector */}
+                     <div className="mb-6">
+                        <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">
+                           Select Date
+                        </label>
+                        <div className="flex gap-2 overflow-x-auto pb-3">
+                           {calendarDates.map(dateObj => {
+                              const planStatus = hasPlanForDate(dateObj.date);
+                              return (
+                                 <button
+                                    key={dateObj.date}
+                                    onClick={() => setSelectedDate(dateObj.date)}
+                                    className={`min-w-[90px] px-3 py-3 rounded-2xl text-xs font-bold transition-all relative ${selectedDate === dateObj.date
+                                          ? 'bg-gray-900 text-white shadow-lg'
+                                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                       }`}
+                                 >
+                                    <div className="flex flex-col items-center gap-1">
+                                       <span className="text-[10px] opacity-70">{dateObj.dayName}</span>
+                                       <span>{dateObj.display}</span>
+                                    </div>
+                                    {(planStatus.hasWorkout || planStatus.hasDiet) && (
+                                       <div className="absolute top-1 right-1 flex gap-0.5">
+                                          {planStatus.hasWorkout && (
+                                             <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                          )}
+                                          {planStatus.hasDiet && (
+                                             <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+                                          )}
+                                       </div>
+                                    )}
+                                 </button>
+                              );
+                           })}
+                        </div>
                      </div>
-                  </div>
 
-                  <div className="mb-6 space-y-4">
-                      <div className="flex gap-2 items-center">
-                          <span className="text-xs font-bold text-gray-400 uppercase">Week:</span>
-                          {weeksList.map(wk => (
-                              <button key={wk} onClick={() => setActiveWeek(wk)} className={`w-8 h-8 rounded-full text-xs font-bold transition-all ${activeWeek === wk ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'}`}>{wk}</button>
-                          ))}
-                      </div>
-                      <div className="flex gap-2 overflow-x-auto pb-2">
-                        {days.map(day => (
-                            <button key={day} onClick={() => setActiveDay(day)} className={`px-3 py-2 rounded-2xl text-xs font-bold whitespace-nowrap flex flex-col items-center min-w-[80px] ${activeDay === day ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}>
-                                <span>{day.slice(0,3)}</span>
-                                <span className={`text-[10px] font-normal ${activeDay === day ? 'text-gray-400' : 'text-gray-400'}`}>{getDateForDay(day, activeWeek)}</span>
-                            </button>
-                        ))}
-                      </div>
-                  </div>
-
-                  <div className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 relative min-h-[400px]">
-                     <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                        {view === 'workout' ? <><i className="fa-solid fa-dumbbell text-blue-500"></i> {activeDay}'s Routine</> : <><i className="fa-solid fa-carrot text-green-500"></i> {activeDay}'s Meal Plan</>}
-                     </h3>
-
+                     {/* Workout View */}
                      {view === 'workout' ? (
-                        <div className="h-full flex flex-col gap-4">
-                           {/* Calorie Target Input */}
-                           <div className="bg-white p-3 rounded-xl border border-gray-100 flex items-center gap-3">
-                              <label className="text-xs font-bold text-orange-500 uppercase">Target Burn:</label>
-                              <input 
-                                 type="number" 
-                                 className="bg-gray-50 rounded-lg p-1.5 text-sm font-bold border-none focus:ring-1 focus:ring-orange-200 w-24"
-                                 placeholder="e.g 500"
-                                 value={currentWorkoutData.calorieTarget || 0}
-                                 onChange={(e) => handleCalorieTargetChange(e.target.value)}
-                              />
-                              <span className="text-xs text-gray-400">kcal</span>
+                        <div className="space-y-6">
+                           <div className="flex justify-between items-center">
+                              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                 <i className="fa-solid fa-dumbbell text-blue-500"></i>
+                                 Workout Plan for {selectedDate}
+                              </h3>
                            </div>
 
-                           <textarea 
-                              className="flex-1 min-h-[200px] w-full bg-white rounded-xl border border-gray-200 p-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 resize-none"
-                              placeholder="List exercises, sets, and reps..."
-                              value={currentWorkoutData.plan}
-                              onChange={(e) => handleWorkoutChange(e.target.value)}
-                           ></textarea>
-                           <button onClick={handleSaveWorkout} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
-                              Save Routine
+                           {/* Calorie Target */}
+                           <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                              <label className="text-xs font-bold text-orange-600 uppercase block mb-2">
+                                 Target Calorie Burn
+                              </label>
+                              <div className="flex items-center gap-2">
+                                 <input
+                                    type="number"
+                                    className="bg-white rounded-lg p-2 text-lg font-bold border border-orange-200 focus:ring-2 focus:ring-orange-300 w-32"
+                                    placeholder="500"
+                                    value={calorieTarget || ''}
+                                    onChange={(e) => setCalorieTarget(Number(e.target.value))}
+                                 />
+                                 <span className="text-sm text-gray-600">kcal</span>
+                              </div>
+                           </div>
+
+                           {/* Exercise Library */}
+                           <div>
+                              <div className="flex justify-between items-center mb-3">
+                                 <h4 className="font-bold text-gray-700">Select Exercises</h4>
+                                 <button
+                                    onClick={() => setShowCustomExercise(!showCustomExercise)}
+                                    className="text-xs bg-[#CDE7FE] text-[#1C398E]  px-3 py-1.5 rounded-lg  cursor-pointer"
+                                 >
+                                    + Add Custom
+                                 </button>
+                              </div>
+
+                              {/* Custom Exercise Form */}
+                              {showCustomExercise && (
+                                 <div className="bg-blue-50 p-4 rounded-xl mb-4 border border-blue-200">
+                                    <h5 className="font-bold text-sm text-blue-900 mb-3">Add Custom Exercise</h5>
+                                    <div className="grid grid-cols-3 gap-3">
+                                       <input
+                                          type="text"
+                                          placeholder="Exercise name"
+                                          className="col-span-3 sm:col-span-1 bg-white rounded-lg p-2 text-sm border border-blue-200"
+                                          value={customExercise.name}
+                                          onChange={(e) => setCustomExercise({ ...customExercise, name: e.target.value })}
+                                       />
+                                       <input
+                                          type="number"
+                                          placeholder="Sets"
+                                          className="bg-white rounded-lg p-2 text-sm border border-blue-200"
+                                          value={customExercise.sets}
+                                          onChange={(e) => setCustomExercise({ ...customExercise, sets: Number(e.target.value) })}
+                                       />
+                                       <input
+                                          type="text"
+                                          placeholder="Reps (e.g., 10-12)"
+                                          className="bg-white rounded-lg p-2 text-sm border border-blue-200"
+                                          value={customExercise.reps}
+                                          onChange={(e) => setCustomExercise({ ...customExercise, reps: e.target.value })}
+                                       />
+                                    </div>
+                                    <button
+                                       onClick={addCustomExercise}
+                                       className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700"
+                                    >
+                                       Add Exercise
+                                    </button>
+                                 </div>
+                              )}
+
+                              {/* Exercise Grid */}
+                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+                                 {exerciseLibrary.map(exercise => {
+                                    const isSelected = selectedExercises.some(e => e.name === exercise.name);
+                                    return (
+                                       <div
+                                          key={exercise.id}
+                                          onClick={() => toggleExercise(exercise)}
+                                          className={`relative cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${isSelected
+                                                ? 'border-blue-500 shadow-lg'
+                                                : 'border-gray-200 hover:border-blue-300'
+                                             }`}
+                                       >
+                                          <img
+                                             src={exercise.imageUrl}
+                                             alt={exercise.name}
+                                             className="w-full h-32 object-cover"
+                                          />
+                                          <div className="p-2 bg-white">
+                                             <p className="text-xs font-bold text-gray-800 truncate">{exercise.name}</p>
+                                             <p className="text-[10px] text-gray-500">{exercise.category}</p>
+                                          </div>
+                                          {isSelected && (
+                                             <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                                                <i className="fa-solid fa-check text-white text-xs"></i>
+                                             </div>
+                                          )}
+                                       </div>
+                                    );
+                                 })}
+                              </div>
+
+                              {/* Selected Exercises */}
+                              {selectedExercises.length > 0 && (
+                                 <div className="bg-gray-50 p-4 rounded-xl">
+                                    <h5 className="font-bold text-sm text-gray-700 mb-3">
+                                       Selected Exercises ({selectedExercises.length})
+                                    </h5>
+                                    <div className="space-y-2">
+                                       {selectedExercises.map((ex, idx) => (
+                                          <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200">
+                                             <img src={ex.imageUrl} alt={ex.name} className="w-12 h-12 object-cover rounded-lg" />
+                                             <div className="flex-1">
+                                                <p className="font-bold text-sm text-gray-800">{ex.name}</p>
+                                                <p className="text-xs text-gray-500">
+                                                   {ex.sets} sets × {ex.reps} reps
+                                                   {ex.isCustom && <span className="ml-2 text-blue-600">(Custom)</span>}
+                                                </p>
+                                             </div>
+                                             <button
+                                                onClick={() => setSelectedExercises(selectedExercises.filter((_, i) => i !== idx))}
+                                                className="text-red-500 hover:text-red-700"
+                                             >
+                                                <i className="fa-solid fa-trash text-sm"></i>
+                                             </button>
+                                          </div>
+                                       ))}
+                                    </div>
+                                 </div>
+                              )}
+                           </div>
+
+                           {/* Notes */}
+                           <div>
+                              <label className="text-xs font-bold text-gray-600 uppercase block mb-2">Notes</label>
+                              <textarea
+                                 className="w-full bg-gray-50 rounded-xl border border-gray-200 p-3 text-sm focus:ring-2 focus:ring-blue-200 resize-none"
+                                 rows="3"
+                                 placeholder="Add any additional instructions..."
+                                 value={workoutNotes}
+                                 onChange={(e) => setWorkoutNotes(e.target.value)}
+                              ></textarea>
+                           </div>
+
+                           <button
+                              onClick={handleSaveWorkout}
+                              className="w-full py-3 bg-[#FEEF75] text-black rounded-xl font-bold cursor-pointer"
+                           >
+                              Save Workout Plan
                            </button>
                         </div>
                      ) : (
-                        <div className="space-y-4">
-                           <div className="grid grid-cols-4 gap-2 mb-4 bg-white p-3 rounded-xl border border-gray-100">
-                                {['calories', 'protein', 'carbs', 'fat'].map(nut => (
-                                    <div key={nut}>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">{nut}</label>
-                                        <input 
-                                            type="number" 
-                                            className="w-full bg-gray-50 rounded-lg p-1.5 text-xs font-bold border-none focus:ring-1 focus:ring-green-200"
-                                            value={currentDietDay.nutrition?.[nut] || 0}
-                                            onChange={(e) => handleNutritionChange(nut, e.target.value)}
-                                        />
-                                    </div>
-                                ))}
+                        /* Diet View */
+                        <div className="space-y-6">
+                           <div className="flex justify-between items-center">
+                              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                 <i className="fa-solid fa-carrot text-green-500"></i>
+                                 Diet Plan for {selectedDate}
+                              </h3>
                            </div>
 
+                           {/* Nutrition Targets */}
+                           <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                              <label className="text-xs font-bold text-green-600 uppercase block mb-3">
+                                 Daily Nutrition Targets
+                              </label>
+                              <div className="grid grid-cols-4 gap-3">
+                                 {['calories', 'protein', 'carbs', 'fat'].map(nut => (
+                                    <div key={nut}>
+                                       <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">
+                                          {nut}
+                                       </label>
+                                       <input
+                                          type="number"
+                                          className="w-full bg-white rounded-lg p-2 text-sm font-bold border border-green-200 focus:ring-2 focus:ring-green-300"
+                                          value={nutrition[nut] || ''}
+                                          onChange={(e) => setNutrition({ ...nutrition, [nut]: Number(e.target.value) })}
+                                       />
+                                    </div>
+                                 ))}
+                              </div>
+                           </div>
+
+                           {/* Meals */}
                            {['Breakfast', 'Lunch', 'Snacks', 'Dinner'].map(meal => (
-                              <div key={meal} className="bg-white p-4 rounded-xl border border-gray-100">
-                                 <p className="text-xs font-bold text-green-600 uppercase mb-2">{meal}</p>
-                                 <input 
-                                    className="w-full bg-transparent border-none focus:ring-0 text-sm text-gray-800 placeholder-gray-400 p-0"
-                                    placeholder={`Add ${meal.toLowerCase()} items...`}
-                                    value={currentDietDay.meals?.[meal] || ""}
-                                    onChange={(e) => handleDietMealChange(meal, e.target.value)}
-                                 />
+                              <div key={meal} className="space-y-3">
+                                 <div className="flex justify-between items-center">
+                                    <h4 className="font-bold text-gray-700 flex items-center gap-2">
+                                       <span className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">
+                                          <i className={`fa-solid ${meal === 'Breakfast' ? 'fa-mug-hot' :
+                                                meal === 'Lunch' ? 'fa-bowl-food' :
+                                                   meal === 'Snacks' ? 'fa-cookie-bite' :
+                                                      'fa-utensils'
+                                             }`}></i>
+                                       </span>
+                                       {meal}
+                                    </h4>
+                                    <button
+                                       onClick={() => {
+                                          setCustomFoodMeal(meal);
+                                          setShowCustomFood(!showCustomFood);
+                                       }}
+                                       className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-lg hover:bg-green-600 transition-colors"
+                                    >
+                                       + Custom
+                                    </button>
+                                 </div>
+
+                                 {/* Custom Food Form */}
+                                 {showCustomFood && customFoodMeal === meal && (
+                                    <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                                       <h5 className="font-bold text-sm text-green-900 mb-3">Add Custom Food</h5>
+                                       <div className="grid grid-cols-2 gap-3">
+                                          <input
+                                             type="text"
+                                             placeholder="Food name"
+                                             className="bg-white rounded-lg p-2 text-sm border border-green-200"
+                                             value={customFood.name}
+                                             onChange={(e) => setCustomFood({ ...customFood, name: e.target.value })}
+                                          />
+                                          <input
+                                             type="text"
+                                             placeholder="Quantity (e.g., 1 cup)"
+                                             className="bg-white rounded-lg p-2 text-sm border border-green-200"
+                                             value={customFood.quantity}
+                                             onChange={(e) => setCustomFood({ ...customFood, quantity: e.target.value })}
+                                          />
+                                       </div>
+                                       <button
+                                          onClick={addCustomFood}
+                                          className="mt-3 w-full bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700"
+                                       >
+                                          Add Food
+                                       </button>
+                                    </div>
+                                 )}
+
+                                 {/* Food Grid */}
+                                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+                                    {foodLibrary
+                                       .filter(food => food.category === meal)
+                                       .map(food => {
+                                          const isSelected = selectedFoods[meal].some(f => f.name === food.name);
+                                          return (
+                                             <div
+                                                key={food.id}
+                                                onClick={() => toggleFood(food, meal)}
+                                                className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${isSelected
+                                                      ? 'border-green-500 shadow-md'
+                                                      : 'border-gray-200 hover:border-green-300'
+                                                   }`}
+                                             >
+                                                <img
+                                                   src={food.imageUrl}
+                                                   alt={food.name}
+                                                   className="w-full h-20 object-cover"
+                                                />
+                                                <div className="p-1.5 bg-white">
+                                                   <p className="text-[10px] font-bold text-gray-800 truncate">{food.name}</p>
+                                                </div>
+                                                {isSelected && (
+                                                   <div className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                                      <i className="fa-solid fa-check text-white text-[8px]"></i>
+                                                   </div>
+                                                )}
+                                             </div>
+                                          );
+                                       })}
+                                 </div>
+
+                                 {/* Selected Foods for this meal */}
+                                 {selectedFoods[meal].length > 0 && (
+                                    <div className="bg-gray-50 p-3 rounded-lg">
+                                       <div className="flex flex-wrap gap-2">
+                                          {selectedFoods[meal].map((food, idx) => (
+                                             <div key={idx} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-200">
+                                                <img src={food.imageUrl} alt={food.name} className="w-6 h-6 object-cover rounded-full" />
+                                                <span className="text-xs font-medium text-gray-700">{food.name}</span>
+                                                <span className="text-[10px] text-gray-500">({food.quantity})</span>
+                                                {food.isCustom && <span className="text-[10px] text-green-600">★</span>}
+                                                <button
+                                                   onClick={() => setSelectedFoods({
+                                                      ...selectedFoods,
+                                                      [meal]: selectedFoods[meal].filter((_, i) => i !== idx)
+                                                   })}
+                                                   className="text-red-400 hover:text-red-600 ml-1"
+                                                >
+                                                   <i className="fa-solid fa-times text-[10px]"></i>
+                                                </button>
+                                             </div>
+                                          ))}
+                                       </div>
+                                    </div>
+                                 )}
                               </div>
                            ))}
-                           <button onClick={handleSaveDiet} className="mt-6 w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-200">
+
+                           {/* Notes */}
+                           <div>
+                              <label className="text-xs font-bold text-gray-600 uppercase block mb-2">Notes</label>
+                              <textarea
+                                 className="w-full bg-gray-50 rounded-xl border border-gray-200 p-3 text-sm focus:ring-2 focus:ring-green-200 resize-none"
+                                 rows="3"
+                                 placeholder="Add dietary notes or restrictions..."
+                                 value={dietNotes}
+                                 onChange={(e) => setDietNotes(e.target.value)}
+                              ></textarea>
+                           </div>
+
+                           <button
+                              onClick={handleSaveDiet}
+                              className="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-200"
+                           >
                               Save Diet Plan
                            </button>
                         </div>
                      )}
+                  </>
+               ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-300">
+                     <i className="fa-solid fa-user-check text-6xl mb-4"></i>
+                     <p className="text-xl font-bold">Select a client to manage their plan</p>
                   </div>
-               </>
-            ) : (
-               <div className="flex flex-col items-center justify-center h-full text-gray-300">
-                  <i className="fa-solid fa-user-check text-6xl mb-4"></i>
-                  <p className="text-xl font-bold">Select a client to manage their plan</p>
-               </div>
-            )}
+               )}
+            </div>
          </div>
       </div>
-    </div>
-  );
+   );
 };
 
 export default ManageWorkoutDiet;

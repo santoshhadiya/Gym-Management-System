@@ -110,7 +110,7 @@ const AssignedMembers = () => {
       </div>
 
       {/* CONTROLS */}
-      <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-200/40">
+      <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-[1rem] border border-gray-100 ">
          <div className="relative flex-grow w-full md:w-auto md:max-w-xs">
             <input
                type="text"
@@ -144,7 +144,7 @@ const AssignedMembers = () => {
       {filteredMembers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {filteredMembers.map((member) => (
-            <div key={member._id} className="bg-white rounded-[3rem] border border-gray-50 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group">
+            <div key={member._id} className="bg-white rounded-[1rem] border border-gray-50 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group">
               
               {/* Card Header */}
               {/* Changed: Adjusted padding for mobile p-6 vs md:p-8 */}
@@ -206,7 +206,7 @@ const AssignedMembers = () => {
       {/* --- MEMBER PROFILE MODAL --- */}
       {showProfileModal && selectedMember && (
          <div className="fixed inset-0 bg-[#121212]/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 md:p-6 overflow-y-auto">
-            <div className="bg-white rounded-[2.5rem] md:rounded-[3rem] w-full max-w-2xl animate-fade-in relative shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] my-auto">
+            <div className="bg-white rounded-[1rem] md:rounded-[3rem] w-full max-w-2xl animate-fade-in relative shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] my-auto">
                
                {/* Modal Header */}
                <div className="px-6 md:px-10 py-4 md:py-6 border-b border-gray-50 flex justify-between items-center sticky top-0 bg-white/80 backdrop-blur-sm rounded-t-[2.5rem] md:rounded-t-[3rem] z-10">

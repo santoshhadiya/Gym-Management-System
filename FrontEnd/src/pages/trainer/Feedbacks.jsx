@@ -162,7 +162,7 @@ const Feedbacks = () => {
         label: "Feedback Count",
         data: ratingsCount,
         backgroundColor: [
-          "#fee2e2", "#ffedd5", "#fef9c3", "#dcfce7", "#bbf7d0",
+          "#fee2e2", "#ffedd5", "#FEEF75", "#D9F17F", "#CDE7FE",
         ],
         borderRadius: 8,
       },
@@ -183,7 +183,7 @@ const Feedbacks = () => {
   };
 
   return (
-    <div className="w-full bg-white rounded-3xl p-8 shadow-sm border border-gray-100 font-sans min-h-screen">
+    <div className="w-full bg-white  font-sans min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* HEADER */}
@@ -211,15 +211,15 @@ const Feedbacks = () => {
       {/* STATS & CHART */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
          <div className="space-y-6">
-            <div className="bg-[#f8fbff] p-6 rounded-3xl border border-blue-50">
-               <p className="text-xs text-blue-400 font-bold uppercase tracking-wider mb-2">Total Feedback</p>
+            <div className="bg-[#d8f17f] p-6 rounded-3xl border border-blue-50">
+               <p className="text-xs text-black font-bold uppercase tracking-wider mb-2">Total Feedback</p>
                <h2 className="text-4xl font-black text-gray-900">{filteredFeedbacks.length}</h2>
             </div>
-            <div className="bg-[#f0fdf4] p-6 rounded-3xl border border-green-50">
-               <p className="text-xs text-green-500 font-bold uppercase tracking-wider mb-2">Avg Rating</p>
+            <div className="bg-[#CDE7FE] p-6 rounded-3xl border border-green-50">
+               <p className="text-xs text-black font-bold uppercase tracking-wider mb-2">Avg Rating</p>
                <h2 className="text-4xl font-black text-gray-900 flex items-center gap-2">
                   {(filteredFeedbacks.reduce((acc, curr) => acc + curr.rating, 0) / (filteredFeedbacks.length || 1)).toFixed(1)}
-                  <span className="text-xl text-green-400">★</span>
+                  <span className="text-xl text-black">★</span>
                </h2>
             </div>
          </div>

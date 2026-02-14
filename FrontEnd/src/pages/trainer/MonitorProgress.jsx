@@ -164,7 +164,7 @@ const MonitorProgress = () => {
       {
         label: "Adherence %",
         data: [adherence.workout, adherence.diet],
-        backgroundColor: ["#1f2937", "#4ade80"], // Dark Gray, Green
+        backgroundColor: ["#CDE7FE", "#FEEF75"], // Dark Gray, Green
         borderRadius: 8,
         barThickness: 40,
       },
@@ -183,7 +183,7 @@ const MonitorProgress = () => {
       <div className="flex flex-col md:flex-row gap-8">
          
          {/* Sidebar: Member List */}
-         <div className="w-full md:w-1/4 bg-white rounded-3xl p-6 border border-gray-100 shadow-sm h-[85vh] flex flex-col">
+         <div className="w-full md:w-1/4 bg-white  p-2  h-[85vh] flex flex-col">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Tracking List</h2>
             
             <div className="relative mb-4">
@@ -197,12 +197,12 @@ const MonitorProgress = () => {
                <i className="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar  p-2">
                {loading ? <p className="text-center text-gray-400 text-sm">Loading...</p> : filteredMembers.map(m => (
                   <div 
                      key={m._id} 
                      onClick={() => setSelectedMember(m)}
-                     className={`p-4 rounded-2xl cursor-pointer transition-all border flex items-center justify-between ${selectedMember?._id === m._id ? 'bg-[#D9F17F] border-[#D9F17F] shadow-md transform scale-[1.02]' : 'bg-white border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
+                     className={`p-4 rounded-xl cursor-pointer transition-all  flex items-center justify-between ${selectedMember?._id === m._id ? 'bg-[#D9F17F] border-[#D9F17F] shadow-md transform scale-[1.02]' : 'bg-white border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
                   >
                      <div>
                         <h3 className={`font-bold text-sm ${selectedMember?._id === m._id ? 'text-green-900' : 'text-gray-800'}`}>{m.name}</h3>
@@ -218,7 +218,7 @@ const MonitorProgress = () => {
          </div>
 
          {/* Main Content */}
-         <div className="flex-1 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm min-h-[85vh]">
+         <div className="flex-1 bg-white rounded-xl p-6 border-1 border-gray-100 min-h-[85vh]">
             
             {selectedMember ? (
                dataLoading ? (
@@ -255,7 +255,7 @@ const MonitorProgress = () => {
                       </div>
                       <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                           <p className="text-xs text-gray-400 font-bold uppercase mb-1">Avg Adherence</p>
-                          <p className={`text-xl font-black ${adherence.workout >= 80 ? 'text-green-600' : 'text-yellow-600'}`}>
+                          <p className={`text-xl font-black ${adherence.workout >= 80 ? 'text-black' : 'text-black'}`}>
                               {Math.round((adherence.workout + adherence.diet) / 2)}%
                           </p>
                       </div>

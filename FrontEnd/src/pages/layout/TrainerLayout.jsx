@@ -197,7 +197,7 @@ const TrainerLayout = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#fafafa] font-sans text-gray-800 overflow-x-hidden h-screen">
+    <div className="flex min-h-screen  font-sans text-gray-800 overflow-x-hidden h-screen">
       <Sidebar_Trainer isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} trainerStatus={trainerStatus} />
       <main className="flex-1 bg-[#ffffff] relative min-w-0 transition-all duration-500">
         <div className="p-4 md:p-10 max-w-[1600px] mx-auto">
