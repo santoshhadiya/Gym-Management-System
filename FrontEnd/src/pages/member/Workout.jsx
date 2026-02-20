@@ -642,7 +642,7 @@ const Workout = () => {
                                                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                                         : isCompleted() === true
                                                             ? 'bg-[#D9F17F] text-black shadow-lg'
-                                                            : 'bg-green-500 hover:bg-[#D9F17F] text-black shadow-lg'
+                                                            : 'bg-[#D9F17F] hover:bg-[#D9F17F] text-black shadow-lg cursor-pointer'
                                                     }`}
                                             >
                                                 <i className="fa-solid fa-check mr-2"></i>

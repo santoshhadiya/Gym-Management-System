@@ -180,7 +180,7 @@ const Booking = () => {
 
                            return (
                               <div key={session._id}
-                                 className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:shadow-md ${isFull && !isActive ? 'opacity-75' : ''}`}
+                                 className={`p-6 rounded-[1rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:shadow-md ${isFull && !isActive ? 'opacity-75' : ''}`}
                                  style={{
                                     backgroundColor: colors.card,
                                     borderColor: colors.border
@@ -296,7 +296,7 @@ const Booking = () => {
                            );
                         })
                   ) : (
-                     <div className="text-center py-16 rounded-[2.5rem] border border-dashed"
+                     <div className="text-center py-16 rounded-[1rem] border border-dashed"
                         style={{ backgroundColor: colors.card, borderColor: colors.border }}>
                         <i className="fa-regular fa-calendar-xmark text-4xl mb-3" style={{ color: colors.textMuted }}></i>
                         <p style={{ color: colors.textMuted }}>No upcoming sessions available.</p>
@@ -323,7 +323,7 @@ const Booking = () => {
 
                            return (
                               <div key={b._id}
-                                 className={`p-6 rounded-[2rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isUserCancelled || isSessionCancelled ? 'opacity-75' : ''}`}
+                                 className={`p-6 rounded-[1rem] border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isUserCancelled || isSessionCancelled ? 'opacity-75' : ''}`}
                                  style={{ backgroundColor: colors.card, borderColor: colors.border }}
                               >
                                  <div className="flex-1 w-full">
@@ -439,7 +439,7 @@ const Booking = () => {
                            )
                         })
                   ) : (
-                     <div className="text-center py-16 rounded-[2.5rem] border border-dashed"
+                     <div className="text-center py-16 rounded-[1rem] border border-dashed"
                         style={{ backgroundColor: colors.card, borderColor: colors.border }}>
                         <i className="fa-solid fa-ticket text-4xl mb-3" style={{ color: colors.textMuted }}></i>
                         <p style={{ color: colors.textMuted }}>You haven't booked any sessions yet.</p>

@@ -611,6 +611,57 @@ const ManageWorkoutDiet = () => {
 
                           
 
+                           {/* Nutrition Summary */}
+                           <div className="bg-green-50 p-4 rounded-xl border border-green-200 mb-4">
+                              <label className="text-xs font-bold text-green-600 uppercase block mb-2">Nutrition Targets</label>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                 <div>
+                                    <input
+                                       type="number"
+                                       min={0}
+                                       className="bg-white rounded-lg p-2 text-sm border border-green-200 w-full"
+                                       placeholder="Calories"
+                                       value={nutrition.calories || ''}
+                                       onChange={(e) => setNutrition({ ...nutrition, calories: Number(e.target.value) })}
+                                    />
+                                    <p className="text-[10px] text-gray-500 mt-1">kcal</p>
+                                 </div>
+                                 <div>
+                                    <input
+                                       type="number"
+                                       min={0}
+                                       className="bg-white rounded-lg p-2 text-sm border border-green-200 w-full"
+                                       placeholder="Protein"
+                                       value={nutrition.protein || ''}
+                                       onChange={(e) => setNutrition({ ...nutrition, protein: Number(e.target.value) })}
+                                    />
+                                    <p className="text-[10px] text-gray-500 mt-1">g Protein</p>
+                                 </div>
+                                 <div>
+                                    <input
+                                       type="number"
+                                       min={0}
+                                       className="bg-white rounded-lg p-2 text-sm border border-green-200 w-full"
+                                       placeholder="Carbs"
+                                       value={nutrition.carbs || ''}
+                                       onChange={(e) => setNutrition({ ...nutrition, carbs: Number(e.target.value) })}
+                                    />
+                                    <p className="text-[10px] text-gray-500 mt-1">g Carbs</p>
+                                 </div>
+                                 <div>
+                                    <input
+                                       type="number"
+                                       min={0}
+                                       className="bg-white rounded-lg p-2 text-sm border border-green-200 w-full"
+                                       placeholder="Fat"
+                                       value={nutrition.fat || ''}
+                                       onChange={(e) => setNutrition({ ...nutrition, fat: Number(e.target.value) })}
+                                    />
+                                    <p className="text-[10px] text-gray-500 mt-1">g Fat</p>
+                                 </div>
+                              </div>
+                           </div>
+
                            {/* Meals */}
                            {/* Meals Section */}
 {['Breakfast', 'Lunch', 'Snacks', 'Dinner'].map(meal => (

@@ -38,7 +38,7 @@ ChartJS.register(
 // --- PDF STYLES ---
 const pdfStyles = StyleSheet.create({
   page: { padding: 40, backgroundColor: '#FFFFFF', fontFamily: 'Helvetica' },
-  header: { marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#8c0000', paddingBottom: 10, display:"flex", flexDirection:"row", gap:10 },
+  header: { marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#8c0000', paddingBottom: 10, display: "flex", flexDirection: "row", gap: 10 },
   title: { fontSize: 24, fontWeight: 'bold' },
   date: { fontSize: 10, color: '#666', marginTop: 4 },
   section: { marginTop: 20 },
@@ -49,7 +49,7 @@ const pdfStyles = StyleSheet.create({
   statValue: { fontSize: 16, fontWeight: 'bold', marginTop: 2 },
   chartImage: { width: '100%', height: 200, objectFit: 'contain', marginVertical: 10 },
   footer: { position: 'absolute', bottom: 30, left: 40, right: 40, textAlign: 'center', fontSize: 10, color: '#999' },
-  logo: { width: 50, height:40 }
+  logo: { width: 50, height: 40 }
 });
 
 // --- PDF COMPONENT ---
@@ -110,7 +110,7 @@ const ProgressReportPDF = ({ stats, chartImages, dietInfo, adherenceInfo, dateIn
 );
 
 const Progress = () => {
-  const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
+  const { api, BACKEND_URL, loadingIMG } = useGlobalContext();
   const { colors, theme } = useTheme();
   const navigate = useNavigate();
 
@@ -123,6 +123,8 @@ const Progress = () => {
   // --- STATE ---
   const [weightHistory, setWeightHistory] = useState([]);
   const [progressLog, setProgressLog] = useState([]);
+  const [workoutPlans, setWorkoutPlans] = useState([]);
+  const [dietPlans, setDietPlans] = useState([]);
   const [memberStats, setMemberStats] = useState({
     startWeight: 0,
     currentWeight: 0,
@@ -154,6 +156,8 @@ const Progress = () => {
           const sortedWeightHistory = (progressDataRaw.weightHistory || []).sort((a, b) => new Date(a.date) - new Date(b.date));
           setWeightHistory(sortedWeightHistory);
           setProgressLog(progressDataRaw.progress || []);
+          setWorkoutPlans(progressDataRaw.workout?.plans || []);
+          setDietPlans(progressDataRaw.diet?.plans || []);
         }
 
         if (profileData) {
@@ -253,7 +257,7 @@ const Progress = () => {
     const date = new Date(log.date);
     const logMonth = date.getMonth();
     const logYear = date.getFullYear();
-    
+
     if (logMonth === selectedMonth && logYear === selectedYear) {
       let dayIndex = date.getDay();
       let chartIndex = dayIndex === 0 ? 6 : dayIndex - 1;
@@ -296,6 +300,67 @@ const Progress = () => {
     }],
   };
 
+  // --- Calories Trend (last 7 days) ---
+  const getLastNDates = (n = 7) => {
+    const dates = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      dates.push(d.toISOString().split('T')[0]);
+    }
+    return dates;
+  };
+
+  const last7 = getLastNDates(7);
+
+  const burnedSeries = last7.map(d => {
+    const prog = progressLog.find(p => p.date === d) || {};
+    if (!prog.workoutCompleted) return 0;
+    const plan = workoutPlans.find(p => p.date === d);
+    return plan ? (plan.calorieTarget || 0) : 0;
+  });
+
+  const consumedSeries = last7.map(d => {
+    const prog = progressLog.find(p => p.date === d) || {};
+    if (!prog.dietCompleted) return 0;
+    const plan = dietPlans.find(p => p.date === d);
+    return plan ? (plan.nutrition?.calories || 0) : 0;
+  });
+
+  const burnedChartData = {
+    labels: last7.map(d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+    datasets: [{
+      label: 'Calories Burned',
+      data: burnedSeries,
+      borderColor: '#CDE7FE',
+      backgroundColor: '#cde7fe77',
+      tension: 0.3,
+      fill: true,
+      pointRadius: 3
+    }]
+  };
+
+  const consumedChartData = {
+    labels: last7.map(d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+    datasets: [{
+      label: 'Calories Consumed',
+      data: consumedSeries,
+      backgroundColor: '#FEF18A',
+      borderColor: '#FEF18A',
+      borderRadius: 6,
+    }]
+  };
+
+  const smallChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: colors.textMuted }, grid: { display: false } },
+      y: { ticks: { color: colors.textMuted }, grid: { color: colors.border } }
+    }
+  };
+
   // --- DOWNLOAD PDF LOGIC ---
   const handleDownloadReport = async () => {
     const loadingToast = toast.loading("Generating your PDF report...");
@@ -313,11 +378,11 @@ const Progress = () => {
             sessionsDone: workoutCompleted,
             avgAdherence: avgAdherence
           }}
-          chartImages={{ 
-            weight: weightImage, 
-            consistency: consistencyImage, 
+          chartImages={{
+            weight: weightImage,
+            consistency: consistencyImage,
             diet: dietImage,
-            adherence: adherenceImage 
+            adherence: adherenceImage
           }}
           dietInfo={{ percentage: dietPercentage, success: dietSuccess, total: dietTotal }}
           adherenceInfo={{ workout: workoutAdherence, diet: dietAdherence }}
@@ -344,19 +409,19 @@ const Progress = () => {
   const getMonthName = (monthIndex) => new Date(2000, monthIndex, 1).toLocaleString('default', { month: 'long' });
 
   if (loading) {
-      return (
-         <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
-            <img src={loadingIMG} className='h-20 w-25'/>
-         </div>
-      );
-   }
+    return (
+      <div className="fixed inset-0 flex items-center justify-center h-screen" style={{ color: colors.textMuted }}>
+        <img src={loadingIMG} className='h-20 w-25' />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8 pb-10 font-sans px-4 sm:px-0">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          
+
           <p className="text-sm md:text-base mt-1" style={{ color: colors.textMuted }}>Track your fitness journey and milestones.</p>
         </div>
       </div>
@@ -385,11 +450,42 @@ const Progress = () => {
         </div>
       </div>
 
+      {/* Calories */}
+      <div className="flex lg:grid-cols-2 gap-4">
+        <div className="rounded-xl p-4 border shadow-sm w-full" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+          <p className="text-xs font-bold uppercase mb-1" style={{ color: colors.textMuted }}>Calories Burned (7d)</p>
+          <div className="h-54 w-full">
+            <Line data={burnedChartData} options={smallChartOptions} />
+          </div>
+          <p className="text-sm mt-2" style={{ color: colors.textMuted }}>Today: {(() => {
+            const today = new Date().toISOString().split('T')[0];
+            const progressEntry = progressLog.find(p => p.date === today) || {};
+            if (!progressEntry.workoutCompleted) return 0;
+            const plan = workoutPlans.find(p => p.date === today);
+            return plan ? (plan.calorieTarget || 0) : 0;
+          })()} kcal</p>
+        </div>
+
+        <div className="rounded-xl p-4 border shadow-sm w-full" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+          <p className="text-xs font-bold uppercase mb-1" style={{ color: colors.textMuted }}>Calories Consumed (7d)</p>
+          <div className="h-54 w-full">
+            <Bar data={consumedChartData} options={smallChartOptions} />
+          </div>
+          <p className="text-sm mt-2" style={{ color: colors.textMuted }}>Today: {(() => {
+            const today = new Date().toISOString().split('T')[0];
+            const progressEntry = progressLog.find(p => p.date === today) || {};
+            if (!progressEntry.dietCompleted) return 0;
+            const plan = dietPlans.find(p => p.date === today);
+            return plan ? (plan.nutrition?.calories || 0) : 0;
+          })()} kcal</p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* LEFT COL: Weight Trend */}
         <div className="lg:col-span-2 space-y-6">
           {/* Weight Progression Chart */}
-          <div className="rounded-[2.5rem] p-6 md:p-8 border shadow-sm relative overflow-hidden"
+          <div className="rounded-[1rem] p-6 md:p-8 border shadow-sm relative overflow-hidden"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}>
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold" style={{ color: colors.text }}>Weight Progression</h3>
@@ -413,7 +509,7 @@ const Progress = () => {
           </div>
 
           {/* Weekly Adherence Chart */}
-          <div className="rounded-[2.5rem] p-6 md:p-8 border shadow-sm"
+          <div className="rounded-[1rem] p-6 md:p-8 border shadow-sm"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}>
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold" style={{ color: colors.text }}>Weekly Adherence</h3>
@@ -426,29 +522,29 @@ const Progress = () => {
                   responsive: true,
                   maintainAspectRatio: false,
                   animation: false,
-                  plugins: { 
+                  plugins: {
                     legend: { display: false },
                     tooltip: {
                       callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                           return context.parsed.y + '%';
                         }
                       }
                     }
                   },
-                  scales: { 
-                    y: { 
-                      beginAtZero: true, 
+                  scales: {
+                    y: {
+                      beginAtZero: true,
                       max: 100,
-                      ticks: { 
+                      ticks: {
                         color: colors.textMuted,
-                        callback: function(value) {
+                        callback: function (value) {
                           return value + '%';
                         }
-                      }, 
-                      grid: { color: colors.border } 
-                    }, 
-                    x: { ticks: { color: colors.textMuted }, grid: { display: false } } 
+                      },
+                      grid: { color: colors.border }
+                    },
+                    x: { ticks: { color: colors.textMuted }, grid: { display: false } }
                   }
                 }}
               />
@@ -456,7 +552,7 @@ const Progress = () => {
           </div>
 
           {/* Workout & Diet Consistency by Day */}
-          <div className="rounded-[2.5rem] p-6 md:p-8 border shadow-sm"
+          <div className="rounded-[1rem] p-6 md:p-8 border shadow-sm"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3 sm:gap-0">
               <h3 className="text-lg font-bold" style={{ color: colors.text }}>Workout & Diet Consistency by Day</h3>
@@ -490,8 +586,8 @@ const Progress = () => {
                   responsive: true,
                   maintainAspectRatio: false,
                   animation: false,
-                  plugins: { 
-                    legend: { 
+                  plugins: {
+                    legend: {
                       display: true,
                       position: 'bottom',
                       labels: {
@@ -499,17 +595,17 @@ const Progress = () => {
                         usePointStyle: true,
                         padding: 15
                       }
-                    } 
+                    }
                   },
-                  scales: { 
-                    y: { 
-                      ticks: { color: colors.textMuted }, 
-                      grid: { color: colors.border } 
-                    }, 
-                    x: { 
-                      ticks: { color: colors.textMuted }, 
-                      grid: { display: false } 
-                    } 
+                  scales: {
+                    y: {
+                      ticks: { color: colors.textMuted },
+                      grid: { color: colors.border }
+                    },
+                    x: {
+                      ticks: { color: colors.textMuted },
+                      grid: { display: false }
+                    }
                   }
                 }}
               />
@@ -519,7 +615,7 @@ const Progress = () => {
 
         {/* RIGHT COL: Stats & Diet */}
         <div className="space-y-6">
-          <div className="rounded-[2.5rem] p-6 md:p-8 border shadow-sm text-center relative"
+          <div className="rounded-[1rem] p-6 md:p-8 border shadow-sm text-center relative"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}>
             <h3 className="text-lg font-bold mb-6" style={{ color: colors.text }}>Diet Adherence</h3>
             <div className="w-40 h-40 mx-auto relative">
@@ -535,7 +631,7 @@ const Progress = () => {
             </div>
           </div>
 
-          <div className="rounded-[2.5rem] p-6 md:p-8 border relative overflow-hidden"
+          <div className="rounded-[1rem] p-6 md:p-8 border relative overflow-hidden"
             style={{
               backgroundColor: theme === 'dark' ? 'rgba(6, 78, 59, 0.2)' : '#f0fdf4',
               borderColor: theme === 'dark' ? '#064e3b' : '#dcfce7'
