@@ -1,5 +1,5 @@
 // Predefined Exercise Library with Images
-const isHosted=true
+const isHosted=false
 const BACKEND_URL=isHosted?"https://gym-management-system-backend-vive.onrender.com":"http://localhost:5000"
 
 const EXERCISE_LIBRARY = [

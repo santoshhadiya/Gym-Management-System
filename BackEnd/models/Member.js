@@ -51,6 +51,46 @@ const memberSchema = mongoose.Schema(
     notes: {
       type: String,
     },
+
+    // 🔹 Plan Queue - For queued future plans
+    planQueue: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "PlanQueue",
+      },
+    ],
+
+    // 🔹 Plan History - Track all plans the member has purchased
+    planHistory: [
+      {
+        plan: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Plan",
+        },
+        startDate: {
+          type: Date,
+        },
+        expiryDate: {
+          type: Date,
+        },
+        purchaseType: {
+          type: String,
+          enum: ["new", "upgrade", "queue"],
+          default: "new",
+        },
+        amount: {
+          type: Number,
+        },
+        payment: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Payment",
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

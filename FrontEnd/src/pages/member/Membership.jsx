@@ -14,21 +14,24 @@ const Membership = () => {
    const [payments, setPayments] = useState([]);
    const [plans, setPlans] = useState([]);
    const [loading, setLoading] = useState(true);
+   const [queuedPlans, setQueuedPlans] = useState([]);
 
    // --- FETCH DATA ---
    useEffect(() => {
       const fetchData = async () => {
          try {
             setLoading(true);
-            const [memberRes, paymentRes, planRes] = await Promise.all([
+            const [memberRes, paymentRes, planRes, upgradeRes] = await Promise.all([
                api.get("/members/profile"),
                api.get("/payments/my"),
                api.get("/plans"),
+               api.get("/upgrades/membership-details").catch(() => ({ data: { queuedPlans: [] } }))
             ]);
 
             setMember(memberRes.data);
             setPayments(paymentRes.data);
             setPlans(planRes.data);
+            setQueuedPlans(upgradeRes.data.queuedPlans || []);
          } catch (error) {
             console.error(error);
             toast.error("Failed to load membership data");
@@ -168,95 +171,60 @@ const Membership = () => {
             </div>
          </div>
 
-         {/* --- DETAILS GRID --- */}
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
 
-            {/* Payment Summary */}
+         {/* --- QUEUED PLANS SECTION --- */}
+         {queuedPlans && queuedPlans.length > 0 && (
             <div
-               className="rounded-3xl p-6 md:p-8 border shadow-sm transition-colors"
+               className="rounded-[2.5rem] p-6 md:p-8 border shadow-sm transition-colors"
                style={{ backgroundColor: colors.card, borderColor: colors.border }}
             >
                <h3 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: colors.text }}>
-                  <i className="fa-solid fa-file-invoice-dollar text-[#CDE7FE] text-xl"></i> Payment Summary
+                  <i className="fa-solid fa-calendar-check text-yellow-500 text-xl"></i> Upcoming Plans
                </h3>
                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 rounded-xl" style={{ backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb' }}>
-                     <span className="text-sm" style={{ color: colors.textMuted }}>Plan Price</span>
-                     <span className="font-bold" style={{ color: colors.text }}>₹{planPrice.toLocaleString()}</span>
-                  </div>
-                  
-                  
-                  <p className="text-xs text-right mt-2" style={{ color: colors.textMuted }}>Last Payment: {lastPaymentDate}</p>
+                  {queuedPlans.map((queueItem, index) => {
+                     const scheduledStart = new Date(queueItem.scheduledStartDate).toLocaleDateString('en-GB').replaceAll('/', '-');
+                     const scheduledEnd = new Date(queueItem.scheduledExpiryDate).toLocaleDateString('en-GB').replaceAll('/', '-');
+                     
+                     return (
+                        <div key={queueItem._id} className="p-4 rounded-2xl border" style={{ borderColor: colors.border, backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb' }}>
+                           <div className="flex justify-between items-start mb-2">
+                              <div>
+                                 <div className="flex items-center gap-2 mb-1">
+                                    <span className="px-2.5 py-0.5 text-[10px] font-black rounded-lg bg-yellow-100 text-yellow-800">Queue #{index + 1}</span>
+                                    <span className="text-xs font-bold" style={{ color: colors.textMuted }}>Pending Activation</span>
+                                 </div>
+                                 <p className="font-bold" style={{ color: colors.text }}>{queueItem.plan?.name}</p>
+                              </div>
+                              <div className="text-right">
+                                 <p className="text-lg font-black" style={{ color: colors.text }}>₹{queueItem.plan?.price}</p>
+                                 <p className="text-xs font-bold text-gray-400">{queueItem.plan?.durationLabel}</p>
+                              </div>
+                           </div>
+                           <div className="flex justify-between items-center text-xs">
+                              <div>
+                                 <p className="font-bold text-gray-400">Starts</p>
+                                 <p className="font-bold" style={{ color: colors.text }}>{scheduledStart}</p>
+                              </div>
+                              <i className="fa-solid fa-arrow-right text-gray-400"></i>
+                              <div>
+                                 <p className="font-bold text-gray-400">Expires</p>
+                                 <p className="font-bold" style={{ color: colors.text }}>{scheduledEnd}</p>
+                              </div>
+                           </div>
+                        </div>
+                     );
+                  })}
                </div>
             </div>
+         )}
 
-            {/* Plan Benefits */}
-            <div
-               className="rounded-3xl p-6 md:p-8 border shadow-sm transition-colors"
-               style={{ backgroundColor: colors.card, borderColor: colors.border }}
-            >
-               <h3 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: colors.text }}>
-                  <i className="fa-solid fa-star text-[#FEEF75] text-xl"></i> Plan Benefits
-               </h3>
-               <ul className="space-y-3">
-                  {currentPlan?.benefits ? (
-                     currentPlan.benefits.map((benefit, idx) => (
-                        <li key={idx} className="flex items-start gap-3 text-sm" style={{ color: colors.textMuted }}>
-                           <i className="fa-solid fa-check text-green-500 mt-0.5 shrink-0"></i>
-                           <span>{benefit}</span>
-                        </li>
-                     ))
-                  ) : (
-                     <p className="text-sm" style={{ color: colors.textMuted }}>No specific benefits listed.</p>
-                  )}
-               </ul>
-            </div>
-         </div>
-
-         {/* --- UPGRADE OPTIONS --- */}
-         <div
-            className="rounded-[2.5rem] p-6 md:p-8 border"
-            style={{
-               backgroundColor: theme === 'dark' ? '#111827' : '#f8fbff',
-               borderColor: theme === 'dark' ? '#374151' : '#dbeafe'
-            }}
-         >
-            <div className="text-center mb-8">
-               <h3 className="text-xl md:text-2xl font-black" style={{ color: colors.text }}>Upgrade Your Experience</h3>
-               <p className="text-sm md:text-base" style={{ color: colors.textMuted }}>Switch to a premium plan for exclusive features.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               {plans.filter(p => !currentPlan || p._id !== currentPlan._id).map((p) => (
-                  <div
-                     key={p._id}
-                     className="p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4"
-                     style={{ backgroundColor: colors.card, borderColor: colors.border }}
-                  >
-                     <div>
-                        <h4 className="font-bold text-lg" style={{ color: colors.text }}>{p.name}</h4>
-                        <p className="text-sm mb-2" style={{ color: colors.textMuted }}>{p.description || `${p.durationInDays} days validity`}</p>
-                        <p className="font-black text-blue-600 dark:text-blue-400">₹{p.price.toLocaleString()}</p>
-                     </div>
-                     <button
-                        onClick={() => handleUpgrade(p)}
-                        className="px-4 py-2 rounded-xl text-xs font-bold hover:opacity-90 transition-opacity shrink-0 cursor-pointer"
-                        style={{ backgroundColor: colors.text, color: colors.background }} // Inverts text/bg for button
-                     >
-                        Upgrade
-                     </button>
-                  </div>
-               ))}
-               {plans.length === 0 && (
-                  <p className="text-center col-span-2" style={{ color: colors.textMuted }}>No upgrade plans available.</p>
-               )}
-            </div>
-         </div>
-
+       
          {/* --- FOOTER --- */}
          <div className="text-center text-xs mt-8 px-4" style={{ color: colors.textMuted }}>
             <p className="mb-2">
-               <span className="font-bold">Terms & Conditions:</span> Membership is non-transferable and non-refundable.
+               <span className="font-bold">Terms & Conditions:</span> Membership is non-refundable.
             </p>
          </div>
       </div>

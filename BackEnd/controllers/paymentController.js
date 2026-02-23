@@ -1,8 +1,10 @@
 const Payment = require("../models/Payment");
 const Member = require("../models/Member");
 const Plan = require("../models/Plan");
+const PlanQueue = require("../models/PlanQueue");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const planService = require("../services/planService");
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
@@ -10,16 +12,21 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET || "3r35e84X8l2auHrwmLhI32I1",
 });
 
-// @desc   Step 1: Create Razorpay Order
+// @desc   Step 1: Create Razorpay Order (handles new purchase, upgrade, or queue)
 // @route  POST /api/payments/razorpay-order
 exports.createRazorpayOrder = async (req, res) => {
   try {
-    const { planId } = req.body;
+    const { planId, purchaseType, amountToCharge } = req.body;
     const plan = await Plan.findById(planId);
     if (!plan) return res.status(404).json({ message: "Plan not found" });
 
+    // If purchase type is upgrade and amount is specified, use that amount
+    // Otherwise use plan price
+    const finalAmount =
+      purchaseType === "upgrade" && amountToCharge ? amountToCharge : plan.price;
+
     const options = {
-      amount: plan.price * 100, // Amount in paise
+      amount: finalAmount * 100, // Amount in paise
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     };
@@ -31,11 +38,8 @@ exports.createRazorpayOrder = async (req, res) => {
   }
 };
 
-// @desc   Step 2: Verify Signature & Activate Membership
+// @desc   Step 2: Verify Signature & Activate Membership (handles new, upgrade, queue)
 // @route  POST /api/payments/verify
-// Updated verifyRazorpayPayment in paymentController.js
-// paymentController.js
-
 exports.verifyRazorpayPayment = async (req, res) => {
   try {
     const {
@@ -43,7 +47,9 @@ exports.verifyRazorpayPayment = async (req, res) => {
       razorpay_payment_id,
       razorpay_signature,
       planId,
-      memberId, // Added: Receive explicit memberId for Admin actions
+      purchaseType, // 'new', 'upgrade', or 'queue'
+      memberId, // For Admin actions
+      amountToCharge, // For upgrade payments
     } = req.body;
 
     // 1. Verify Signature
@@ -57,67 +63,237 @@ exports.verifyRazorpayPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment signature" });
     }
 
-    // 2. Retrieve Member Details
+    // 2. Retrieve Member & Plan Details
     let member;
     if (memberId) {
-      // If memberId is provided (Admin Dashboard flow), use it directly
-      member = await Member.findById(memberId);
+      member = await Member.findById(memberId).populate("plan");
     } else if (req.user && req.user.id) {
-      // If no memberId, fall back to the logged-in user (Member Dashboard flow)
-      member = await Member.findOne({ user: req.user.id });
+      member = await Member.findOne({ user: req.user.id }).populate("plan");
     }
 
-    const plan = await Plan.findById(planId);
+    const newPlan = await Plan.findById(planId);
 
-    if (!member || !plan) {
+    if (!member || !newPlan) {
       return res.status(404).json({ message: "Member or Plan details not found" });
     }
 
-    // 3. Determine Start and Expiry Dates (Queuing Logic)
     const today = new Date();
-    let startDate = today;
-    let isQueued = false;
+    let response = {};
 
-    if (member.expiryDate && new Date(member.expiryDate) > today) {
-      startDate = new Date(member.expiryDate);
-      isQueued = true;
+    // 3. HANDLE DIFFERENT PURCHASE TYPES
+    if (purchaseType === "upgrade") {
+      // ===== UPGRADE LOGIC =====
+      response = await handleUpgradePayment(
+        member,
+        newPlan,
+        razorpay_payment_id,
+        today,
+        amountToCharge
+      );
+    } else if (purchaseType === "queue") {
+      // ===== QUEUE LOGIC =====
+      response = await handleQueuePayment(
+        member,
+        newPlan,
+        razorpay_payment_id,
+        today
+      );
+    } else {
+      // ===== NEW PURCHASE LOGIC =====
+      response = await handleNewPayment(
+        member,
+        newPlan,
+        razorpay_payment_id,
+        today
+      );
     }
 
-    const expiryDate = new Date(
-      startDate.getTime() + plan.duration * 24 * 60 * 60 * 1000
-    );
-
-    // 4. Create local Payment Record
-    await Payment.create({
-      member: member._id,
-      plan: plan._id,
-      amount: plan.price,
-      method: "Razorpay",
-      transactionId: razorpay_payment_id,
-      status: "Success",
-      paidAt: today,
-    });
-
-    // 5. Update Membership Details
-    member.plan = plan._id;
-    member.status = "Active";
-    member.startDate = startDate;
-    member.expiryDate = expiryDate;
-    await member.save();
-
-    return res.status(201).json({
-      message: isQueued 
-        ? "Payment verified and plan queued successfully" 
-        : "Payment verified and membership activated",
-      startDate,
-      expiryDate,
-    });
-
+    return res.status(201).json(response);
   } catch (error) {
     console.error("PAYMENT VERIFY CRASH:", error);
-    res.status(500).json({ message: "Server error during verification", error: error.message });
+    res
+      .status(500)
+      .json({
+        message: "Server error during verification",
+        error: error.message,
+      });
   }
 };
+
+/**
+ * Handle new plan purchase (no active plan)
+ */
+async function handleNewPayment(member, newPlan, transactionId, today) {
+  // Create payment record
+  const payment = await Payment.create({
+    member: member._id,
+    plan: newPlan._id,
+    amount: newPlan.price,
+    method: "Razorpay",
+    transactionId,
+    status: "Success",
+    paidAt: today,
+  });
+
+  // Calculate expiry date
+  const expiryDate = new Date(
+    today.getTime() + newPlan.duration * 24 * 60 * 60 * 1000
+  );
+
+  // Update member with new plan
+  member.plan = newPlan._id;
+  member.status = "Active";
+  member.startDate = today;
+  member.expiryDate = expiryDate;
+
+  // Add to plan history
+  member.planHistory.push({
+    plan: newPlan._id,
+    startDate: today,
+    expiryDate,
+    purchaseType: "new",
+    amount: newPlan.price,
+    payment: payment._id,
+  });
+
+  await member.save();
+
+  return {
+    message: "Payment verified and membership activated",
+    purchaseType: "new",
+    plan: newPlan.name,
+    startDate: today,
+    expiryDate,
+    paymentId: payment._id,
+  };
+}
+
+/**
+ * Handle plan upgrade
+ */
+async function handleUpgradePayment(
+  member,
+  newPlan,
+  transactionId,
+  today,
+  amountToCharge
+) {
+  // Create payment record with upgrade amount
+  const payment = await Payment.create({
+    member: member._id,
+    plan: newPlan._id,
+    amount: amountToCharge || newPlan.price,
+    method: "Razorpay",
+    transactionId,
+    status: "Success",
+    paidAt: today,
+  });
+
+  // Calculate remaining value and new expiry
+  const upgradeCalc = planService.calculateUpgradeCost(
+    member,
+    member.plan,
+    newPlan
+  );
+
+  if (!upgradeCalc.allowed) {
+    throw new Error(upgradeCalc.reason);
+  }
+
+  // Update member with new plan details
+  // New plan starts immediately, expiry extends
+  member.plan = newPlan._id;
+  member.status = "Active";
+  member.startDate = today;
+  member.expiryDate = upgradeCalc.newExpiryDate;
+
+  // Add to plan history with upgrade details
+  member.planHistory.push({
+    plan: newPlan._id,
+    startDate: today,
+    expiryDate: upgradeCalc.newExpiryDate,
+    purchaseType: "upgrade",
+    amount: amountToCharge || newPlan.price,
+    payment: payment._id,
+  });
+
+  await member.save();
+
+  // **CRITICAL: Recalculate all queued plans based on new active plan expiry**
+  // This ensures queued plans automatically shift forward without gaps/overlaps
+  try {
+    await planService.recalculateQueuedPlansAfterUpgrade(
+      member._id,
+      upgradeCalc.newExpiryDate
+    );
+  } catch (error) {
+    console.error("Warning: Failed to recalculate queued plans after upgrade:", error);
+    // Don't fail the upgrade if queue recalculation fails, just log it
+  }
+
+  return {
+    message: "Plan upgraded successfully",
+    purchaseType: "upgrade",
+    currentPlan: upgradeCalc.currentPlan,
+    upgradedPlan: upgradeCalc.upgrade,
+    calculation: upgradeCalc.calculation,
+    newExpiryDate: upgradeCalc.newExpiryDate,
+    paymentId: payment._id,
+  };
+}
+
+/**
+ * Handle plan queueing with proper multiple queue handling
+ */
+async function handleQueuePayment(member, newPlan, transactionId, today) {
+  // Create payment record
+  const payment = await Payment.create({
+    member: member._id,
+    plan: newPlan._id,
+    amount: newPlan.price,
+    method: "Razorpay",
+    transactionId,
+    status: "Success",
+    paidAt: today,
+  });
+
+  // Calculate scheduled dates considering all existing queued plans
+  const queueDates = await planService.calculateQueuedPlanDates(
+    member,
+    newPlan
+  );
+
+  const scheduledStartDate = queueDates.scheduledStartDate;
+  const scheduledExpiryDate = queueDates.scheduledExpiryDate;
+  const queuePosition = queueDates.queuePosition;
+
+  const planQueue = await PlanQueue.create({
+    member: member._id,
+    plan: newPlan._id,
+    scheduledStartDate,
+    scheduledExpiryDate,
+    payment: payment._id,
+    purchaseType: "queue",
+    status: "Pending",
+    queuePosition,
+  });
+
+  // Add to member's plan queue
+  member.planQueue.push(planQueue._id);
+  await member.save();
+
+  return {
+    message: "Payment verified and plan queued successfully",
+    purchaseType: "queue",
+    queuedPlan: newPlan.name,
+    queuedPlanDuration: newPlan.duration,
+    scheduledStartDate,
+    scheduledExpiryDate,
+    queuePosition,
+    note: `Your plan will activate on ${scheduledStartDate.toLocaleDateString()} as Queue #${queuePosition}. Each queued plan will start after the previous one expires.`,
+    paymentId: payment._id,
+  };
+}
 
 // @desc   Full payment & instant membership activation
 // @route  POST /api/payments
