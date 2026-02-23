@@ -136,7 +136,7 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-300">
               <Link to="/plans">
                 <button className="px-10 py-4 bg-[#D9F17F] text-green-900 rounded-full font-black text-sm uppercase tracking-widest hover:bg-[#cce66f] transition-all transform hover:scale-105 shadow-xl shadow-[#D9F17F]/20">
-                  View Memberships
+                  View Plans
                 </button>
               </Link>
               <Link to="/contact">
