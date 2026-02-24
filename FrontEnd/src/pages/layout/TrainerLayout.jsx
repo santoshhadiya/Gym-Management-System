@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate, Navigate } from 'react-route
 import toast from 'react-hot-toast';
 import { useGlobalContext } from '../../context/GlobalContext';
 import logo from "../../assets/logo.png";
+import TrainerNav from '../../components/trainer/TrainerNav';
 
 // --- INTERNAL COMPONENT: TRAINER NAVIGATION (Top Bar) ---
 const Nav_Trainer = ({ onMenuClick, trainerStatus }) => {
@@ -70,6 +71,7 @@ const Sidebar_Trainer = ({ isOpen, onClose, trainerStatus }) => {
     { path: '/trainer/workout-diet', label: 'Workout & Diet Plans', icon: 'fa-clipboard-list', restricted: true },
     { path: '/trainer/session', label: 'Session', icon: 'fa-clipboard-list', restricted: true },
     { path: '/trainer/monitor-progress', label: 'Member Progress', icon: 'fa-chart-line', restricted: true },
+     { path: '/trainer/announcements', label: 'Announcements', icon: 'fa-chart-line', restricted: true },
     { path: '/trainer/feedbacks', label: 'Feedbacks', icon: 'fa-star', restricted: true },
    /*  { path: '/trainer/availability', label: 'My Availability', icon: 'fa-clock' }, */
 /*     { path: '/trainer/payments', label: 'Payment Status', icon: 'fa-file-invoice-dollar' }, */
@@ -202,7 +204,8 @@ const TrainerLayout = () => {
       <Sidebar_Trainer isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} trainerStatus={trainerStatus} />
       <main className="flex-1 bg-[#ffffff] relative min-w-0 transition-all duration-500">
         <div className="p-4 md:p-10 max-w-[1600px] mx-auto">
-          <Nav_Trainer onMenuClick={() => setIsMobileMenuOpen(true)} trainerStatus={trainerStatus} />
+          {/* <Nav_Trainer onMenuClick={() => setIsMobileMenuOpen(true)} trainerStatus={trainerStatus} /> */}
+          <TrainerNav/>
           <div className="mt-8 animate-fade-in-up">
             <Outlet />
           </div>
