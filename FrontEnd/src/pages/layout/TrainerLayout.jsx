@@ -68,6 +68,7 @@ const Sidebar_Trainer = ({ isOpen, onClose, trainerStatus }) => {
     { path: '/trainer/profile', label: 'My Profile', icon: 'fa-user' },
     { path: '/trainer/members', label: 'Assigned Members', icon: 'fa-users', restricted: true },
     { path: '/trainer/workout-diet', label: 'Workout & Diet Plans', icon: 'fa-clipboard-list', restricted: true },
+    { path: '/trainer/session', label: 'Session', icon: 'fa-clipboard-list', restricted: true },
     { path: '/trainer/monitor-progress', label: 'Member Progress', icon: 'fa-chart-line', restricted: true },
     { path: '/trainer/feedbacks', label: 'Feedbacks', icon: 'fa-star', restricted: true },
    /*  { path: '/trainer/availability', label: 'My Availability', icon: 'fa-clock' }, */
