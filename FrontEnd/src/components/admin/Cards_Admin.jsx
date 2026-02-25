@@ -42,7 +42,7 @@ const Cards_Admin = () => {
       title: "Total Trainers",
       value: stats.trainers,
       suffix: "Trainers",
-      subtitle: "Active trainers",
+      subtitle: "Total trainers",
       icon: "fa-solid fa-user-tie",
     },
     {
