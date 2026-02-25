@@ -441,11 +441,11 @@ const Progress = () => {
           </p>
         </div>
         <div className="rounded-xl p-4 border shadow-sm" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
-          <p className="text-xs font-bold uppercase mb-1" style={{ color: colors.textMuted }}>Sessions Done</p>
+          <p className="text-xs font-bold uppercase mb-1" style={{ color: colors.textMuted }}>Workout Completed</p>
           <p className="text-xl font-black" style={{ color: colors.text }}>{workoutCompleted}</p>
         </div>
         <div className="rounded-xl p-4 border shadow-sm" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
-          <p className="text-xs font-bold uppercase mb-1" style={{ color: colors.textMuted }}>Avg Adherence</p>
+          <p className="text-xs font-bold uppercase mb-1" style={{ color: colors.textMuted }}>Avg Workout & Diet</p>
           <p className="text-xl font-black" style={{ color: colors.text }}>{avgAdherence}%</p>
         </div>
       </div>
@@ -512,7 +512,7 @@ const Progress = () => {
           <div className="rounded-[1rem] p-6 md:p-8 border shadow-sm"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}>
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold" style={{ color: colors.text }}>Weekly Adherence</h3>
+              <h3 className="text-lg font-bold" style={{ color: colors.text }}>Workout & Diet Consistency</h3>
             </div>
             <div className="h-48 w-full">
               <Bar
@@ -617,7 +617,7 @@ const Progress = () => {
         <div className="space-y-6">
           <div className="rounded-[1rem] p-6 md:p-8 border shadow-sm text-center relative"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}>
-            <h3 className="text-lg font-bold mb-6" style={{ color: colors.text }}>Diet Adherence</h3>
+            <h3 className="text-lg font-bold mb-6" style={{ color: colors.text }}>Diet Success</h3>
             <div className="w-40 h-40 mx-auto relative">
               <Doughnut
                 ref={dietChartRef}
@@ -631,19 +631,6 @@ const Progress = () => {
             </div>
           </div>
 
-          <div className="rounded-[1rem] p-6 md:p-8 border relative overflow-hidden"
-            style={{
-              backgroundColor: theme === 'dark' ? 'rgba(6, 78, 59, 0.2)' : '#f0fdf4',
-              borderColor: theme === 'dark' ? '#064e3b' : '#dcfce7'
-            }}>
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2 relative z-10" style={{ color: theme === 'dark' ? '#86efac' : '#14532d' }}>
-              <i className="fa-solid fa-user-pen"></i> Trainer's Note
-            </h3>
-            <p className="italic leading-relaxed text-sm mb-4 relative z-10" style={{ color: theme === 'dark' ? '#bbf7d0' : '#166534' }}>
-              "Great progress on the weight lifting! Try to increase protein intake slightly next week."
-            </p>
-            <p className="text-xs font-medium text-right" style={{ color: theme === 'dark' ? '#4ade80' : '#16a34a' }}>Updated: {new Date().toLocaleDateString()}</p>
-          </div>
         </div>
       </div>
 

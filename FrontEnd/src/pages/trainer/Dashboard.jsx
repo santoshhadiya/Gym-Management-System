@@ -211,7 +211,7 @@ const Dashboard = () => {
                      <button className="w-full px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 border-2"
                         style={{
                            backgroundColor: paletteColors.white,
-                           borderColor: paletteColors.lightBlue,
+                           borderColor: '#F3F4F6',
                            color: paletteColors.mattBlack
                         }}
                         onMouseEnter={e => e.target.style.backgroundColor = paletteColors.lightBlue}
@@ -224,7 +224,7 @@ const Dashboard = () => {
                      <button className="w-full px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 border-2"
                         style={{
                            backgroundColor: paletteColors.white,
-                           borderColor: paletteColors.softYellow,
+                           borderColor: '#F3F4F6',
                            color: paletteColors.mattBlack
                         }}
                         onMouseEnter={e => e.target.style.backgroundColor = paletteColors.softYellow}
@@ -253,7 +253,7 @@ const Dashboard = () => {
                      className="stat-card border rounded-2xl p-6 relative overflow-hidden group"
                      style={{
                         backgroundColor: paletteColors.white,
-                        borderColor: paletteColors.lightBlue,
+                        borderColor: '#F3F4F6',
                         boxShadow: "0 2px 8px rgba(205, 231, 254, 0.1)"
                      }}
                   >
@@ -282,7 +282,7 @@ const Dashboard = () => {
                <div className="lg:col-span-2 space-y-6">
 
                   {/* Today's Sessions */}
-                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: paletteColors.lightBlue }}>
+                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: '#F3F4F6' }}>
                      <h3 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: paletteColors.mattBlack }}>
                         <i className="fa-solid fa-clock" style={{ color: paletteColors.lime }}></i>
                         Today's Sessions
@@ -294,7 +294,7 @@ const Dashboard = () => {
                                  <div className="p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-lg"
                                     style={{
                                        backgroundColor: paletteColors.white,
-                                       borderColor: paletteColors.lightBlue,
+                                       borderColor: '#F3F4F6',
                                        opacity: 0.95
                                     }}
                                     onMouseEnter={e => {
@@ -343,7 +343,7 @@ const Dashboard = () => {
                   </div>
 
                   {/* Upcoming Sessions */}
-                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: paletteColors.lightBlue }}>
+                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: '#F3F4F6' }}>
                      <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: paletteColors.mattBlack }}>
                            <i className="fa-solid fa-calendar-days" style={{ color: paletteColors.softYellow }}></i>
@@ -383,7 +383,7 @@ const Dashboard = () => {
                   </div>
 
                   {/* Recent Activity Feed */}
-                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: paletteColors.lightBlue }}>
+                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: '#F3F4F6' }}>
                      <h3 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: paletteColors.mattBlack }}>
                         <i className="fa-solid fa-bell" style={{ color: paletteColors.softYellow }}></i>
                         Activity
@@ -420,7 +420,7 @@ const Dashboard = () => {
                <div className="space-y-6">
 
                   {/* Client Summary Overview */}
-                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: paletteColors.lightBlue }}>
+                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: '#F3F4F6'}}>
                      <h3 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: paletteColors.mattBlack }}>
                         <i className="fa-solid fa-users-line" style={{ color: paletteColors.lime }}></i>
                         Client Summary
@@ -448,7 +448,7 @@ const Dashboard = () => {
                   </div>
 
                   {/* Fitness Goals Distribution */}
-                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: paletteColors.lightBlue }}>
+                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: '#F3F4F6' }}>
                      <h3 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: paletteColors.mattBlack }}>
                         <i className="fa-solid fa-bullseye" style={{ color: paletteColors.softYellow }}></i>
                         Goals Breakdown
@@ -506,7 +506,7 @@ const Dashboard = () => {
                      <div className="nav-hub-card border rounded-2xl p-6 text-center transition-all"
                         style={{
                            backgroundColor: getTransparentColor(paletteColors.lightBlue, 0.1),
-                           borderColor: paletteColors.lightBlue,
+                           borderColor: '#F3F4F6',
                            border: `2px solid ${paletteColors.lightBlue}`
                         }}
                      >
@@ -572,7 +572,7 @@ const Dashboard = () => {
                            <div className="p-4 rounded-xl border-2 transition-all cursor-pointer hover:shadow-lg"
                               style={{
                                  backgroundColor: paletteColors.white,
-                                 borderColor: paletteColors.lightBlue
+                                 borderColor: '#F3F4F6'
                               }}
                               onMouseEnter={e => {
                                  e.currentTarget.style.borderColor = paletteColors.lime;

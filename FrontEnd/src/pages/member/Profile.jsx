@@ -124,11 +124,40 @@ const Profile = () => {
       }
    };
 
-   const handlePasswordChange = (e) => {
+   const handlePasswordChange = async (e) => {
       e.preventDefault();
-      if (passwords.new !== passwords.confirm) return toast.error("Passwords do not match");
-      toast.success("Password updated successfully!");
-      setPasswords({ current: "", new: "", confirm: "" });
+      
+      // Validation: Check if all fields are filled
+      if (!passwords.current.trim()) {
+         return toast.error("Old password is required");
+      }
+      if (!passwords.new.trim()) {
+         return toast.error("New password is required");
+      }
+      if (!passwords.confirm.trim()) {
+         return toast.error("Confirm password is required");
+      }
+      
+      // Validation: Check if new password and confirm password match
+      if (passwords.new !== passwords.confirm) {
+         return toast.error("New password and confirm password do not match");
+      }
+
+      const loadingToast = toast.loading("Updating password...");
+      
+      try {
+         await api.put('/auth/change-password', {
+            oldPassword: passwords.current,
+            newPassword: passwords.new,
+            confirmPassword: passwords.confirm
+         });
+         
+         toast.success("Password updated successfully!", { id: loadingToast });
+         setPasswords({ current: "", new: "", confirm: "" });
+      } catch (error) {
+         const errorMessage = error.response?.data?.message || "Failed to update password";
+         toast.error(errorMessage, { id: loadingToast });
+      }
    };
 
    if (loading) {

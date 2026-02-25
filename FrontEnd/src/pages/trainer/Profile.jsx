@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import { useGlobalContext } from '../../context/GlobalContext';
 
 const Profile = () => {
@@ -146,7 +146,7 @@ const Profile = () => {
    return (
       // Changed: Added padding (px-4 sm:px-6) for mobile spacing
       <div className="w-full max-w-6xl mx-auto space-y-6 md:space-y-8 pb-10 font-sans relative px-4 sm:px-6">
-         <ToastContainer position="top-right" autoClose={3000} />
+       
 
          {/* --- HEADER / HERO SECTION --- */}
          {/* Changed: Adjusted padding for mobile (p-6) vs desktop (p-8) */}

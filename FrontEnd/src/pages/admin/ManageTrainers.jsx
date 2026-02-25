@@ -268,21 +268,7 @@ const ManageTrainer = () => {
                   />
                   <i className="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-xs" style={{ color: colors.textMuted }}></i>
                 </div>
-                <select
-                  value={filterSpec}
-                  onChange={(e) => setFilterSpec(e.target.value)}
-                  className="px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 cursor-pointer"
-                  style={{ 
-                     backgroundColor: colors.card, 
-                     borderColor: colors.border,
-                     color: colors.text
-                  }}
-                >
-                  <option value="All">All Specializations</option>
-                  <option value="Strength Training">Strength Training</option>
-                  <option value="Yoga">Yoga</option>
-                  <option value="CrossFit">CrossFit</option>
-                </select>
+               
               </div>
 
               <div className="overflow-hidden rounded-2xl border shadow-sm"
@@ -645,12 +631,7 @@ const ManageTrainer = () => {
                           ? selectedTrainer.salary.monthly.toLocaleString()
                           : "0"}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs mb-1" style={{ color: colors.textMuted }}>Status</p>
-                        <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${selectedTrainer.salary?.status === 'Paid' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
-                          {selectedTrainer.salary?.status}
-                        </span>
-                      </div>
+                     
                     </div>
                   </div>
 

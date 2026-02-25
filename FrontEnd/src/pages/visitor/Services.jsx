@@ -33,11 +33,6 @@ const Services = () => {
           <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed mb-8">
             From personalized training to holistic nutrition, we provide the tools, guidance, and environment you need to succeed.
           </p>
-          <Link to="/contact">
-            <button className="px-8 py-3 bg-[#FEEF75] text-yellow-900 rounded-full font-bold text-sm hover:bg-yellow-400 transition-all shadow-lg hover:scale-105">
-              Book a Free Trial
-            </button>
-          </Link>
         </div>
       </section>
 
