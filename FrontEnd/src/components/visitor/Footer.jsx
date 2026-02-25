@@ -108,11 +108,6 @@ const Footer = () => {
                   {companyData?.email || "hello@songarsgym.com"}
                 </a>
               </li>
-              <li className="flex gap-3 pt-2">
-                <span className="inline-block px-3 py-1 bg-yellow-500/10 text-[#FEEF75] rounded-full text-[10px] font-bold uppercase tracking-widest border border-yellow-500/20">
-                  Mon-Sat: 6am - 10pm
-                </span>
-              </li>
             </ul>
           </div>
 

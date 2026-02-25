@@ -282,3 +282,58 @@ exports.validateSessionQR = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// NEW: Get sessions assigned to a specific trainer
+exports.getTrainerSessions = async (req, res) => {
+  try {
+    const trainerId = req.user.id; // Get from logged-in user
+
+    const sessions = await Session.find({
+      $or: [
+        { trainer: trainerId },           // Primary trainer
+        { additionalTrainers: trainerId } // Additional trainer
+      ]
+    })
+      .populate("trainer", "name email specialization")
+      .populate("additionalTrainers", "name email specialization")
+      .populate("createdBy", "name email")
+      .sort({ date: 1, time: 1 });
+
+    res.json(sessions);
+  } catch (err) {
+    console.error("GET TRAINER SESSIONS ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// NEW: Get session details with participants
+exports.getSessionDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const session = await Session.findById(id)
+      .populate("trainer", "name email specialization")
+      .populate("additionalTrainers", "name email specialization")
+      .populate("createdBy", "name email");
+
+    if (!session) {
+      return res.status(404).json({ message: "Session not found" });
+    }
+
+    // Get session bookings (participants)
+    const SessionBooking = require("../models/SessionBooking");
+    const bookings = await SessionBooking.find({ session: id })
+      .populate("member", "name email phone");
+
+    res.json({
+      session,
+      participants: bookings,
+      participantCount: bookings.length,
+      bookedCount: bookings.filter(b => b.bookingStatus === "Booked" || b.bookingStatus === "Confirmed").length,
+      attendedCount: bookings.filter(b => b.bookingStatus === "Attended").length,
+    });
+  } catch (err) {
+    console.error("GET SESSION DETAILS ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+};

@@ -1,32 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
    Chart as ChartJS,
    CategoryScale,
    LinearScale,
-   BarElement,
    PointElement,
    LineElement,
+   BarElement,
    Title,
    Tooltip,
    Legend,
    ArcElement,
    Filler
 } from "chart.js";
-import { Bar, Doughnut, Line } from "react-chartjs-2";
-import { ToastContainer, toast } from 'react-toastify';
+import { Line, Doughnut, Bar } from "react-chartjs-2";
+import toast from "react-hot-toast";
 import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext";
-import Feedbacks from "./Feedbacks";
-import AssignedMembers from "./AssignedMembers";
+import TrainerNav from "../../components/trainer/TrainerNav";
 
 // Register ChartJS components
 ChartJS.register(
    CategoryScale,
    LinearScale,
-   BarElement,
    PointElement,
    LineElement,
+   BarElement,
    Title,
    Tooltip,
    Legend,
@@ -35,41 +34,48 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
-   const { api, BACKEND_URL, loadingIMG} = useGlobalContext();
+   const { api, BACKEND_URL } = useGlobalContext();
    const { colors, theme } = useTheme();
+   const navigate = useNavigate();
+
    const [dashboardData, setDashboardData] = useState(null);
    const [isLoading, setIsLoading] = useState(true);
-   const [activeTab, setActiveTab] = useState();
+   const [selectedTab, setSelectedTab] = useState("overview");
+
+   // Professional color palette
+   const paletteColors = {
+      white: "#FFFFFF",
+      mattBlack: "#000000",
+      lightBlue: "#CDE7FE",
+      lime: "#D9F17F",
+      softYellow: "#FEEF75",
+      gray: "#6B7280"
+   };
 
    // --- STYLE INJECTION ---
    useEffect(() => {
-      const linkToast = document.createElement("link");
-      linkToast.href = "https://cdnjs.cloudflare.com/ajax/libs/react-toastify/9.1.3/ReactToastify.min.css";
-      linkToast.rel = "stylesheet";
-      document.head.appendChild(linkToast);
-
       const linkFA = document.createElement("link");
       linkFA.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
       linkFA.rel = "stylesheet";
       document.head.appendChild(linkFA);
 
       return () => {
-         document.head.removeChild(linkToast);
-         document.head.removeChild(linkFA);
+         if (document.head.contains(linkFA)) {
+            document.head.removeChild(linkFA);
+         }
       };
    }, []);
 
-   // --- FETCH LIVE DATA FROM BACKEND ---
+   // --- FETCH LIVE DATA ---
    useEffect(() => {
       const fetchDashboard = async () => {
          try {
             setIsLoading(true);
-            // Fetches comprehensive trainer stats and metrics from the backend
             const res = await api.get("/dashboard/trainer");
             setDashboardData(res.data);
          } catch (err) {
-            console.error("Dashboard Fetch Error:", err);
-            toast.error("Failed to load dashboard data.");
+            console.error("Dashboard Error:", err);
+            toast.error("Failed to load dashboard data");
          } finally {
             setIsLoading(false);
          }
@@ -77,23 +83,47 @@ const Dashboard = () => {
       fetchDashboard();
    }, [api]);
 
-   // --- CHART CONFIGURATIONS ---
-   const commonOptions = {
+   // --- CHART OPTIONS ---
+   const chartOptions = {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-   };
-
-   const lineOptions = {
-      ...commonOptions,
+      plugins: {
+         legend: {
+            position: "bottom",
+            labels: {
+               color: paletteColors.mattBlack,
+               padding: 20,
+               font: { size: 12, weight: "600" }
+            }
+         },
+         tooltip: {
+            backgroundColor: paletteColors.white,
+            titleColor: paletteColors.mattBlack,
+            bodyColor: paletteColors.mattBlack,
+            borderColor: paletteColors.lightBlue,
+            borderWidth: 2,
+            padding: 12,
+            titleFont: { size: 13, weight: "bold" },
+            bodyFont: { size: 12 }
+         }
+      },
       scales: {
-         y: { beginAtZero: true, grid: { color: theme === 'dark' ? '#374151' : '#f3f4f6' } },
-         x: { grid: { display: false } }
+         y: {
+            beginAtZero: true,
+            grid: { color: paletteColors.lightBlue, drawBorder: false },
+            ticks: { color: paletteColors.gray }
+         },
+         x: {
+            grid: { display: false },
+            ticks: { color: paletteColors.gray }
+         }
       }
    };
 
-   const handleAction = (msg) => {
-      toast.info(msg);
+   const lineChartOptions = {
+      ...chartOptions,
+      tension: 0.4,
+      fill: true
    };
 
    if (isLoading) {
@@ -103,126 +133,495 @@ const Dashboard = () => {
                <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
                <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
             </div>
-            <p className="font-black text-gray-400 tracking-tighter text-sm uppercase">Optimizing Coach View...</p>
+            <p className="font-black text-gray-400 tracking-tighter text-sm uppercase">Loading Coach Dashboard...</p>
          </div>
       );
    }
 
-   // Destructure real-time data from the backend response
    const {
+      trainer = {},
       stats = [],
+      overview = {},
       todaysSessions = [],
+      upcomingSessions = [],
       recentActivity = [],
-      goalsData = { labels: [], datasets: [{ data: [] }] }
+      charts = {},
+      members = []
    } = dashboardData || {};
 
+   const getTransparentColor = (hex, opacity) => {
+      if (!hex) return `rgba(255, 255, 255, ${opacity})`;
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+   };
+
    return (
-      <div className="w-full space-y-8 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-         <ToastContainer position="bottom-right" autoClose={3000} theme={theme} />
+      <div className="w-full">
 
-         {/* HEADER SECTION */}
-         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
-            <div className="space-y-1">
-               <div className="flex items-center gap-3">
-                  
-                  <span className="px-3 py-1 rounded-full text-[10px] font-black bg-[#D9F17F] text-green-900 uppercase">Coach Mode</span>
-               </div>
-               <p className="text-gray-500 font-medium" style={{ color: colors.textMuted }}>Manage members and track live gym performance.</p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-               
-               <Link to="/trainer/workout-diet" className="flex-1 md:flex-none">
-                  <button className="w-full px-6 py-3 bg-black text-white rounded-2xl text-xs font-black hover:scale-105 transition-all shadow-xl flex items-center justify-center gap-2">
-                     <i className="fa-solid fa-plus"></i> New Plan
-                  </button>
-               </Link>
-            </div>
-         </div>
-
-         {/* STATS GRID - Aggregating live counts for clients, sessions, and ratings */}
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat, i) => (
-               <div key={i} className="group relative bg-white p-6 rounded-[1rem] border border-gray-100 shadow-sm overflow-hidden" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
-                  <div className="flex justify-between items-start mb-4">
-                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${stat.color} ${stat.text}`}>
-                        <i className={`fa-solid ${stat.icon}`}></i>
+         <div className="w-full pb-10 space-y-8 px-6 lg:px-10 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <style>{`
+            .stat-card {
+               transition: all 0.3s ease;
+            }
+            .stat-card:hover {
+               transform: translateY(-4px);
+               box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            }
+            .chart-container {
+               position: relative;
+               height: 300px;
+            }
+            .nav-hub-card {
+               transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+               cursor: pointer;
+            }
+            .nav-hub-card:hover {
+               transform: translateY(-8px);
+               box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            }
+         `}</style>
+            {/* ========== HEADER ========== */}
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+               <div className="space-y-2">
+                  <div className="flex items-center gap-4">
+                     <div className="w-16 h-16 rounded-2xl overflow-hidden border-4" style={{ borderColor: paletteColors.lightBlue }}>
+                        {trainer.profileImage ? (
+                           <img src={trainer.profileImage} alt={trainer.name} className="w-full h-full object-cover" />
+                        ) : (
+                           <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
+                              {trainer.name?.charAt(0) || "T"}
+                           </div>
+                        )}
                      </div>
-                     
-                  </div>
-                  <div>
-                     <h3 className="text-3xl font-black" style={{ color: colors.text }}>{stat.value}</h3>
-                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{stat.label}</p>
-                  </div>
-                  <i className={`fa-solid ${stat.icon} absolute -right-4 -bottom-4 text-7xl opacity-[0.03] group-hover:opacity-[0.07] transition-all`}></i>
-               </div>
-            ))}
-         </div>
-
-         <div className="flex gap-4">
-
-            {/* LIVE INTEL FEED - Displays recent client interactions and feedback */}
-            <div className="bg-[#121212] p-8 rounded-[3rem] text-white shadow-2xl relative overflow-hidden w-[50%]">
-               <h3 className="text-xl font-black mb-8 flex items-center gap-3">
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
-                  Live Intel
-               </h3>
-
-               <div className="space-y-8 relative">
-                  <div className="absolute left-4 top-2 bottom-2 w-[1px] bg-white/10"></div>
-
-                  {recentActivity.length > 0 ? recentActivity.map(activity => (
-                     <div key={activity.id} className="flex gap-6 relative group">
-                        <div className={`w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 z-10 group-hover:bg-blue-500 transition-colors`}>
-                           <i className={`fa-solid ${activity.icon} text-xs text-white/50 group-hover:text-white`}></i>
-                        </div>
-                        <div>
-                           <p className="text-sm font-bold text-white/90 leading-tight">{activity.text}</p>
-                           <p className="text-[9px] text-white/30 font-black uppercase mt-2 tracking-widest">{activity.time}</p>
-                        </div>
+                     <div>
+                        <h1 className="text-3xl font-black" style={{ color: paletteColors.mattBlack }}>
+                           Coach Dashboard
+                        </h1>
+                        <p className="text-sm" style={{ color: paletteColors.gray }}>
+                           {trainer.name} • {trainer.specialization}
+                        </p>
                      </div>
-                  )) : (
-                     <div className="text-center py-12 opacity-30">
-                        <i className="fa-solid fa-satellite-dish text-4xl mb-4"></i>
-                        <p className="text-[10px] font-black uppercase tracking-tighter">Awaiting Signal...</p>
-                     </div>
-                  )}
-
-                  <button className="w-full py-4 mt-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all cursor-pointer">
-                     History Log
-                  </button>
-               </div>
-
-               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[80px] rounded-full"></div>
-            </div>
-
-            {/* GOAL BREAKDOWN - Visualizing member fitness goal distribution */}
-            <div className="lg:col-span-4 bg-white p-8 rounded-[3rem] border border-gray-100 shadow-sm flex flex-col items-center justify-between w-[50%]" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
-               <h3 className="text-lg font-black w-full text-left mb-6" style={{ color: colors.text }}>Roster Goals</h3>
-               <div className="h-56 w-56 relative">
-                  <Doughnut data={goalsData} options={{ ...commonOptions, cutout: '75%' }} />
-                  <div className="absolute inset-0 flex items-center justify-center flex-col">
-                     <span className="text-4xl font-black" style={{ color: colors.text }}>{stats[0]?.value || 0}</span>
-                     <span className="text-[9px] text-gray-400 uppercase font-black tracking-widest">Active</span>
                   </div>
                </div>
-               <div className="w-full mt-6 space-y-3">
-                  {goalsData.labels.map((label, idx) => (
-                     <div key={label} className="flex justify-between items-center p-3 rounded-2xl bg-gray-50" style={{ backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb' }}>
-                        <div className="flex items-center gap-3">
-                           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: goalsData.datasets[0].backgroundColor[idx] }}></span>
-                           <span className="text-[10px] font-black uppercase text-gray-500">{label}</span>
-                        </div>
-                        <span className="text-xs font-black" style={{ color: colors.text }}>{goalsData.datasets[0].data[idx]}</span>
-                     </div>
-                  ))}
+
+               <div className="flex gap-3 flex-wrap">
+                  <Link to="/trainer/members" className="flex-1 sm:flex-none">
+                     <button className="w-full px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 border-2"
+                        style={{
+                           backgroundColor: paletteColors.white,
+                           borderColor: paletteColors.lightBlue,
+                           color: paletteColors.mattBlack
+                        }}
+                        onMouseEnter={e => e.target.style.backgroundColor = paletteColors.lightBlue}
+                        onMouseLeave={e => e.target.style.backgroundColor = paletteColors.white}
+                     >
+                        <i className="fa-solid fa-users"></i> My Clients
+                     </button>
+                  </Link>
+                  <Link to="/trainer/sessions" className="flex-1 sm:flex-none">
+                     <button className="w-full px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 border-2"
+                        style={{
+                           backgroundColor: paletteColors.white,
+                           borderColor: paletteColors.softYellow,
+                           color: paletteColors.mattBlack
+                        }}
+                        onMouseEnter={e => e.target.style.backgroundColor = paletteColors.softYellow}
+                        onMouseLeave={e => e.target.style.backgroundColor = paletteColors.white}
+                     >
+                        <i className="fa-solid fa-calendar-check"></i> Sessions
+                     </button>
+                  </Link>
+                  <Link to="/trainer/workout-diet" className="flex-1 sm:flex-none">
+                     <button className="w-full px-6 py-3 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:scale-105"
+                        style={{
+                           backgroundColor: paletteColors.mattBlack
+                        }}
+                     >
+                        <i className="fa-solid fa-plus"></i> New Plan
+                     </button>
+                  </Link>
                </div>
             </div>
 
-         </div>
-         <div>
-            <Feedbacks/>
-            <AssignedMembers/>
+            {/* ========== KEY METRICS CARDS ========== */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+               {stats.map((stat, idx) => (
+                  <div
+                     key={idx}
+                     className="stat-card border rounded-2xl p-6 relative overflow-hidden group"
+                     style={{
+                        backgroundColor: paletteColors.white,
+                        borderColor: paletteColors.lightBlue,
+                        boxShadow: "0 2px 8px rgba(205, 231, 254, 0.1)"
+                     }}
+                  >
+                     <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                           <p className="text-xs font-bold uppercase tracking-widest" style={{ color: paletteColors.gray }}>
+                              {stat.label}
+                           </p>
+                           <h3 className="text-4xl font-black mt-2" style={{ color: paletteColors.mattBlack }}>
+                              {stat.value}
+                           </h3>
+                        </div>
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold ${stat.color} ${stat.text}`}>
+                           <i className={`fa-solid ${stat.icon}`}></i>
+                        </div>
+                     </div>
+
+                  </div>
+               ))}
+            </div>
+
+            {/* ========== MAIN CONTENT GRID ========== */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+               {/* ========== LEFT COLUMN (2/3 width) ========== */}
+               <div className="lg:col-span-2 space-y-6">
+
+                  {/* Today's Sessions */}
+                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: paletteColors.lightBlue }}>
+                     <h3 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: paletteColors.mattBlack }}>
+                        <i className="fa-solid fa-clock" style={{ color: paletteColors.lime }}></i>
+                        Today's Sessions
+                     </h3>
+                     {todaysSessions.length > 0 ? (
+                        <div className="space-y-3">
+                           {todaysSessions.map((session, idx) => (
+                              <Link key={idx} to={`/trainer/sessions/${session.id}`}>
+                                 <div className="p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-lg"
+                                    style={{
+                                       backgroundColor: paletteColors.white,
+                                       borderColor: paletteColors.lightBlue,
+                                       opacity: 0.95
+                                    }}
+                                    onMouseEnter={e => {
+                                       e.currentTarget.style.borderColor = paletteColors.lime;
+                                       e.currentTarget.style.backgroundColor = getTransparentColor(paletteColors.lime, 0.05);
+                                    }}
+                                    onMouseLeave={e => {
+                                       e.currentTarget.style.borderColor = paletteColors.lightBlue;
+                                       e.currentTarget.style.backgroundColor = paletteColors.white;
+                                    }}
+                                 >
+                                    <div className="flex items-center justify-between mb-2">
+                                       <div className="font-bold text-sm" style={{ color: paletteColors.mattBlack }}>
+                                          {session.type}
+                                       </div>
+                                       <span className="text-xs px-2 py-1 rounded-lg font-bold"
+                                          style={{
+                                             backgroundColor: session.status === "Upcoming" ? getTransparentColor(paletteColors.lime, 0.2) : getTransparentColor(paletteColors.lightBlue, 0.2),
+                                             color: session.status === "Upcoming" ? paletteColors.mattBlack : paletteColors.mattBlack
+                                          }}>
+                                          {session.status}
+                                       </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs" style={{ color: paletteColors.gray }}>
+                                       <div>
+                                          <i className="fa-solid fa-users mr-2"></i>
+                                          Capacity: {session.bookedCount}/{session.capacity}
+                                       </div>
+                                       <div>
+                                          <i className="fa-solid fa-hourglass-end mr-2"></i>
+                                          {session.time} • {session.duration}
+                                       </div>
+                                    </div>
+                                 </div>
+                              </Link>
+                           ))}
+                        </div>
+                     ) : (
+                        <div className="text-center py-12" style={{ opacity: 0.5 }}>
+                           <i className="fa-solid fa-calendar-xmark text-4xl mb-3" style={{ color: paletteColors.gray }}></i>
+                           <p className="text-sm" style={{ color: paletteColors.gray }}>
+                              No sessions scheduled for today
+                           </p>
+                        </div>
+                     )}
+                  </div>
+
+                  {/* Upcoming Sessions */}
+                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: paletteColors.lightBlue }}>
+                     <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: paletteColors.mattBlack }}>
+                           <i className="fa-solid fa-calendar-days" style={{ color: paletteColors.softYellow }}></i>
+                           Upcoming Sessions
+                        </h3>
+                        <Link to="/trainer/sessions" className="text-xs font-bold" style={{ color: paletteColors.lime }}>
+                           View All →
+                        </Link>
+                     </div>
+                     {upcomingSessions.length > 0 ? (
+                        <div className="space-y-2">
+                           {upcomingSessions.map((session, idx) => (
+                              <div key={idx} className="flex items-center justify-between p-3 rounded-lg"
+                                 style={{
+                                    backgroundColor: paletteColors.white,
+                                    borderLeft: `3px solid ${paletteColors.lime}`
+                                 }}>
+                                 <div>
+                                    <p className="text-sm font-bold" style={{ color: paletteColors.mattBlack }}>{session.type}</p>
+                                    <p className="text-xs" style={{ color: paletteColors.gray }}>Capacity: {session.bookedCount}/{session.capacity}</p>
+                                 </div>
+                                 <div className="text-right">
+                                    <p className="text-xs font-bold" style={{ color: paletteColors.mattBlack }}>{session.date}</p>
+                                    <p className="text-xs" style={{ color: paletteColors.gray }}>{session.time}</p>
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     ) : (
+                        <div className="text-center py-6" style={{ opacity: 0.5 }}>
+                           <i className="fa-solid fa-calendar-xmark text-3xl mb-3" style={{ color: paletteColors.gray }}></i>
+                           <p className="text-sm" style={{ color: paletteColors.gray }}>
+                              No upcoming sessions scheduled
+                           </p>
+                        </div>
+                     )}
+                  </div>
+
+                  {/* Recent Activity Feed */}
+                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: paletteColors.lightBlue }}>
+                     <h3 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: paletteColors.mattBlack }}>
+                        <i className="fa-solid fa-bell" style={{ color: paletteColors.softYellow }}></i>
+                        Activity
+                     </h3>
+                     <div className="space-y-3 max-h-60 overflow-y-auto">
+                        {recentActivity.length > 0 ? (
+                           recentActivity.map((activity, idx) => (
+                              <div key={idx} className="flex gap-3 pb-3 border-b" style={{ borderColor: paletteColors.lightBlue }}>
+                                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold"
+                                    style={{
+                                       backgroundColor: paletteColors.lightBlue,
+                                       color: paletteColors.mattBlack
+                                    }}>
+                                    <i className={`fa-solid ${activity.icon}`}></i>
+                                 </div>
+                                 <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold line-clamp-2" style={{ color: paletteColors.mattBlack }}>
+                                       {activity.text}
+                                    </p>
+                                 </div>
+                              </div>
+                           ))
+                        ) : (
+                           <div className="text-center py-8" style={{ opacity: 0.5 }}>
+                              <i className="fa-solid fa-inbox text-2xl mb-2" style={{ color: paletteColors.gray }}></i>
+                              <p className="text-xs" style={{ color: paletteColors.gray }}>No recent activity</p>
+                           </div>
+                        )}
+                     </div>
+                  </div>
+
+                  {/* ========== RIGHT COLUMN (1/3 width) ========== */}
+               </div>
+               <div className="space-y-6">
+
+                  {/* Client Summary Overview */}
+                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: paletteColors.lightBlue }}>
+                     <h3 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: paletteColors.mattBlack }}>
+                        <i className="fa-solid fa-users-line" style={{ color: paletteColors.lime }}></i>
+                        Client Summary
+                     </h3>
+                     <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="p-4 rounded-lg text-center" style={{ backgroundColor: getTransparentColor(paletteColors.lime, 0.1) }}>
+                           <p className="text-2xl font-black" style={{ color: paletteColors.mattBlack }}>{overview.activeMembers}</p>
+                           <p className="text-xs mt-2" style={{ color: paletteColors.gray }}>Active</p>
+                        </div>
+                        <div className="p-4 rounded-lg text-center" style={{ backgroundColor: getTransparentColor(paletteColors.lightBlue, 0.1) }}>
+                           <p className="text-2xl font-black" style={{ color: paletteColors.mattBlack }}>{overview.inactiveMembers}</p>
+                           <p className="text-xs mt-2" style={{ color: paletteColors.gray }}>Inactive</p>
+                        </div>
+                     </div>
+                     <div className="pt-4 border-t space-y-3" style={{ borderColor: paletteColors.lightBlue }}>
+                        <div className="flex items-center justify-between text-sm">
+                           <span style={{ color: paletteColors.gray }}>Total Clients</span>
+                           <span className="font-bold" style={{ color: paletteColors.mattBlack }}>{overview.totalMembers}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                           <span style={{ color: paletteColors.gray }}>This Month</span>
+                           <span className="font-bold" style={{ color: paletteColors.mattBlack }}>{overview.completedSessionsThisMonth || 0} sessions</span>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Fitness Goals Distribution */}
+                  <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: paletteColors.lightBlue }}>
+                     <h3 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: paletteColors.mattBlack }}>
+                        <i className="fa-solid fa-bullseye" style={{ color: paletteColors.softYellow }}></i>
+                        Goals Breakdown
+                     </h3>
+                     <div className="chart-container">
+                        {charts.goalsDistribution && (
+                           <Doughnut
+                              data={{
+                                 ...charts.goalsDistribution,
+                                 datasets: [{
+                                    ...charts.goalsDistribution.datasets[0],
+                                    backgroundColor: [paletteColors.softYellow, paletteColors.lightBlue, paletteColors.lime, paletteColors.mattBlack, paletteColors.gray]
+                                 }]
+                              }}
+                              options={{
+                                 ...chartOptions,
+                                 plugins: {
+                                    ...chartOptions.plugins,
+                                    legend: { display: false }
+                                 },
+                                 cutout: '65%'
+                              }}
+                           />
+                        )}
+                     </div>
+                     {charts.goalsDistribution && (
+                        <div className="mt-4 pt-4 border-t space-y-2" style={{ borderColor: paletteColors.lightBlue }}>
+                           {charts.goalsDistribution.labels.map((label, idx) => (
+                              <div key={idx} className="flex items-center justify-between text-xs">
+                                 <div className="flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: charts.goalsDistribution.datasets[0].backgroundColor[idx] }}></span>
+                                    <span style={{ color: paletteColors.gray }}>{label}</span>
+                                 </div>
+                                 <span className="font-bold" style={{ color: paletteColors.mattBlack }}>
+                                    {charts.goalsDistribution.datasets[0].data[idx]}
+                                 </span>
+                              </div>
+                           ))}
+                        </div>
+                     )}
+                  </div>
+
+
+               </div>
+            </div>
+
+            {/* ========== QUICK ACTION NAVIGATION HUB ========== */}
+            <div className="space-y-4">
+               <h2 className="text-lg font-bold" style={{ color: paletteColors.mattBlack }}>
+                  <i className="fa-solid fa-magic mr-2" style={{ color: paletteColors.lime }}></i>
+                  Quick Access
+               </h2>
+               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <Link to="/trainer/members">
+                     <div className="nav-hub-card border rounded-2xl p-6 text-center transition-all"
+                        style={{
+                           backgroundColor: getTransparentColor(paletteColors.lightBlue, 0.1),
+                           borderColor: paletteColors.lightBlue,
+                           border: `2px solid ${paletteColors.lightBlue}`
+                        }}
+                     >
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center text-2xl font-bold" style={{ backgroundColor: paletteColors.lightBlue, color: paletteColors.mattBlack }}>
+                           <i className="fa-solid fa-people-group"></i>
+                        </div>
+                        <h4 className="font-bold text-sm mb-1" style={{ color: paletteColors.mattBlack }}>My Clients</h4>
+                        <p className="text-xs" style={{ color: paletteColors.gray }}>{overview.totalMembers} total</p>
+                     </div>
+                  </Link>
+
+                  <Link to="/trainer/sessions">
+                     <div className="nav-hub-card border rounded-2xl p-6 text-center transition-all"
+                        style={{
+                           backgroundColor: getTransparentColor(paletteColors.lime, 0.1),
+                           borderColor: paletteColors.lime,
+                           border: `2px solid ${paletteColors.lime}`
+                        }}
+                     >
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center text-2xl font-bold" style={{ backgroundColor: paletteColors.lime, color: paletteColors.mattBlack }}>
+                           <i className="fa-solid fa-calendar-check"></i>
+                        </div>
+                        <h4 className="font-bold text-sm mb-1" style={{ color: paletteColors.mattBlack }}>Sessions</h4>
+                        <p className="text-xs" style={{ color: paletteColors.gray }}>{todaysSessions.length} today</p>
+                     </div>
+                  </Link>
+
+                  <Link to="/trainer/workout-diet">
+                     <div className="nav-hub-card border rounded-2xl p-6 text-center transition-all"
+                        style={{
+                           backgroundColor: getTransparentColor(paletteColors.softYellow, 0.1),
+                           borderColor: paletteColors.softYellow,
+                           border: `2px solid ${paletteColors.softYellow}`
+                        }}
+                     >
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center text-2xl font-bold" style={{ backgroundColor: paletteColors.softYellow, color: paletteColors.mattBlack }}>
+                           <i className="fa-solid fa-dumbbell"></i>
+                        </div>
+                        <h4 className="font-bold text-sm mb-1" style={{ color: paletteColors.mattBlack }}>Workouts</h4>
+                        <p className="text-xs" style={{ color: paletteColors.gray }}>Create & manage</p>
+                     </div>
+                  </Link>
+
+
+               </div>
+            </div>
+
+            {/* ========== TOP CLIENTS MINI SECTION ========== */}
+            <div className="border rounded-2xl p-6" style={{ backgroundColor: paletteColors.white, borderColor: paletteColors.lightBlue }}>
+               <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: paletteColors.mattBlack }}>
+                     <i className="fa-solid fa-star" style={{ color: paletteColors.softYellow }}></i>
+                     Top Performing Clients
+                  </h3>
+                  <Link to="/trainer/members" className="text-xs font-bold" style={{ color: paletteColors.lime }}>
+                     View All →
+                  </Link>
+               </div>
+               {members.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                     {members.slice(0, 6).map((member, idx) => (
+                        <Link key={idx} to={`/trainer/members`}>
+                           <div className="p-4 rounded-xl border-2 transition-all cursor-pointer hover:shadow-lg"
+                              style={{
+                                 backgroundColor: paletteColors.white,
+                                 borderColor: paletteColors.lightBlue
+                              }}
+                              onMouseEnter={e => {
+                                 e.currentTarget.style.borderColor = paletteColors.lime;
+                                 e.currentTarget.style.transform = 'translateY(-2px)';
+                              }}
+                              onMouseLeave={e => {
+                                 e.currentTarget.style.borderColor = paletteColors.lightBlue;
+                                 e.currentTarget.style.transform = 'translateY(0)';
+                              }}
+                           >
+                              <div className="flex items-center gap-3 mb-3">
+                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                                    style={{ background: `linear-gradient(to right, ${paletteColors.lightBlue}, ${paletteColors.lime})` }}>
+                                    {member.name?.charAt(0)}
+                                 </div>
+                                 <div className="flex-1">
+                                    <p className="text-sm font-bold" style={{ color: paletteColors.mattBlack }}>
+                                       {member.name}
+                                    </p>
+                                    <p className="text-xs" style={{ color: paletteColors.gray }}>
+                                       {member.plan}
+                                    </p>
+                                 </div>
+                              </div>
+                              <div className="space-y-1 text-xs">
+                                 <div className="flex justify-between" style={{ color: paletteColors.gray }}>
+                                    <span>Goal:</span>
+                                    <span style={{ color: paletteColors.mattBlack }} className="font-semibold">{member.goal}</span>
+                                 </div>
+                                 <div className="flex justify-between" style={{ color: paletteColors.gray }}>
+                                    <span>Status:</span>
+                                    <span className={`font-semibold ${member.status === 'Active' ? 'text-green-500' : 'text-red-500'}`}>
+                                       {member.status}
+                                    </span>
+                                 </div>
+                              </div>
+                           </div>
+                        </Link>
+                     ))}
+                  </div>
+               ) : (
+                  <div className="text-center py-12" style={{ opacity: 0.5 }}>
+                     <i className="fa-solid fa-inbox text-3xl mb-3" style={{ color: paletteColors.gray }}></i>
+                     <p className="text-sm" style={{ color: paletteColors.gray }}>
+                        No clients assigned yet
+                     </p>
+                  </div>
+               )}
+            </div>
          </div>
       </div>
    );

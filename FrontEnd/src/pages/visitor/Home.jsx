@@ -139,11 +139,6 @@ const Home = () => {
                   View Plans
                 </button>
               </Link>
-              <Link to="/contact">
-                <button className="px-10 py-4 bg-transparent border-2 border-white/30 text-white rounded-full font-black text-sm uppercase tracking-widest hover:bg-white hover:text-black transition-all">
-                  Book Free Trial
-                </button>
-              </Link>
             </div>
           </div>
         </div>
@@ -220,9 +215,6 @@ const Home = () => {
             <div className="relative z-10 max-w-3xl mx-auto">
               <h2 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">Don't Let Tomorrow <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-500 to-white">Be Another Yesterday.</span></h2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
-                <Link to="/contact">
-                  <button className="px-12 py-5 bg-[#D9F17F] text-green-900 rounded-full font-black text-sm uppercase tracking-widest hover:bg-white hover:text-black transition-all transform hover:-translate-y-1 shadow-xl">Claim Free Pass</button>
-                </Link>
               </div>
             </div>
           </div>

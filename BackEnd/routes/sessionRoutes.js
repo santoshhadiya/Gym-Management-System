@@ -8,12 +8,16 @@ const {
   deleteSession,
   generateSessionQR,
   validateSessionQR,
+  getTrainerSessions,
+  getSessionDetails,
 } = require("../controllers/sessionController");
 
 // Session CRUD routes
 router.post("/", protect, authorize("admin"), createSession);
 router.get("/", protect, getAllSessions);
 router.get("/upcoming", protect, getAvailableSessions);
+router.get("/trainer/assigned", protect, getTrainerSessions);
+router.get("/:id/details", protect, getSessionDetails);
 router.put("/:id", protect, authorize("admin"), updateSession);
 router.delete("/:id", protect, authorize("admin"), deleteSession);
 
