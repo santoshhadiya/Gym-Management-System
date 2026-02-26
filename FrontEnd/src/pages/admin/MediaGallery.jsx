@@ -62,7 +62,7 @@ const MediaGallery = () => {
   }, []);
 
   // --- HELPERS ---
-  const categories = ["Transformations", "Gym Events", "Equipment", "Workout Sessions"];
+  const categories = ["General","Transformations", "Gym Events", "Equipment", "Workot Sessions"];
   const visibilities = ["Public", "Members Only", "Admin Only"];
 
   const getCategoryColor = (cat) => {

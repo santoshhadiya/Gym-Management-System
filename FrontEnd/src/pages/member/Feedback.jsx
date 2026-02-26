@@ -104,62 +104,28 @@ const Feedback = () => {
        return;
     }
 
-    try {
-      setIsSubmitting(true);
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-      const token = userInfo?.token;
+      try {
+         setIsSubmitting(true);
+         const payload = { ...formData, type: activeTab };
 
-      const url = currentFeedback 
-        ? `${BACKEND_URL}/api/feedback/${currentFeedback._id}` 
-        : `${BACKEND_URL}/api/feedback`; 
-      
-      const method = currentFeedback ? "PUT" : "POST";
+         if (currentFeedback) {
+            // backend expects POST for member update at /api/feedback/:id
+            const res = await api.post(`/feedback/${currentFeedback._id}`, payload);
+            // Update local state with response
+            setFeedbacks(prev => prev.map(f => f._id === currentFeedback._id ? res.data : f));
+            toast.success("Feedback updated successfully!");
+         } else {
+            const res = await api.post('/feedback', payload);
+            setFeedbacks(prev => [res.data, ...prev]);
+            toast.success("Feedback submitted successfully!");
+         }
 
-      const payload = {
-        ...formData,
-        type: activeTab 
-      };
-
-      const isPreview = false;
-
-      if (!isPreview) {
-          const res = await fetch(url, {
-            method: method,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-          });
-
-          if (!res.ok) {
-             const errData = await res.json();
-             throw new Error(errData.message || "Failed to submit feedback");
-          }
-      } else {
-          await new Promise(resolve => setTimeout(resolve, 800));
-          const newFb = { 
-             _id: currentFeedback ? currentFeedback._id : `new_${Date.now()}`,
-             type: activeTab,
-             ...formData,
-             status: "Pending",
-             createdAt: new Date().toISOString()
-          };
-          
-          setFeedbacks(prev => {
-             const others = prev.filter(f => f.type !== activeTab);
-             return [...others, newFb];
-          });
+      } catch (err) {
+         const msg = err.response?.data?.message || err.message || "Failed to submit feedback";
+         toast.error(msg);
+      } finally {
+         setIsSubmitting(false);
       }
-
-      toast.success(currentFeedback ? "Feedback updated successfully!" : "Feedback submitted successfully!");
-      if (!isPreview) fetchMyFeedback();
-
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   return (

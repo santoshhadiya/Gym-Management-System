@@ -114,14 +114,14 @@ const Gallery = () => {
                 {filteredMedia.map((item) => (
                   <div 
                     key={item._id} 
-                    className="group relative h-72 rounded-[2rem] overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 bg-gray-100"
+                    className="group relative rounded-[2rem] overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 bg-gray-100"
                     onClick={() => setSelectedMedia(item)}
                   >
                     {item.type === 'video' ? (
                        <div className="w-full h-full relative flex items-center justify-center bg-gray-900">
                           <video 
                              src={getFullUrl(item.url)} 
-                             className="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" 
+                             className="w-full h-auto object-contain opacity-80 group-hover:scale-110 transition-transform duration-700" 
                              muted 
                           />
                           <div className="absolute inset-0 flex items-center justify-center">
@@ -134,7 +134,7 @@ const Gallery = () => {
                        <img 
                           src={getFullUrl(item.url)} 
                           alt={item.caption} 
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                          className="w-full h-auto object-contain group-hover:scale-110 transition-transform duration-700" 
                        />
                     )}
                     

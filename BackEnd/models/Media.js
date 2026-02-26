@@ -16,7 +16,7 @@ const mediaSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ["Transformations", "Gym Events", "Equipment", "Workout Sessions"],
+    enum: ["General","Transformations", "Gym Events", "Equipment", "Workout Sessions"],
     default: "Gym Events",
   },
   visibility: {

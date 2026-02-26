@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from 'react-hot-toast'; // Switched to react-hot-toast
+import { createPortal } from 'react-dom';
 import { useGlobalContext } from "../../context/GlobalContext";
 import { useTheme } from "../../context/ThemeContext"; // Import useTheme
 import logo from "../../assets/logo.png"
@@ -257,6 +258,17 @@ const PaymentHistory = () => {
    const [filterDate, setFilterDate] = useState("");
    const [selectedTxn, setSelectedTxn] = useState(null);
    const [showModal, setShowModal] = useState(false);
+   const modalRootRef = useRef(null);
+
+   useEffect(() => {
+      const el = document.createElement('div');
+      el.setAttribute('id', 'payment-details-modal-root');
+      document.body.appendChild(el);
+      modalRootRef.current = el;
+      return () => {
+         if (modalRootRef.current) document.body.removeChild(modalRootRef.current);
+      };
+   }, []);
 
    // --- FETCH DATA ---
    useEffect(() => {
@@ -510,8 +522,8 @@ const PaymentHistory = () => {
             </table>
          </div>
 
-         {/* --- DETAILS MODAL --- */}
-         {showModal && selectedTxn && (
+         {/* --- DETAILS MODAL (rendered via portal to ensure viewport-centering) --- */}
+         {showModal && selectedTxn && modalRootRef.current && createPortal(
             <div className="fixed inset-0  flex items-center justify-center z-50 p-4"
                style={{
                   backgroundColor: getTransparentColor(colors.sidebar, 0.4), // 40% opacity
@@ -614,7 +626,8 @@ const PaymentHistory = () => {
                      </div>
                   </div>
                </div>
-            </div>
+            </div>,
+            modalRootRef.current
          )}
       </div>
    );

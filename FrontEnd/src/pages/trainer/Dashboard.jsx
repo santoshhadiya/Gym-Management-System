@@ -425,25 +425,19 @@ const Dashboard = () => {
                         <i className="fa-solid fa-users-line" style={{ color: paletteColors.lime }}></i>
                         Client Summary
                      </h3>
-                     <div className="grid grid-cols-2 gap-3 mb-4">
+                     <div className="grid grid-cols-1 gap-3 mb-4">
                         <div className="p-4 rounded-lg text-center" style={{ backgroundColor: getTransparentColor(paletteColors.lime, 0.1) }}>
                            <p className="text-2xl font-black" style={{ color: paletteColors.mattBlack }}>{overview.activeMembers}</p>
-                           <p className="text-xs mt-2" style={{ color: paletteColors.gray }}>Active</p>
+                           <p className="text-xs mt-2" style={{ color: paletteColors.gray }}>Total Client</p>
                         </div>
-                        <div className="p-4 rounded-lg text-center" style={{ backgroundColor: getTransparentColor(paletteColors.lightBlue, 0.1) }}>
-                           <p className="text-2xl font-black" style={{ color: paletteColors.mattBlack }}>{overview.inactiveMembers}</p>
-                           <p className="text-xs mt-2" style={{ color: paletteColors.gray }}>Inactive</p>
-                        </div>
+                        
                      </div>
                      <div className="pt-4 border-t space-y-3" style={{ borderColor: paletteColors.lightBlue }}>
                         <div className="flex items-center justify-between text-sm">
                            <span style={{ color: paletteColors.gray }}>Total Clients</span>
                            <span className="font-bold" style={{ color: paletteColors.mattBlack }}>{overview.totalMembers}</span>
                         </div>
-                        <div className="flex items-center justify-between text-sm">
-                           <span style={{ color: paletteColors.gray }}>This Month</span>
-                           <span className="font-bold" style={{ color: paletteColors.mattBlack }}>{overview.completedSessionsThisMonth || 0} sessions</span>
-                        </div>
+                        
                      </div>
                   </div>
 
