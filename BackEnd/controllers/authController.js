@@ -217,7 +217,7 @@ exports.forgotPassword = async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   // Create reset URL
-  isHosted=false
+  isHosted=true
   const resetUrl = !sted? `http://localhost:5173/reset-password/${resetToken}`:`https://songars-gym.vercel.app/reset-password/${resetToken}`
 
   const message = `
