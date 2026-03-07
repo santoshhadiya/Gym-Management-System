@@ -33,9 +33,9 @@ const SessionQR = () => {
    };
 
    const generateQRForSession = async (session) => {
-      // Safety check: Prevent generation if not today
-      if (!isSessionToday(session.date)) {
-         toast.error("QR codes can only be generated for today's sessions");
+      // Safety check: Prevent generation if not within 1 hour of session start
+      if (!isWithinOneHour(session)) {
+         toast.error("QR codes can only be generated within 1 hour of the session start time");
          return;
       }
 
@@ -73,6 +73,34 @@ const SessionQR = () => {
       const offset = today.getTimezoneOffset();
       const localToday = new Date(today.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0];
       return sessionDate === localToday;
+   };
+
+   const isWithinOneHour = (session) => {
+      try {
+         // Parse session time (assuming format like "8:00 AM")
+         const timeMatch = session.time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+         if (!timeMatch) return false;
+
+         let hours = parseInt(timeMatch[1]);
+         const minutes = parseInt(timeMatch[2]);
+         const period = timeMatch[3]?.toUpperCase();
+
+         if (period === 'PM' && hours !== 12) hours += 12;
+         if (period === 'AM' && hours === 12) hours = 0;
+
+         // Create session start datetime
+         const sessionStart = new Date(session.date);
+         sessionStart.setHours(hours, minutes, 0, 0);
+
+         // Session end (1 hour later)
+         const sessionEnd = new Date(sessionStart.getTime() + 60 * 60 * 1000);
+
+         const now = new Date();
+         return now >= sessionStart && now <= sessionEnd;
+      } catch (error) {
+         console.error('Error parsing session time:', error);
+         return false;
+      }
    };
 
    const toggleFullscreen = () => {
@@ -233,13 +261,13 @@ const SessionQR = () => {
                         </div>
                      </div>
 
-                     {isSessionToday(selectedSession.date) && (
+                     {isWithinOneHour(selectedSession) && (
                         <div className="flex items-center gap-2 p-3 rounded-lg mb-4"
                            style={{ backgroundColor: colors.primary + '20', borderLeft: `4px solid ${colors.primary}` }}
                         >
                            <i className="fa-solid fa-circle-check" style={{ color: colors.primary }}></i>
                            <span className="text-sm font-bold" style={{ color: colors.primary }}>
-                              QR Code is valid today
+                              QR Code is valid for this session
                            </span>
                         </div>
                      )}
@@ -362,7 +390,7 @@ const SessionQR = () => {
                                     <i className="fa-solid fa-eye-slash"></i>
                                     Hide QR
                                  </button>
-                              ) : isToday ? (
+                              ) : isWithinOneHour(session) ? (
                                  <button
                                     onClick={() => generateQRForSession(session)}
                                     className="px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
@@ -376,7 +404,7 @@ const SessionQR = () => {
                                  </button>
                               ) : (
                                  <div className="flex items-center px-4 text-xs font-medium italic" style={{ color: colors.textMuted }}>
-                                    QR available on session date
+                                    QR available 1 hour before session
                                  </div>
                               )}
                            </div>

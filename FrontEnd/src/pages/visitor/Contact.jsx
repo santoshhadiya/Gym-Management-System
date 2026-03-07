@@ -41,15 +41,29 @@ const Contact = () => {
     subject: 'General Inquiry',
     message: ''
   });
+  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: '' });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // Validation
+    const newErrors = {};
+    if (!/^\d{10}$/.test(formData.phone)) {
+      newErrors.phone = "Phone number must be exactly 10 digits.";
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Please correct the errors in the form.");
+      setIsSubmitting(false);
+      return;
+    }
     
     const payload = {
         name: formData.name,
@@ -208,6 +222,7 @@ const Contact = () => {
                         className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:outline-none focus:border-[#CDE7FE] focus:bg-white transition-all text-sm"
                         placeholder="+91 00000 00000"
                      />
+                     {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                   </div>
                </div>
 
