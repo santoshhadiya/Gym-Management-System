@@ -205,6 +205,7 @@ exports.changePassword = async (req, res) => {
 // @desc    Forgot Password
 // @route   POST /api/auth/forgotpassword
 exports.forgotPassword = async (req, res) => {
+ 
   const user = await User.findOne({ email: req.body.email });
 
   if (!user) {
@@ -217,8 +218,8 @@ exports.forgotPassword = async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   // Create reset URL
-  isHosted=false
-  const resetUrl = !sted? `http://localhost:5173/reset-password/${resetToken}`:`https://songars-gym.vercel.app/reset-password/${resetToken}`
+  const isHosted = false;
+  const resetUrl = !isHosted ? `http://localhost:5173/reset-password/${resetToken}` : `https://songars-gym.vercel.app/reset-password/${resetToken}`;
 
   const message = `
 <!DOCTYPE html>
