@@ -45,6 +45,10 @@ exports.updateMemberProfile = async (req, res) => {
     member.fitnessGoal = req.body.fitnessGoal ?? member.fitnessGoal;
     member.notes = req.body.notes ?? member.notes;
 
+    if (req.body.healthInfo) {
+      member.healthInfo = { ...member.healthInfo, ...req.body.healthInfo };
+    }
+
     const updatedMember = await member.save();
     res.json(updatedMember);
   } catch (error) {

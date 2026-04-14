@@ -9,6 +9,7 @@ const AssignedMembers = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterGoal, setFilterGoal] = useState("All");
+  const [selectedHealthMember, setSelectedHealthMember] = useState(null);
 
    const getImageUrl = (path) => {
       if (!path) return "https://i.pravatar.cc/150?u=default";
@@ -162,8 +163,11 @@ const AssignedMembers = () => {
 
                         <p className="text-sm font-black uppercase tracking-wider bg-[#CDE7FE] text-blue-900 px-4 py-1.5 rounded-full">{member.goal}</p>
 
-                        <div className="w-full mt-4">
-                           <Link to={`/trainer/chat/member`} className="w-full inline-flex items-center justify-center py-3 bg-[#121212] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#D9F17F] hover:text-[#121212] transition-all">
+                        <div className="w-full mt-4 flex gap-2">
+                           <button onClick={() => setSelectedHealthMember(member)} className="flex-1 inline-flex items-center justify-center py-3 bg-red-50 text-red-600 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-red-100 transition-all">
+                              <i className="fa-solid fa-notes-medical mr-2"></i> Health
+                           </button>
+                           <Link to={`/trainer/chat/member`} className="flex-1 inline-flex items-center justify-center py-3 bg-[#121212] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#D9F17F] hover:text-[#121212] transition-all">
                               <i className="fa-regular fa-comment-dots mr-2"></i> Chat
                            </Link>
                         </div>
@@ -179,7 +183,74 @@ const AssignedMembers = () => {
         </div>
       )}
 
-      {/* member profile modal removed - member info now visible on cards */}
+      {/* HEALTH INFO MODAL */}
+      {selectedHealthMember && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setSelectedHealthMember(null)}>
+            <div className="bg-white rounded-[2rem] w-full max-w-2xl overflow-hidden shadow-2xl relative" onClick={e => e.stopPropagation()}>
+               <div className="bg-red-500 p-6 flex justify-between items-center text-white">
+                 <h2 className="text-xl font-black flex items-center gap-3">
+                   <i className="fa-solid fa-heart-pulse"></i>
+                   {selectedHealthMember.name}'s Medical Profile
+                 </h2>
+                 <button onClick={() => setSelectedHealthMember(null)} className="text-white/80 hover:text-white transition-colors cursor-pointer">
+                   <i className="fa-solid fa-xmark text-2xl"></i>
+                 </button>
+               </div>
+               
+               <div className="p-8 max-h-[70vh] overflow-y-auto">
+                 {selectedHealthMember.healthInfo ? (
+                   <div className="space-y-6">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                       {[
+                         { label: 'Medical Conditions', val: selectedHealthMember.healthInfo.medicalConditions },
+                         { label: 'Allergies', val: selectedHealthMember.healthInfo.allergies },
+                         { label: 'Blood Group', val: selectedHealthMember.healthInfo.bloodGroup },
+                         { label: 'Past Surgeries', val: selectedHealthMember.healthInfo.pastSurgeries },
+                         { label: 'Medications', val: selectedHealthMember.healthInfo.medications },
+                       ].map(item => (
+                         <div key={item.label} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                           <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-1">{item.label}</p>
+                           <p className="font-medium text-gray-800">{item.val || "None reported"}</p>
+                         </div>
+                       ))}
+                     </div>
+
+                     <div className="border-t border-gray-100 pt-6">
+                       <h3 className="text-sm font-black uppercase text-gray-800 tracking-widest mb-4">Urgent Indicators</h3>
+                       <div className="flex flex-wrap gap-3">
+                         {[
+                           { key: 'hasHeartCondition', label: 'Heart Condition', icon: 'fa-heart-crack' },
+                           { key: 'feelsPainDuringExercise', label: 'Pain During Exercise', icon: 'fa-user-injured' },
+                           { key: 'hasAsthma', label: 'Asthma', icon: 'fa-lungs' },
+                           { key: 'hasDiabetes', label: 'Diabetes', icon: 'fa-cubes-stacked' },
+                         ].map(item => (
+                           <div key={item.key} className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold uppercase tracking-wider
+                             ${selectedHealthMember.healthInfo[item.key] ? 'bg-red-50 text-red-600 border-red-200' : 'bg-gray-50 text-gray-400 border-gray-200'}`}>
+                              <i className={`fa-solid ${item.icon}`}></i> {item.label}: {selectedHealthMember.healthInfo[item.key] ? 'YES' : 'NO'}
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+
+                     {selectedHealthMember.healthInfo.additionalNotes && (
+                       <div className="border-t border-gray-100 pt-6">
+                           <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Additional Notes</p>
+                           <p className="text-sm text-gray-700 bg-yellow-50 p-4 rounded-xl italic">
+                              "{selectedHealthMember.healthInfo.additionalNotes}"
+                           </p>
+                       </div>
+                     )}
+                   </div>
+                 ) : (
+                   <div className="text-center py-10">
+                      <i className="fa-solid fa-file-medical text-4xl text-gray-200 mb-4"></i>
+                      <p className="text-gray-500">No medical information provided by the client.</p>
+                   </div>
+                 )}
+               </div>
+            </div>
+         </div>
+      )}
 
       <style>{`
         @keyframes fade-in {

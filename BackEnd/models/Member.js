@@ -52,6 +52,20 @@ const memberSchema = mongoose.Schema(
       type: String,
     },
 
+    // 🔹 Health Information
+    healthInfo: {
+      medicalConditions: { type: String, default: "" },
+      allergies: { type: String, default: "" },
+      bloodGroup: { type: String, default: "" },
+      pastSurgeries: { type: String, default: "" },
+      medications: { type: String, default: "" },
+      hasHeartCondition: { type: Boolean, default: false },
+      feelsPainDuringExercise: { type: Boolean, default: false },
+      hasAsthma: { type: Boolean, default: false },
+      hasDiabetes: { type: Boolean, default: false },
+      additionalNotes: { type: String, default: "" }
+    },
+
     // 🔹 Plan Queue - For queued future plans
     planQueue: [
       {

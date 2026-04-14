@@ -54,6 +54,18 @@ const Profile = () => {
                   weight: member.currentWeight || 0,
                   goal: member.fitnessGoal || "General Fitness",
                   notes: member.notes || "No remarks yet.",
+                  healthInfo: {
+                     medicalConditions: member.healthInfo?.medicalConditions || "",
+                     allergies: member.healthInfo?.allergies || "",
+                     bloodGroup: member.healthInfo?.bloodGroup || "",
+                     pastSurgeries: member.healthInfo?.pastSurgeries || "",
+                     medications: member.healthInfo?.medications || "",
+                     hasHeartCondition: member.healthInfo?.hasHeartCondition || false,
+                     feelsPainDuringExercise: member.healthInfo?.feelsPainDuringExercise || false,
+                     hasAsthma: member.healthInfo?.hasAsthma || false,
+                     hasDiabetes: member.healthInfo?.hasDiabetes || false,
+                     additionalNotes: member.healthInfo?.additionalNotes || ""
+                  }
                },
             };
 
@@ -76,6 +88,21 @@ const Profile = () => {
       } else {
          setTempData(prev => ({ ...prev, [name]: value }));
       }
+   };
+
+   const handleHealthChange = (e) => {
+      const { name, type, checked, value } = e.target;
+      const finalValue = type === 'checkbox' ? checked : value;
+      setTempData(prev => ({
+         ...prev,
+         fitness: {
+            ...prev.fitness,
+            healthInfo: {
+               ...prev.fitness.healthInfo,
+               [name]: finalValue
+            }
+         }
+      }));
    };
 
    const handleImageUpload = (e) => {
@@ -113,6 +140,7 @@ const Profile = () => {
             height: tempData.fitness.height,
             currentWeight: tempData.fitness.weight,
             fitnessGoal: tempData.fitness.goal,
+            healthInfo: tempData.fitness.healthInfo,
          });
 
          setProfile(tempData);
@@ -399,6 +427,63 @@ const Profile = () => {
                                  {['Weight Loss', 'Muscle Gain', 'Endurance', 'General Fitness'].map(o => <option key={o} className="text-black text-lg">{o}</option>)}
                               </select>
                              
+                           </div>
+                        </div>
+
+                        {/* Medical & Health Profile Section */}
+                        <div className="mt-10 pt-8 border-t" style={{ borderColor: colors.border }}>
+                           <h3 className="text-xl font-black mb-6 flex items-center gap-3" style={{ color: colors.text }}>
+                              <i className="fa-solid fa-heart-pulse text-red-500"></i>
+                              Medical & Health Profile
+                           </h3>
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                              {/* Text Fields */}
+                              {['medicalConditions', 'allergies', 'bloodGroup', 'pastSurgeries', 'medications'].map((field) => (
+                                 <div key={field} className="space-y-3">
+                                    <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">
+                                       {field.replace(/([A-Z])/g, ' $1').trim()}
+                                    </label>
+                                    <input type="text" name={field} disabled={!isEditing} 
+                                       value={tempData.fitness?.healthInfo?.[field] || ""} 
+                                       onChange={handleHealthChange}
+                                       className="input-glow w-full px-6 py-3 rounded-xl border-2 outline-none font-medium text-md disabled:opacity-60"
+                                       style={{ borderColor: colors.border, color: colors.text }} 
+                                       placeholder={`Any ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}?`} />
+                                 </div>
+                              ))}
+
+                              {/* Yes/No Toggles */}
+                              <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mt-4">
+                                 {[
+                                    { name: 'hasHeartCondition', label: 'Heart Condition' },
+                                    { name: 'feelsPainDuringExercise', label: 'Pain During Exercise' },
+                                    { name: 'hasAsthma', label: 'Asthma/Breathing' },
+                                    { name: 'hasDiabetes', label: 'Diabetes' }
+                                 ].map((question) => (
+                                    <label key={question.name} className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${!isEditing ? 'opacity-60 cursor-not-allowed' : 'hover:border-[#D9F17F]'}`}
+                                           style={{ borderColor: colors.border, backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.03)' : '#f8f9fa' }}>
+                                       <span className="text-xs font-bold uppercase tracking-wider" style={{ color: colors.text }}>{question.label}</span>
+                                       <div className="relative">
+                                          <input type="checkbox" name={question.name} disabled={!isEditing}
+                                             checked={tempData.fitness?.healthInfo?.[question.name] || false} 
+                                             onChange={handleHealthChange}
+                                             className="sr-only peer" />
+                                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#D9F17F]"></div>
+                                       </div>
+                                    </label>
+                                 ))}
+                              </div>
+
+                              <div className="space-y-3 md:col-span-2">
+                                 <label className="text-xs font-bold uppercase tracking-widest opacity-60 ml-1">Additional Notes</label>
+                                 <textarea name="additionalNotes" rows="3" disabled={!isEditing} 
+                                    value={tempData.fitness?.healthInfo?.additionalNotes || ""} 
+                                    onChange={handleHealthChange}
+                                    className="input-glow w-full px-6 py-3 rounded-xl border-2 outline-none font-medium text-lg resize-none disabled:opacity-60 leading-relaxed"
+                                    style={{ borderColor: colors.border, color: colors.text }}
+                                    placeholder="Any other health details we should know about?"></textarea>
+                              </div>
                            </div>
                         </div>
                      </div>

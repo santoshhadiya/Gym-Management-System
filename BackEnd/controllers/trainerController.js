@@ -176,6 +176,7 @@ exports.getTrainerMembersAll = async (req, res) => {
           : "N/A",
         // Logic for progress calculation would go here; for now, we pass data points
         progress: m.user.status === "Active" ? "On Track" : "Low Attendance",
+        healthInfo: m.healthInfo || {},
         details: {
           age: m.age || "N/A",
           height: m.height || 0,
